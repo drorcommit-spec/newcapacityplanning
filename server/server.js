@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 import { parseHubSpotEmail, convertToProject } from './emailParser.js';
 
 const app = express();
-const PORT = 3002;
+const PORT = process.env.PORT || 3002;
 const DB_FILE = path.join(__dirname, 'database.json');
 let isWriting = false;
 const writeQueue = [];
