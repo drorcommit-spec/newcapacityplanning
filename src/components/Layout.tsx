@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
+import { APP_VERSION } from '../version';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -85,6 +86,9 @@ export default function Layout({ children }: LayoutProps) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
+      <footer className="fixed bottom-0 right-0 p-2">
+        <span className="text-xs text-gray-400">v{APP_VERSION}</span>
+      </footer>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 {
   "name": "product-capacity-platform",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.001",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:3002/api';
+// Use environment variable for API URL, fallback to empty string for localStorage-only mode
+const API_URL = (import.meta as any).env?.VITE_API_URL || '';
 
 export interface DatabaseData {
   teamMembers: any[];
@@ -8,12 +9,25 @@ export interface DatabaseData {
 }
 
 export async function fetchAllData(): Promise<DatabaseData> {
+  // If no API URL, return empty data (localStorage mode)
+  if (!API_URL) {
+    return {
+      teamMembers: [],
+      projects: [],
+      allocations: [],
+      history: [],
+    };
+  }
+  
   const response = await fetch(`${API_URL}/data`);
   if (!response.ok) throw new Error('Failed to fetch data');
   return response.json();
 }
 
 export async function saveTeamMembers(teamMembers: any[]): Promise<void> {
+  // If no API URL, skip server save (localStorage mode)
+  if (!API_URL) return;
+  
   const response = await fetch(`${API_URL}/teamMembers`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -23,6 +37,9 @@ export async function saveTeamMembers(teamMembers: any[]): Promise<void> {
 }
 
 export async function saveProjects(projects: any[]): Promise<void> {
+  // If no API URL, skip server save (localStorage mode)
+  if (!API_URL) return;
+  
   const response = await fetch(`${API_URL}/projects`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -32,6 +49,9 @@ export async function saveProjects(projects: any[]): Promise<void> {
 }
 
 export async function saveAllocations(allocations: any[]): Promise<void> {
+  // If no API URL, skip server save (localStorage mode)
+  if (!API_URL) return;
+  
   const response = await fetch(`${API_URL}/allocations`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -41,6 +61,9 @@ export async function saveAllocations(allocations: any[]): Promise<void> {
 }
 
 export async function saveHistory(history: any[]): Promise<void> {
+  // If no API URL, skip server save (localStorage mode)
+  if (!API_URL) return;
+  
   const response = await fetch(`${API_URL}/history`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

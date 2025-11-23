@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import { APP_VERSION } from '../version';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -62,8 +63,9 @@ export default function Login() {
         </p>
       </div>
       
-      {/* Credit */}
-      <div className="mt-8 text-center">
+      {/* Version and Credit */}
+      <div className="mt-8 text-center space-y-2">
+        <p className="text-xs text-gray-400">Version {APP_VERSION}</p>
         <p className="text-sm text-gray-500">by Dror Shem-Tov</p>
       </div>
     </div>
