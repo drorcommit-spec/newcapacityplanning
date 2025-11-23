@@ -148,7 +148,8 @@ export default function CapacityOverview({
     });
   const teams = Array.from(new Set(activeManagers.map(m => m.team).filter(Boolean))).sort((a, b) => (a as string).localeCompare(b as string));
   
-  const [selectedTeam, setSelectedTeam] = useState<string>(teams[0] as string || '');
+  // Multi-select team filter - default to all teams selected except "No Team"
+  const [selectedTeams, setSelectedTeams] = useState<string[]>(teams as string[]);
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [projectSearchTerm, setProjectSearchTerm] = useState('');
   const [showUnallocatedOnly, setShowUnallocatedOnly] = useState(false);
@@ -587,8 +588,14 @@ export default function CapacityOverview({
       
       if (viewMode === 'team') {
         let managers = activeManagers;
-        if (selectedTeam) {
-          managers = managers.filter(m => m.team === selectedTeam);
+        // Filter by selected teams (multi-select)
+        if (selectedTeams.length > 0) {
+          managers = managers.filter(m => {
+            // Handle "No Team" option
+            if (selectedTeams.includes('No Team') && !m.team) return true;
+            // Handle regular teams
+            return m.team && selectedTeams.includes(m.team);
+          });
         }
 
         // Member search filter
@@ -683,7 +690,7 @@ export default function CapacityOverview({
         return { ...sprintInfo, isPast, projects: filteredProjects };
       }
     });
-  }, [nextThreeSprints, viewMode, activeManagers, selectedTeam, capacityFilter, underCapacityThreshold, overCapacityThreshold, allocations, projects, activeProjects, selectedProjects, teamMembers, isSprintPast, showUnallocatedOnly]);
+  }, [nextThreeSprints, viewMode, activeManagers, selectedTeams, capacityFilter, underCapacityThreshold, overCapacityThreshold, allocations, projects, activeProjects, selectedProjects, teamMembers, isSprintPast, showUnallocatedOnly]);
 
 
   return (
@@ -745,12 +752,64 @@ export default function CapacityOverview({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           {viewMode === 'team' && (
             <>
-              <Select
-                label="Team"
-                options={teams.map(t => ({ value: t as string, label: t as string }))}
-                value={selectedTeam}
-                onChange={(e) => setSelectedTeam(e.target.value)}
-              />
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-2">Team Filter</label>
+                <div className="bg-white border border-gray-300 rounded-md p-3 max-h-48 overflow-y-auto">
+                  {/* No Team option */}
+                  <label className="flex items-center gap-2 mb-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                    <input
+                      type="checkbox"
+                      checked={selectedTeams.includes('No Team')}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedTeams([...selectedTeams, 'No Team']);
+                        } else {
+                          setSelectedTeams(selectedTeams.filter(t => t !== 'No Team'));
+                        }
+                      }}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">No Team</span>
+                  </label>
+                  
+                  {/* Regular teams */}
+                  {teams.map(team => (
+                    <label key={team} className="flex items-center gap-2 mb-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                      <input
+                        type="checkbox"
+                        checked={selectedTeams.includes(team as string)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedTeams([...selectedTeams, team as string]);
+                          } else {
+                            setSelectedTeams(selectedTeams.filter(t => t !== team));
+                          }
+                        }}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">{team}</span>
+                    </label>
+                  ))}
+                  
+                  {/* Select All / Deselect All buttons */}
+                  <div className="flex gap-2 mt-2 pt-2 border-t border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTeams([...teams as string[], 'No Team'])}
+                      className="text-xs text-blue-600 hover:text-blue-800"
+                    >
+                      Select All
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTeams([])}
+                      className="text-xs text-gray-600 hover:text-gray-800"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                </div>
+              </div>
 
               <div>
                 <label className="text-sm font-medium text-gray-700 block mb-1">Capacity Filter</label>
@@ -988,7 +1047,7 @@ export default function CapacityOverview({
                         {member.projects.length === 0 && (
                           <div className="text-xs text-gray-400 italic ml-2">No allocations</div>
                         )}
-                        {member.projects.map((proj: any, i: number) => (
+                        {[...member.projects].sort((a, b) => b.percentage - a.percentage).map((proj: any, i: number) => (
                           <div key={i} className="text-xs text-gray-600 ml-2 flex items-center justify-between mt-1">
                             <span>• {proj.project}: {proj.percentage}%</span>
                             {!swimlane.isPast && canWrite && (
@@ -1031,7 +1090,15 @@ export default function CapacityOverview({
                 ))}
 
 
-                {viewMode === 'project' && 'projects' in swimlane && swimlane.projects?.map((projectData: any) => (
+                {viewMode === 'project' && 'projects' in swimlane && swimlane.projects?.map((projectData: any) => {
+                  // Check if total exceeds max capacity
+                  const maxCapacity = projectData.project.maxCapacityPercentage;
+                  const exceedsCapacity = maxCapacity && projectData.total > maxCapacity;
+                  
+                  // Sort members by allocation percentage descending
+                  const sortedMembers = [...projectData.members].sort((a, b) => b.percentage - a.percentage);
+                  
+                  return (
                   <div key={projectData.project.id} className="mb-3 p-2 bg-white rounded border shadow-sm">
                     <div className="flex items-center justify-between mb-1">
                       <div>
@@ -1040,6 +1107,14 @@ export default function CapacityOverview({
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-gray-700">{projectData.total}%</span>
+                        {exceedsCapacity && (
+                          <span 
+                            className="text-red-600 cursor-help" 
+                            title={`Exceeds project max capacity of ${maxCapacity}%`}
+                          >
+                            ❗
+                          </span>
+                        )}
                         {!swimlane.isPast && canWrite && (
                           <>
                             {projectData.members.length > 0 && index < 2 && (
@@ -1078,10 +1153,10 @@ export default function CapacityOverview({
                         )}
                       </div>
                     </div>
-                    {projectData.members.length === 0 && (
+                    {sortedMembers.length === 0 && (
                       <div className="text-xs text-gray-400 italic ml-2">No allocations</div>
                     )}
-                    {projectData.members.map((mem: any, i: number) => (
+                    {sortedMembers.map((mem: any, i: number) => (
                       <div key={i} className="text-xs text-gray-600 ml-2 flex items-center justify-between mt-1">
                         <span>• {mem.member}: {mem.percentage}%</span>
                         {!swimlane.isPast && canWrite && (
@@ -1120,7 +1195,8 @@ export default function CapacityOverview({
                       </div>
                     ))}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ))}
           </div>
