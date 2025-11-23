@@ -582,7 +582,7 @@ export default function CapacityOverview({
 
   const swimlaneData = useMemo(() => {
     return nextThreeSprints.map(sprintInfo => {
-      const { year, month, sprint, label } = sprintInfo;
+      const { year, month, sprint } = sprintInfo;
       const isPast = isSprintPast(year, month, sprint);
       
       if (viewMode === 'team') {

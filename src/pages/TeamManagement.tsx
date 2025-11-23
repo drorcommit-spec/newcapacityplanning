@@ -14,8 +14,7 @@ export default function TeamManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [searchTerm] = useState('');
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
