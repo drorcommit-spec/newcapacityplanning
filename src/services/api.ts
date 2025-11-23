@@ -1,5 +1,5 @@
-// Use environment variable for API URL, fallback to empty string for localStorage-only mode
-const API_URL = (import.meta as any).env?.VITE_API_URL || '';
+// Use environment variable for API URL, fallback to localhost for development
+const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3002/api';
 
 export interface DatabaseData {
   teamMembers: any[];
