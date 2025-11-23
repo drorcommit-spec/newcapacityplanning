@@ -694,67 +694,51 @@ export default function CapacityOverview({
 
 
   return (
-    <Card>
-      <div className="space-y-4">
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* Compact Header */}
+      <div className="bg-white border-b border-gray-200 px-4 py-2 flex-shrink-0">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Capacity Overview</h2>
-          <div className="flex gap-2">
+          <h2 className="text-lg font-semibold text-gray-900">Capacity Overview</h2>
+          <div className="flex gap-2 items-center">
             {viewMode === 'project' && (
               <button
                 onClick={handleExportCSV}
-                className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 flex items-center gap-2"
+                className="px-3 py-1.5 text-sm rounded bg-green-600 text-white hover:bg-green-700 flex items-center gap-1.5"
                 title="Export to CSV"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                Export CSV
+                Export
               </button>
             )}
-            <button
-              onClick={() => setViewMode('team')}
-              className={`px-4 py-2 rounded ${viewMode === 'team' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-            >
-              Team View
-            </button>
-            <button
-              onClick={() => setViewMode('project')}
-              className={`px-4 py-2 rounded ${viewMode === 'project' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-            >
-              Project View
-            </button>
+            <div className="flex gap-1 bg-gray-100 rounded p-1">
+              <button
+                onClick={() => setViewMode('team')}
+                className={`px-3 py-1.5 text-sm rounded transition-colors ${viewMode === 'team' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-700 hover:bg-gray-200'}`}
+              >
+                Team
+              </button>
+              <button
+                onClick={() => setViewMode('project')}
+                className={`px-3 py-1.5 text-sm rounded transition-colors ${viewMode === 'project' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-700 hover:bg-gray-200'}`}
+              >
+                Project
+              </button>
+            </div>
           </div>
         </div>
+      </div>
 
-        {viewMode === 'team' && (
-          <div className="flex gap-4 items-end mb-4 p-4 bg-gray-50 rounded-lg">
-            <Input
-              label="Under Capacity Threshold (%)"
-              type="number"
-              min="0"
-              max="100"
-              value={underCapacityThreshold.toString()}
-              onChange={(e) => setUnderCapacityThreshold(Number(e.target.value))}
-              className="w-32"
-            />
-            <Input
-              label="Over Capacity Threshold (%)"
-              type="number"
-              min="100"
-              max="200"
-              value={overCapacityThreshold.toString()}
-              onChange={(e) => setOverCapacityThreshold(Number(e.target.value))}
-              className="w-32"
-            />
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+      {/* Filters Bar - Compact and Horizontal */}
+      <div className="bg-white border-b border-gray-200 px-4 py-2.5 flex-shrink-0">
+        <div className="flex gap-4 items-center flex-wrap">
           {viewMode === 'team' && (
             <>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">Team Filter</label>
-                <div className="bg-white border border-gray-300 rounded-md p-3 max-h-48 overflow-y-auto">
+              {/* Team Filter - Compact Dropdown */}
+              <div className="relative">
+                <label className="text-xs font-medium text-gray-600 block mb-1">Team Filter</label>
+                <div className="bg-white border border-gray-300 rounded p-2 max-h-32 overflow-y-auto w-48">
                   {/* No Team option */}
                   <label className="flex items-center gap-2 mb-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
                     <input
@@ -954,26 +938,31 @@ export default function CapacityOverview({
             </>
           )}
         </div>
+      </div>
 
-
-        <div className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {swimlaneData.map((swimlane, index) => (
-              <div 
-                key={`${swimlane.year}-${swimlane.month}-${swimlane.sprint}`}
-                className={`border-2 rounded-lg p-4 ${
-                  index === 0 ? 'border-blue-500 bg-blue-50' : 
-                  index === 1 ? 'border-green-500 bg-green-50' : 
-                  'border-gray-400 bg-gray-50'
-                } ${swimlane.isPast ? 'opacity-50' : ''}`}
-              >
-                <div className="mb-4 pb-3 border-b-2">
-                  <h3 className="text-lg font-bold text-gray-900">{swimlane.label}</h3>
-                  <div className="text-sm text-gray-600">
-                    {getMonthName(swimlane.month)} {swimlane.year} - Sprint {swimlane.sprint}
-                  </div>
-                  {swimlane.isPast && <span className="text-xs text-gray-500 font-semibold">(Past Sprint)</span>}
+      {/* Sprint Panes - Full Height */}
+      <div className="flex-1 overflow-hidden px-4 py-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 h-full">
+          {swimlaneData.map((swimlane, index) => (
+            <div 
+              key={`${swimlane.year}-${swimlane.month}-${swimlane.sprint}`}
+              className={`border-2 rounded-lg flex flex-col overflow-hidden ${
+                index === 0 ? 'border-blue-500 bg-blue-50' : 
+                index === 1 ? 'border-green-500 bg-green-50' : 
+                'border-gray-400 bg-gray-50'
+              } ${swimlane.isPast ? 'opacity-50' : ''}`}
+            >
+              {/* Sprint Header - Compact */}
+              <div className="px-3 py-2 border-b-2 flex-shrink-0 bg-white bg-opacity-60">
+                <h3 className="text-base font-bold text-gray-900">{swimlane.label}</h3>
+                <div className="text-xs text-gray-600">
+                  {getMonthName(swimlane.month)} {swimlane.year} - Sprint {swimlane.sprint}
+                  {swimlane.isPast && <span className="ml-2 text-gray-500 font-semibold">(Past)</span>}
                 </div>
+              </div>
+              
+              {/* Sprint Content - Scrollable */}
+              <div className="flex-1 overflow-y-auto p-3">
 
                 {viewMode === 'team' && 'teams' in swimlane && swimlane.teams?.map((team: any) => (
                   <div key={team.teamName} className="mb-4">
@@ -1194,15 +1183,14 @@ export default function CapacityOverview({
                         )}
                       </div>
                     ))}
-                  </div>
-                  );
-                })}
+                </div>
+                );
+              })}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
-
 
       <Modal 
         isOpen={editingAllocation !== null} 
@@ -1360,6 +1348,6 @@ export default function CapacityOverview({
           </div>
         )}
       </Modal>
-    </Card>
+    </div>
   );
 }
