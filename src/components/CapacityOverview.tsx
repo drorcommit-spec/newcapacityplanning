@@ -57,7 +57,7 @@ export default function CapacityOverview({
   initialOverThreshold,
   highlightMemberId
 }: CapacityOverviewProps = {}) {
-  const { teamMembers, projects, allocations, updateAllocation, addAllocation, deleteAllocation } = useData();
+  const { teamMembers, projects, allocations, updateAllocation, addAllocation, deleteAllocation, updateProject } = useData();
   const { user } = useAuth();
   const { canWrite } = usePermissions();
   const [viewMode, setViewMode] = useState<ViewMode>('team');
@@ -69,6 +69,12 @@ export default function CapacityOverview({
     productManagerId: '',
     allocationPercentage: '',
   });
+  
+  const [commentingAllocation, setCommentingAllocation] = useState<{ allocationId: string; currentComment: string; projectName: string; memberName: string } | null>(null);
+  const [commentText, setCommentText] = useState('');
+  
+  const [commentingProject, setCommentingProject] = useState<{ projectId: string; projectName: string; currentComment: string } | null>(null);
+  const [projectCommentText, setProjectCommentText] = useState('');
   
   const [underCapacityThreshold, setUnderCapacityThreshold] = useState(() => {
     if (initialUnderThreshold !== undefined) return initialUnderThreshold;
@@ -1090,8 +1096,29 @@ export default function CapacityOverview({
                   return (
                   <div key={projectData.project.id} className="mb-3 p-2 bg-white rounded border shadow-sm">
                     <div className="flex items-center justify-between mb-1">
-                      <div>
+                      <div className="flex items-center gap-2">
                         <div className="font-medium text-sm">{projectData.project.projectName}</div>
+                        {projectData.project.comment && (
+                          <span className="text-blue-500 text-xs" title={projectData.project.comment}>💬</span>
+                        )}
+                        {canWrite && (
+                          <button
+                            onClick={() => {
+                              setCommentingProject({
+                                projectId: projectData.project.id,
+                                projectName: projectData.project.projectName,
+                                currentComment: projectData.project.comment || ''
+                              });
+                              setProjectCommentText(projectData.project.comment || '');
+                            }}
+                            className={`${projectData.project.comment ? 'text-blue-600' : 'text-gray-400'} hover:text-blue-800`}
+                            title={projectData.project.comment ? 'Edit project comment' : 'Add project comment'}
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                            </svg>
+                          </button>
+                        )}
                         <div className="text-xs text-gray-500">{projectData.project.customerName}</div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1145,11 +1172,39 @@ export default function CapacityOverview({
                     {sortedMembers.length === 0 && (
                       <div className="text-xs text-gray-400 italic ml-2">No allocations</div>
                     )}
-                    {sortedMembers.map((mem: any, i: number) => (
-                      <div key={i} className="text-xs text-gray-600 ml-2 flex items-center justify-between mt-1">
-                        <span>• {mem.member}: {mem.percentage}%</span>
-                        {!swimlane.isPast && canWrite && (
+                    {sortedMembers.map((mem: any, i: number) => {
+                      const allocation = allocations.find(a => a.id === mem.allocationId);
+                      const hasComment = allocation?.comment;
+                      
+                      return (
+                        <div key={i} className="text-xs text-gray-600 ml-2 flex items-center justify-between mt-1">
+                          <span className="flex items-center gap-1">
+                            • {mem.member}: {mem.percentage}%
+                            {hasComment && (
+                              <span className="text-blue-500" title={allocation?.comment}>💬</span>
+                            )}
+                          </span>
+                          {!swimlane.isPast && canWrite && (
                           <div className="flex gap-1">
+                            <button
+                              onClick={() => {
+                                const alloc = allocations.find(a => a.id === mem.allocationId);
+                                setCommentingAllocation({
+                                  allocationId: mem.allocationId,
+                                  currentComment: alloc?.comment || '',
+                                  projectName: projectData.project.projectName,
+                                  memberName: mem.member
+                                });
+                                setCommentText(alloc?.comment || '');
+                              }}
+                              className={`${hasComment ? 'text-blue-600' : 'text-gray-400'} hover:text-blue-800`}
+                              title={hasComment ? 'Edit comment' : 'Add comment'}
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                              </svg>
+                            </button>
+                            
                             <button
                               onClick={() => handleEditClick(
                                 mem.allocationId,
@@ -1181,9 +1236,10 @@ export default function CapacityOverview({
                             </button>
                           </div>
                         )}
-                      </div>
-                    ))}
-                </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 );
               })}
               </div>
@@ -1343,6 +1399,120 @@ export default function CapacityOverview({
               </Button>
               <Button type="button" onClick={handleSaveNewAllocation}>
                 Add Allocation
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Allocation Comment Modal */}
+      <Modal 
+        isOpen={commentingAllocation !== null} 
+        onClose={() => {
+          setCommentingAllocation(null);
+          setCommentText('');
+        }} 
+        title="Allocation Comment"
+      >
+        {commentingAllocation && (
+          <div className="space-y-4">
+            <div className="bg-gray-50 p-3 rounded">
+              <div className="text-sm text-gray-600">Project</div>
+              <div className="font-medium">{commentingAllocation.projectName}</div>
+            </div>
+            <div className="bg-gray-50 p-3 rounded">
+              <div className="text-sm text-gray-600">Product Manager</div>
+              <div className="font-medium">{commentingAllocation.memberName}</div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Comment
+              </label>
+              <textarea
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Add a comment about this allocation..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={4}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button 
+                type="button" 
+                variant="secondary" 
+                onClick={() => {
+                  setCommentingAllocation(null);
+                  setCommentText('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="button" 
+                onClick={() => {
+                  if (commentingAllocation && user) {
+                    updateAllocation(commentingAllocation.allocationId, { comment: commentText || undefined }, user.id);
+                    setCommentingAllocation(null);
+                    setCommentText('');
+                  }
+                }}
+              >
+                Save Comment
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Project Comment Modal */}
+      <Modal 
+        isOpen={commentingProject !== null} 
+        onClose={() => {
+          setCommentingProject(null);
+          setProjectCommentText('');
+        }} 
+        title="Project Comment"
+      >
+        {commentingProject && (
+          <div className="space-y-4">
+            <div className="bg-gray-50 p-3 rounded">
+              <div className="text-sm text-gray-600">Project</div>
+              <div className="font-medium">{commentingProject.projectName}</div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Comment
+              </label>
+              <textarea
+                value={projectCommentText}
+                onChange={(e) => setProjectCommentText(e.target.value)}
+                placeholder="Add a comment about this project..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={4}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button 
+                type="button" 
+                variant="secondary" 
+                onClick={() => {
+                  setCommentingProject(null);
+                  setProjectCommentText('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="button" 
+                onClick={() => {
+                  if (commentingProject) {
+                    updateProject(commentingProject.projectId, { comment: projectCommentText || undefined });
+                    setCommentingProject(null);
+                    setProjectCommentText('');
+                  }
+                }}
+              >
+                Save Comment
               </Button>
             </div>
           </div>

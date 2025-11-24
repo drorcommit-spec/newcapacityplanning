@@ -36,6 +36,7 @@ export interface Project {
   region?: ProjectRegion;
   createdAt: string;
   isArchived: boolean;
+  comment?: string;
 }
 
 export interface SprintAllocation {
@@ -49,6 +50,7 @@ export interface SprintAllocation {
   allocationDays: number;
   createdAt: string;
   createdBy: string;
+  comment?: string;
 }
 
 export interface AllocationHistory {

@@ -38,15 +38,18 @@ export default function ProjectManagement() {
   };
 
   const isProjectUnallocated = (projectId: string) => {
-    const sprintsToCheck = getNextSprints(3); // Current + next 2
-    return sprintsToCheck.every(({ year, month, sprint }) => {
-      return !allocations.some(
-        a => a.projectId === projectId && 
-             a.year === year && 
-             a.month === month && 
-             a.sprint === sprint
-      );
-    });
+    // Check only the CURRENT sprint
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const currentSprint = now.getDate() <= 15 ? 1 : 2;
+    
+    return !allocations.some(
+      a => a.projectId === projectId && 
+           a.year === currentYear && 
+           a.month === currentMonth && 
+           a.sprint === currentSprint
+    );
   };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -404,7 +407,7 @@ export default function ProjectManagement() {
                 <tr key={project.id} className="border-b hover:bg-gray-50">
                   <td className="py-3 px-4 text-center">
                     {project.status === 'Active' && isProjectUnallocated(project.id) && (
-                      <span className="text-red-600 text-xl" title="No allocations for current + next 2 sprints">
+                      <span className="text-red-600 text-xl" title="No allocations for current sprint">
                         ❗
                       </span>
                     )}
@@ -432,7 +435,9 @@ export default function ProjectManagement() {
                       {project.status}
                     </span>
                   </td>
+                  <td className="py-3 px-4">{project.region || '-'}</td>
                   <td className="py-3 px-4">{project.maxCapacityPercentage ? `${project.maxCapacityPercentage}%` : '-'}</td>
+                  <td className="py-3 px-4">{project.activityCloseDate || '-'}</td>
                   <td className="py-3 px-4">{project.pmoContact ? getPMOName(project.pmoContact) : '-'}</td>
                   <td className="py-3 px-4">
                     {canWrite ? (
