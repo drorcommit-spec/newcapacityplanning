@@ -12,6 +12,17 @@ dist
 dist-ssr
 *.local
 
+# Environment files (keep credentials safe)
+.env
+.env.local
+.env.production
+
+# Database files (keep local data safe)
+server/database.json
+server/database.backup.*.json
+server/csv-backups/
+server/*.backup.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
