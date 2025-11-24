@@ -1,12 +1,10 @@
 -- Supabase Database Schema for Product Capacity Platform
 -- This creates all tables with proper constraints and indexes
-
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Uses TEXT for IDs to support both UUID and custom string formats
 
 -- Team Members Table
 CREATE TABLE IF NOT EXISTS team_members (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id TEXT PRIMARY KEY,
     full_name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     role TEXT NOT NULL,
@@ -18,7 +16,7 @@ CREATE TABLE IF NOT EXISTS team_members (
 
 -- Projects Table
 CREATE TABLE IF NOT EXISTS projects (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id TEXT PRIMARY KEY,
     customer_name TEXT NOT NULL,
     project_name TEXT NOT NULL,
     project_type TEXT NOT NULL,
@@ -33,9 +31,9 @@ CREATE TABLE IF NOT EXISTS projects (
 
 -- Allocations Table
 CREATE TABLE IF NOT EXISTS allocations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    product_manager_id UUID NOT NULL REFERENCES team_members(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    product_manager_id TEXT NOT NULL REFERENCES team_members(id) ON DELETE CASCADE,
     year INTEGER NOT NULL,
     month INTEGER NOT NULL,
     sprint INTEGER NOT NULL,
@@ -49,8 +47,8 @@ CREATE TABLE IF NOT EXISTS allocations (
 
 -- History Table (Audit Trail)
 CREATE TABLE IF NOT EXISTS allocation_history (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    allocation_id UUID NOT NULL,
+    id TEXT PRIMARY KEY,
+    allocation_id TEXT NOT NULL,
     changed_by TEXT NOT NULL,
     changed_at TIMESTAMPTZ DEFAULT NOW(),
     change_type TEXT NOT NULL CHECK (change_type IN ('created', 'updated', 'deleted')),
@@ -106,7 +104,7 @@ CREATE POLICY "Allow all for authenticated users" ON allocation_history
 
 -- Create a backup table for safety
 CREATE TABLE IF NOT EXISTS data_backups (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id SERIAL PRIMARY KEY,
     backup_date TIMESTAMPTZ DEFAULT NOW(),
     team_members_count INTEGER,
     projects_count INTEGER,
