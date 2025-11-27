@@ -29,6 +29,19 @@ export default function CapacityPlanning() {
   const [capacityFilter, setCapacityFilter] = useState<CapacityFilter>('all');
   const [showUnallocatedOnly, setShowUnallocatedOnly] = useState(false);
 
+  // Capacity thresholds
+  const underCapacityThreshold = 70;
+  const overCapacityThreshold = 100;
+
+  // Get all unique resource types
+  const allResourceTypes = useMemo(() => {
+    const types = new Set<string>();
+    teamMembers.forEach(m => {
+      if (m.resourceType) types.add(m.resourceType);
+    });
+    return Array.from(types).sort();
+  }, [teamMembers]);
+
   // Modal state
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
@@ -81,6 +94,11 @@ export default function CapacityPlanning() {
       const member = teamMembers.find(m => m.id === alloc.productManagerId);
       
       if (project && member && project.status === 'Active') {
+        // Apply resource type filter
+        if (selectedResourceTypes.length > 0 && member.resourceType && !selectedResourceTypes.includes(member.resourceType)) {
+          return;
+        }
+
         if (!projectMap.has(project.id)) {
           projectMap.set(project.id, { project, members: [], total: 0 });
         }
@@ -95,8 +113,34 @@ export default function CapacityPlanning() {
       }
     });
 
+    let result = Array.from(projectMap.values());
+
+    // Apply search filter
+    if (searchText) {
+      const search = searchText.toLowerCase();
+      result = result.filter(({ project }) =>
+        project.customerName.toLowerCase().includes(search) ||
+        project.projectName.toLowerCase().includes(search)
+      );
+    }
+
+    // Apply capacity filter
+    if (capacityFilter !== 'all') {
+      result = result.filter(({ total }) => {
+        if (capacityFilter === 'under') return total < underCapacityThreshold;
+        if (capacityFilter === 'over') return total > overCapacityThreshold;
+        if (capacityFilter === 'good') return total >= underCapacityThreshold && total <= overCapacityThreshold;
+        return true;
+      });
+    }
+
+    // Apply unallocated filter
+    if (showUnallocatedOnly) {
+      result = result.filter(({ members }) => members.length === 0);
+    }
+
     // Sort projects by customer name, then project name
-    return Array.from(projectMap.values()).sort((a, b) => {
+    return result.sort((a, b) => {
       const customerCompare = a.project.customerName.localeCompare(b.project.customerName);
       if (customerCompare !== 0) return customerCompare;
       return a.project.projectName.localeCompare(b.project.projectName);
@@ -113,6 +157,11 @@ export default function CapacityPlanning() {
       const project = projects.find(p => p.id === alloc.projectId);
       
       if (member && project && member.isActive) {
+        // Apply resource type filter
+        if (selectedResourceTypes.length > 0 && member.resourceType && !selectedResourceTypes.includes(member.resourceType)) {
+          return;
+        }
+
         if (!memberMap.has(member.id)) {
           memberMap.set(member.id, { member, projects: [], total: 0 });
         }
@@ -127,8 +176,28 @@ export default function CapacityPlanning() {
       }
     });
 
+    let result = Array.from(memberMap.values());
+
+    // Apply search filter
+    if (searchText) {
+      const search = searchText.toLowerCase();
+      result = result.filter(({ member }) =>
+        member.fullName.toLowerCase().includes(search)
+      );
+    }
+
+    // Apply capacity filter
+    if (capacityFilter !== 'all') {
+      result = result.filter(({ total }) => {
+        if (capacityFilter === 'under') return total < underCapacityThreshold;
+        if (capacityFilter === 'over') return total > overCapacityThreshold;
+        if (capacityFilter === 'good') return total >= underCapacityThreshold && total <= overCapacityThreshold;
+        return true;
+      });
+    }
+
     // Sort members by name
-    return Array.from(memberMap.values()).sort((a, b) => 
+    return result.sort((a, b) => 
       a.member.fullName.localeCompare(b.member.fullName)
     );
   };
@@ -150,6 +219,31 @@ export default function CapacityPlanning() {
     setSelectedProject(project);
     setSelectedSprint(sprint);
     setShowAddMemberModal(true);
+  };
+
+  const handleAddProjectToSprint = (sprint: SprintInfo) => {
+    setSelectedSprint(sprint);
+    setShowAddProjectModal(true);
+  };
+
+  const handleSelectProject = (project: Project) => {
+    setSelectedProject(project);
+    setShowAddProjectModal(false);
+    setShowAddMemberModal(true);
+  };
+
+  // Get projects not in current sprint
+  const getAvailableProjects = (sprint: SprintInfo) => {
+    const sprintAllocs = getSprintAllocations(sprint);
+    const projectIdsInSprint = new Set(sprintAllocs.map(a => a.projectId));
+    
+    return projects
+      .filter(p => p.status === 'Active' && !p.isArchived && !projectIdsInSprint.has(p.id))
+      .sort((a, b) => {
+        const customerCompare = a.customerName.localeCompare(b.customerName);
+        if (customerCompare !== 0) return customerCompare;
+        return a.projectName.localeCompare(b.projectName);
+      });
   };
 
   const handleAddMember = () => {
@@ -309,7 +403,52 @@ export default function CapacityPlanning() {
                 <option value="good">Good Capacity</option>
                 <option value="over">Over Capacity</option>
               </select>
-              <div className="text-sm text-gray-600">Resource Type Filter (Coming soon)</div>
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    const newTypes = allResourceTypes.filter(t => !selectedResourceTypes.includes(t));
+                    if (newTypes.length > 0) {
+                      setSelectedResourceTypes([...selectedResourceTypes, newTypes[0]]);
+                    }
+                  }}
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm text-left hover:bg-gray-50"
+                >
+                  {selectedResourceTypes.length === 0 
+                    ? 'Filter by Resource Type...' 
+                    : `${selectedResourceTypes.length} type(s) selected`}
+                </button>
+                {selectedResourceTypes.length > 0 && (
+                  <div className="absolute top-full left-0 mt-1 w-full bg-white border rounded shadow-lg z-10 p-2">
+                    {selectedResourceTypes.map(type => (
+                      <div key={type} className="flex items-center justify-between py-1">
+                        <span className="text-xs">{type}</span>
+                        <button
+                          onClick={() => setSelectedResourceTypes(selectedResourceTypes.filter(t => t !== type))}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value && !selectedResourceTypes.includes(e.target.value)) {
+                          setSelectedResourceTypes([...selectedResourceTypes, e.target.value]);
+                        }
+                        e.target.value = '';
+                      }}
+                      className="w-full mt-2 px-2 py-1 border rounded text-xs"
+                    >
+                      <option value="">Add type...</option>
+                      {allResourceTypes.filter(t => !selectedResourceTypes.includes(t)).map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
               {viewMode === 'projects' && (
                 <label className="flex items-center gap-2 text-sm">
                   <input
@@ -350,11 +489,8 @@ export default function CapacityPlanning() {
                     {canWrite && (
                       <button 
                         className="p-1.5 rounded hover:bg-white/50" 
-                        title="Add project"
-                        onClick={() => {
-                          setSelectedSprint(sprint);
-                          setShowAddProjectModal(true);
-                        }}
+                        title="Add project to sprint"
+                        onClick={() => handleAddProjectToSprint(sprint)}
                       >
                         <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -548,6 +684,40 @@ export default function CapacityPlanning() {
             >
               Add Member
             </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Add Project Modal */}
+      <Modal
+        isOpen={showAddProjectModal}
+        onClose={() => {
+          setShowAddProjectModal(false);
+          setSelectedProject(null);
+        }}
+        title="Add Project to Sprint"
+      >
+        <div className="space-y-3">
+          <p className="text-sm text-gray-600">
+            Select a project to add to {selectedSprint && `${getMonthName(selectedSprint.month)} ${selectedSprint.year} Sprint #${selectedSprint.sprint}`}
+          </p>
+          <div className="max-h-96 overflow-y-auto space-y-2">
+            {selectedSprint && getAvailableProjects(selectedSprint).map((project: Project) => (
+              <button
+                key={project.id}
+                onClick={() => handleSelectProject(project)}
+                className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
+              >
+                <div className="font-semibold text-sm text-gray-900">{project.customerName}</div>
+                <div className="text-sm text-gray-700">{project.projectName}</div>
+                <div className="text-xs text-gray-500 mt-1">{project.projectType} • {project.status}</div>
+              </button>
+            ))}
+            {selectedSprint && getAvailableProjects(selectedSprint).length === 0 && (
+              <div className="text-center text-gray-400 py-8">
+                No available projects to add
+              </div>
+            )}
           </div>
         </div>
       </Modal>
