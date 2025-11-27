@@ -71,6 +71,9 @@ export default function Layout({ children }: LayoutProps) {
                 <Link to="/history" className="text-gray-700 hover:text-blue-600 px-3 py-2">
                   History
                 </Link>
+                <Link to="/capacity-planning" className="text-gray-700 hover:text-blue-600 px-3 py-2 font-semibold">
+                  Capacity Planning
+                </Link>
               </div>
             </div>
             <div className="flex items-center gap-4">

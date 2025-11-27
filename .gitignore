@@ -23,6 +23,9 @@ server/database.backup.*.json
 server/csv-backups/
 server/*.backup.json
 
+# Migration config (contains credentials)
+server/migrate-config.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

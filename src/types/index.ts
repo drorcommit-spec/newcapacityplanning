@@ -6,6 +6,9 @@ export type ProjectStatus = 'Pending' | 'Active' | 'Inactive' | 'Completed';
 
 export type ProjectRegion = 'UK' | 'US' | 'Canada' | 'Israel';
 
+// Resource Types for Capacity Planning
+export type ResourceType = 'BE' | 'FE' | 'Tech Lead' | 'QA' | 'QA Lead' | 'VP' | 'Director' | 'DevOps' | 'AI' | 'Architect' | 'Design' | string;
+
 export interface TeamMember {
   id: string;
   fullName: string;
@@ -14,6 +17,9 @@ export interface TeamMember {
   team?: string;
   isActive: boolean;
   createdAt: string;
+  // New fields for Capacity Planning
+  resourceType?: ResourceType;
+  employeeNumber?: string;
 }
 
 export interface Customer {
@@ -37,6 +43,8 @@ export interface Project {
   createdAt: string;
   isArchived: boolean;
   comment?: string;
+  // New field for Capacity Planning - max capacity per resource type per sprint
+  maxCapacityPerResourceType?: Record<string, number>; // { "BE": 80, "FE": 60 }
 }
 
 export interface SprintAllocation {
@@ -51,6 +59,8 @@ export interface SprintAllocation {
   createdAt: string;
   createdBy: string;
   comment?: string;
+  // New field for Capacity Planning - indicates if this is a planned allocation
+  isPlanned?: boolean;
 }
 
 export interface AllocationHistory {

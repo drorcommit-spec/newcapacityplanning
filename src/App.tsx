@@ -10,6 +10,7 @@ import AllocationPlanning from './pages/AllocationPlanning';
 import AllocationRawdata from './pages/AllocationRawdata';
 import AllocationCanvas from './pages/AllocationCanvas';
 import AllocationHistory from './pages/AllocationHistory';
+import CapacityPlanning from './pages/CapacityPlanning';
 import Setup from './pages/Setup';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -55,6 +56,11 @@ function AppRoutes() {
       <Route path="/history" element={
         <ProtectedRoute>
           <Layout><AllocationHistory /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/capacity-planning" element={
+        <ProtectedRoute>
+          <Layout><CapacityPlanning /></Layout>
         </ProtectedRoute>
       } />
     </Routes>

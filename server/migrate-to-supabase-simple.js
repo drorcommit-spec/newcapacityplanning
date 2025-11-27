@@ -1,0 +1,193 @@
+import { createClient } from '@supabase/supabase-js';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+async function migrateToSupabase() {
+  console.log('🚀 Supabase Migration Tool (Simple Version)');
+  console.log('============================================\n');
+
+  // Read config file
+  const configFile = path.join(__dirname, 'migrate-config.json');
+  let config;
+  
+  try {
+    const configContent = await fs.readFile(configFile, 'utf-8');
+    config = JSON.parse(configContent);
+  } catch (error) {
+    console.error('❌ Error: Could not read migrate-config.json');
+    console.error('Please create the file with your Supabase credentials.');
+    return;
+  }
+
+  const supabaseUrl = config.supabaseUrl;
+  const supabaseKey = config.supabaseKey;
+
+  // Validate credentials
+  if (!supabaseUrl || supabaseUrl === 'PASTE_YOUR_URL_HERE') {
+    console.error('❌ Error: Please update migrate-config.json with your Supabase URL');
+    return;
+  }
+
+  if (!supabaseKey || supabaseKey === 'PASTE_YOUR_KEY_HERE') {
+    console.error('❌ Error: Please update migrate-config.json with your Supabase Key');
+    return;
+  }
+
+  console.log('✅ Configuration loaded');
+  console.log(`📍 Supabase URL: ${supabaseUrl}\n`);
+
+  // Create Supabase client
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  // Read local database.json
+  const dbFile = path.join(__dirname, 'database.json');
+  console.log(`📖 Reading local database from: ${dbFile}`);
+
+  let localData;
+  try {
+    const fileContent = await fs.readFile(dbFile, 'utf-8');
+    localData = JSON.parse(fileContent);
+    console.log('✅ Local database loaded successfully');
+  } catch (error) {
+    console.error('❌ Error reading database.json:', error.message);
+    return;
+  }
+
+  // Show data summary
+  console.log('\n📊 Data Summary:');
+  console.log(`   Team Members: ${localData.teamMembers?.length || 0}`);
+  console.log(`   Projects: ${localData.projects?.length || 0}`);
+  console.log(`   Allocations: ${localData.allocations?.length || 0}`);
+  console.log(`   History: ${localData.history?.length || 0}`);
+
+  // Create backup before migration
+  const backupFile = path.join(__dirname, `database.pre-migration.${Date.now()}.json`);
+  await fs.writeFile(backupFile, JSON.stringify(localData, null, 2));
+  console.log(`\n💾 Backup created: ${backupFile}`);
+
+  console.log('\n🔄 Starting migration...\n');
+
+  try {
+    // Migrate Team Members
+    if (localData.teamMembers && localData.teamMembers.length > 0) {
+      console.log('📤 Migrating team members...');
+      const teamMembers = localData.teamMembers.map(tm => ({
+        id: tm.id,
+        full_name: tm.fullName,
+        email: tm.email,
+        role: tm.role,
+        team: tm.team,
+        is_active: tm.isActive,
+        created_at: tm.createdAt,
+      }));
+
+      const { error } = await supabase
+        .from('team_members')
+        .upsert(teamMembers, { onConflict: 'id' });
+
+      if (error) throw new Error(`Team members migration failed: ${error.message}`);
+      console.log(`✅ Migrated ${teamMembers.length} team members`);
+    }
+
+    // Migrate Projects
+    if (localData.projects && localData.projects.length > 0) {
+      console.log('📤 Migrating projects...');
+      const projects = localData.projects.map(p => ({
+        id: p.id,
+        customer_name: p.customerName,
+        project_name: p.projectName,
+        project_type: p.projectType,
+        status: p.status,
+        max_capacity_percentage: p.maxCapacityPercentage,
+        pmo_contact: p.pmoContact,
+        is_archived: p.isArchived,
+        comment: p.comment,
+        created_at: p.createdAt,
+      }));
+
+      const { error } = await supabase
+        .from('projects')
+        .upsert(projects, { onConflict: 'id' });
+
+      if (error) throw new Error(`Projects migration failed: ${error.message}`);
+      console.log(`✅ Migrated ${projects.length} projects`);
+    }
+
+    // Migrate Allocations
+    if (localData.allocations && localData.allocations.length > 0) {
+      console.log('📤 Migrating allocations...');
+      const allocations = localData.allocations.map(a => ({
+        id: a.id,
+        project_id: a.projectId,
+        product_manager_id: a.productManagerId,
+        year: a.year,
+        month: a.month,
+        sprint: a.sprint,
+        allocation_percentage: a.allocationPercentage,
+        allocation_days: a.allocationDays,
+        comment: a.comment,
+        created_at: a.createdAt,
+        created_by: a.createdBy,
+      }));
+
+      const { error } = await supabase
+        .from('allocations')
+        .upsert(allocations, { onConflict: 'id' });
+
+      if (error) throw new Error(`Allocations migration failed: ${error.message}`);
+      console.log(`✅ Migrated ${allocations.length} allocations`);
+    }
+
+    // Migrate History
+    if (localData.history && localData.history.length > 0) {
+      console.log('📤 Migrating history...');
+      const history = localData.history.map(h => ({
+        id: h.id,
+        allocation_id: h.allocationId,
+        changed_by: h.changedBy,
+        changed_at: h.changedAt,
+        change_type: h.changeType,
+        old_value: h.oldValue,
+        new_value: h.newValue,
+      }));
+
+      const { error } = await supabase
+        .from('allocation_history')
+        .upsert(history, { onConflict: 'id' });
+
+      if (error) throw new Error(`History migration failed: ${error.message}`);
+      console.log(`✅ Migrated ${history.length} history records`);
+    }
+
+    // Create automatic backup in Supabase
+    console.log('\n📦 Creating Supabase backup...');
+    const { error: backupError } = await supabase.rpc('create_automatic_backup');
+    if (backupError) {
+      console.warn('⚠️  Backup creation failed:', backupError.message);
+    } else {
+      console.log('✅ Supabase backup created');
+    }
+
+    console.log('\n🎉 Migration completed successfully!');
+    console.log('\n📝 Next steps:');
+    console.log('1. Verify data in Supabase dashboard (Table Editor)');
+    console.log('2. Set environment variables in Vercel:');
+    console.log('   VITE_USE_SUPABASE=true');
+    console.log(`   VITE_SUPABASE_URL=${supabaseUrl}`);
+    console.log(`   VITE_SUPABASE_ANON_KEY=${supabaseKey}`);
+    console.log('3. Deploy your application');
+    console.log(`\n💾 Pre-migration backup saved at: ${backupFile}`);
+
+  } catch (error) {
+    console.error('\n❌ Migration failed:', error.message);
+    console.log(`\n💾 Your data is safe in the backup: ${backupFile}`);
+    console.log('You can restore it by copying it back to database.json');
+  }
+}
+
+// Run migration
+migrateToSupabase().catch(console.error);
