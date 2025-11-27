@@ -45,9 +45,18 @@ export default function CapacityPlanning() {
   // Modal state
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [showCommentModal, setShowCommentModal] = useState(false);
   const [selectedSprint, setSelectedSprint] = useState<SprintInfo | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [selectedAllocation, setSelectedAllocation] = useState<SprintAllocation | null>(null);
+  
+  // Inline editing state
+  const [editingAllocationId, setEditingAllocationId] = useState<string | null>(null);
+  const [editingPercentage, setEditingPercentage] = useState('');
+  
+  // Comment state
+  const [commentText, setCommentText] = useState('');
   const [allocationPercentage, setAllocationPercentage] = useState('');
 
   // Generate sprint timeline
@@ -312,6 +321,71 @@ export default function CapacityPlanning() {
     alert('Project copied to next sprint!');
   };
 
+  // Inline editing handlers
+  const startEditingAllocation = (allocationId: string, currentPercentage: number) => {
+    setEditingAllocationId(allocationId);
+    setEditingPercentage(currentPercentage.toString());
+  };
+
+  const saveAllocationEdit = (allocationId: string) => {
+    const percentage = parseInt(editingPercentage);
+    if (isNaN(percentage) || percentage < 0 || percentage > 100) {
+      alert('Please enter a valid percentage (0-100)');
+      return;
+    }
+
+    updateAllocation(
+      allocationId,
+      {
+        allocationPercentage: percentage,
+        allocationDays: (percentage / 100) * 10
+      },
+      currentUser.email
+    );
+
+    setEditingAllocationId(null);
+    setEditingPercentage('');
+  };
+
+  const cancelEdit = () => {
+    setEditingAllocationId(null);
+    setEditingPercentage('');
+  };
+
+  // Comment handlers
+  const openCommentModal = (allocation: SprintAllocation) => {
+    setSelectedAllocation(allocation);
+    setCommentText(allocation.comment || '');
+    setShowCommentModal(true);
+  };
+
+  const saveComment = () => {
+    if (!selectedAllocation) return;
+
+    updateAllocation(
+      selectedAllocation.id,
+      { comment: commentText || undefined },
+      currentUser.email
+    );
+
+    setShowCommentModal(false);
+    setSelectedAllocation(null);
+    setCommentText('');
+  };
+
+  // Get capacity color
+  const getCapacityColor = (total: number) => {
+    if (total < underCapacityThreshold) return 'text-yellow-600 bg-yellow-50';
+    if (total > overCapacityThreshold) return 'text-red-600 bg-red-50';
+    return 'text-green-600 bg-green-50';
+  };
+
+  const getCapacityBadge = (total: number) => {
+    if (total < underCapacityThreshold) return '⚠️';
+    if (total > overCapacityThreshold) return '❗';
+    return '✓';
+  };
+
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Header */}
@@ -515,7 +589,10 @@ export default function CapacityPlanning() {
                             <div className="flex-1">
                               <div className="font-semibold text-sm text-gray-900">{project.customerName}</div>
                               <div className="text-sm text-gray-700">{project.projectName}</div>
-                              <div className="text-xs text-gray-500 mt-1">Total: {total}%</div>
+                              <div className={`text-xs mt-1 px-2 py-0.5 rounded inline-flex items-center gap-1 ${getCapacityColor(total)}`}>
+                                <span>{getCapacityBadge(total)}</span>
+                                <span className="font-semibold">Total: {total}%</span>
+                              </div>
                             </div>
                             {canWrite && (
                               <div className="flex gap-1">
@@ -543,28 +620,97 @@ export default function CapacityPlanning() {
 
                           {/* Members List */}
                           <div className="space-y-1 mt-2 border-t pt-2">
-                            {members.sort((a, b) => b.percentage - a.percentage).map((member) => (
-                              <div key={member.allocationId} className="flex justify-between items-center text-xs py-1">
-                                <div className="flex-1">
-                                  <span className="font-medium">{member.fullName}</span>
-                                  {member.resourceType && (
-                                    <span className="ml-2 text-gray-500">({member.resourceType})</span>
+                            {members.sort((a, b) => b.percentage - a.percentage).map((member) => {
+                              const alloc = allocations.find(a => a.id === member.allocationId);
+                              const isEditing = editingAllocationId === member.allocationId;
+                              
+                              return (
+                                <div key={member.allocationId} className="flex justify-between items-center text-xs py-1 gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <span className="font-medium">{member.fullName}</span>
+                                    {member.resourceType && (
+                                      <span className="ml-1 text-gray-500 text-[10px]">({member.resourceType})</span>
+                                    )}
+                                    {isEditing ? (
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        value={editingPercentage}
+                                        onChange={(e) => setEditingPercentage(e.target.value)}
+                                        className="ml-2 w-12 px-1 py-0.5 border rounded text-xs"
+                                        autoFocus
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') saveAllocationEdit(member.allocationId);
+                                          if (e.key === 'Escape') cancelEdit();
+                                        }}
+                                      />
+                                    ) : (
+                                      <span className="ml-2 text-blue-600 font-semibold">{member.percentage}%</span>
+                                    )}
+                                    {alloc?.comment && (
+                                      <span className="ml-1 text-blue-500" title={alloc.comment}>💬</span>
+                                    )}
+                                  </div>
+                                  {canWrite && (
+                                    <div className="flex gap-0.5 flex-shrink-0">
+                                      {isEditing ? (
+                                        <>
+                                          <button
+                                            onClick={() => saveAllocationEdit(member.allocationId)}
+                                            className="p-0.5 rounded hover:bg-green-100 text-green-600"
+                                            title="Save"
+                                          >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                          </button>
+                                          <button
+                                            onClick={cancelEdit}
+                                            className="p-0.5 rounded hover:bg-gray-100 text-gray-600"
+                                            title="Cancel"
+                                          >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <button
+                                            onClick={() => alloc && openCommentModal(alloc)}
+                                            className="p-0.5 rounded hover:bg-blue-100 text-blue-600"
+                                            title="Comment"
+                                          >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                            </svg>
+                                          </button>
+                                          <button
+                                            onClick={() => startEditingAllocation(member.allocationId, member.percentage)}
+                                            className="p-0.5 rounded hover:bg-yellow-100 text-yellow-600"
+                                            title="Edit"
+                                          >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                            </svg>
+                                          </button>
+                                          <button
+                                            onClick={() => handleRemoveAllocation(member.allocationId)}
+                                            className="p-0.5 rounded hover:bg-red-100 text-red-600"
+                                            title="Remove"
+                                          >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
                                   )}
-                                  <span className="ml-2 text-blue-600 font-semibold">{member.percentage}%</span>
                                 </div>
-                                {canWrite && (
-                                  <button
-                                    onClick={() => handleRemoveAllocation(member.allocationId)}
-                                    className="p-1 rounded hover:bg-red-100 text-red-600"
-                                    title="Remove"
-                                  >
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                  </button>
-                                )}
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       ))
@@ -718,6 +864,48 @@ export default function CapacityPlanning() {
                 No available projects to add
               </div>
             )}
+          </div>
+        </div>
+      </Modal>
+
+      {/* Comment Modal */}
+      <Modal
+        isOpen={showCommentModal}
+        onClose={() => {
+          setShowCommentModal(false);
+          setSelectedAllocation(null);
+          setCommentText('');
+        }}
+        title="Add/Edit Comment"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Comment</label>
+            <textarea
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              rows={4}
+              placeholder="Enter your comment..."
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => {
+                setShowCommentModal(false);
+                setSelectedAllocation(null);
+                setCommentText('');
+              }}
+              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={saveComment}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Save Comment
+            </button>
           </div>
         </div>
       </Modal>
