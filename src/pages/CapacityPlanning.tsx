@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { getUserPermissions, Project, TeamMember, SprintAllocation } from '../types';
 import Modal from '../components/Modal';
+import ProjectForm from '../components/ProjectForm';
 
 type ViewMode = 'projects' | 'team';
 type CapacityFilter = 'all' | 'under' | 'over' | 'good';
@@ -46,6 +47,7 @@ export default function CapacityPlanning() {
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
+  const [showEditProjectModal, setShowEditProjectModal] = useState(false);
   const [selectedSprint, setSelectedSprint] = useState<SprintInfo | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
@@ -359,6 +361,12 @@ export default function CapacityPlanning() {
     setShowCommentModal(true);
   };
 
+  // Project edit handler
+  const openEditProjectModal = (project: Project) => {
+    setSelectedProject(project);
+    setShowEditProjectModal(true);
+  };
+
   const saveComment = () => {
     if (!selectedAllocation) return;
 
@@ -587,8 +595,18 @@ export default function CapacityPlanning() {
                           {/* Project Header */}
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex-1">
-                              <div className="font-semibold text-sm text-gray-900">{project.customerName}</div>
-                              <div className="text-sm text-gray-700">{project.projectName}</div>
+                              <button
+                                onClick={() => openEditProjectModal(project)}
+                                className="font-semibold text-sm text-gray-900 hover:text-blue-600 hover:underline text-left"
+                              >
+                                {project.customerName}
+                              </button>
+                              <button
+                                onClick={() => openEditProjectModal(project)}
+                                className="text-sm text-gray-700 hover:text-blue-600 hover:underline block text-left"
+                              >
+                                {project.projectName}
+                              </button>
                               <div className={`text-xs mt-1 px-2 py-0.5 rounded inline-flex items-center gap-1 ${getCapacityColor(total)}`}>
                                 <span>{getCapacityBadge(total)}</span>
                                 <span className="font-semibold">Total: {total}%</span>
@@ -738,27 +756,40 @@ export default function CapacityPlanning() {
                             </div>
                           </div>
                           <div className="space-y-1 mt-2 border-t pt-2">
-                            {memberProjects.sort((a, b) => b.percentage - a.percentage).map((proj) => (
-                              <div key={proj.allocationId} className="flex justify-between items-center text-xs py-1">
-                                <div className="flex-1">
-                                  <span className="font-medium">{proj.customerName}</span>
-                                  <span className="mx-1">-</span>
-                                  <span>{proj.projectName}</span>
-                                  <span className="ml-2 text-blue-600 font-semibold">{proj.percentage}%</span>
+                            {memberProjects.sort((a, b) => b.percentage - a.percentage).map((proj) => {
+                              const projectObj = projects.find(p => p.id === proj.id);
+                              return (
+                                <div key={proj.allocationId} className="flex justify-between items-center text-xs py-1">
+                                  <div className="flex-1">
+                                    <button
+                                      onClick={() => projectObj && openEditProjectModal(projectObj)}
+                                      className="font-medium hover:text-blue-600 hover:underline"
+                                    >
+                                      {proj.customerName}
+                                    </button>
+                                    <span className="mx-1">-</span>
+                                    <button
+                                      onClick={() => projectObj && openEditProjectModal(projectObj)}
+                                      className="hover:text-blue-600 hover:underline"
+                                    >
+                                      {proj.projectName}
+                                    </button>
+                                    <span className="ml-2 text-blue-600 font-semibold">{proj.percentage}%</span>
+                                  </div>
+                                  {canWrite && (
+                                    <button
+                                      onClick={() => handleRemoveAllocation(proj.allocationId)}
+                                      className="p-1 rounded hover:bg-red-100 text-red-600"
+                                      title="Remove"
+                                    >
+                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                      </svg>
+                                    </button>
+                                  )}
                                 </div>
-                                {canWrite && (
-                                  <button
-                                    onClick={() => handleRemoveAllocation(proj.allocationId)}
-                                    className="p-1 rounded hover:bg-red-100 text-red-600"
-                                    title="Remove"
-                                  >
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                  </button>
-                                )}
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       ))
@@ -908,6 +939,74 @@ export default function CapacityPlanning() {
             </button>
           </div>
         </div>
+      </Modal>
+
+      {/* View Project Modal */}
+      <Modal
+        isOpen={showEditProjectModal}
+        onClose={() => {
+          setShowEditProjectModal(false);
+          setSelectedProject(null);
+        }}
+        title="Project Details"
+      >
+        {selectedProject && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+                <div className="text-sm text-gray-900">{selectedProject.customerName}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
+                <div className="text-sm text-gray-900">{selectedProject.projectName}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <div className="text-sm text-gray-900">{selectedProject.projectType}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <div className="text-sm text-gray-900">{selectedProject.status}</div>
+              </div>
+              {selectedProject.maxCapacityPercentage && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Max Capacity</label>
+                  <div className="text-sm text-gray-900">{selectedProject.maxCapacityPercentage}%</div>
+                </div>
+              )}
+              {selectedProject.pmoContact && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">PMO Contact</label>
+                  <div className="text-sm text-gray-900">{selectedProject.pmoContact}</div>
+                </div>
+              )}
+            </div>
+            {selectedProject.comment && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Comment</label>
+                <div className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedProject.comment}</div>
+              </div>
+            )}
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <button
+                onClick={() => {
+                  setShowEditProjectModal(false);
+                  setSelectedProject(null);
+                }}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+              >
+                Close
+              </button>
+              <a
+                href="/projects"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 inline-block"
+              >
+                Edit in Project Management
+              </a>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
