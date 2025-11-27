@@ -549,7 +549,7 @@ export default function CapacityPlanning() {
 
       {/* Sprint Columns */}
       <div className="flex-1 overflow-x-auto overflow-y-hidden">
-        <div className="h-full flex gap-4 p-4" style={{ minWidth: `${sprintCount * 400}px` }}>
+        <div className="h-full flex gap-4 p-4">
           {sprints.map((sprint) => {
             const projectsData = viewMode === 'projects' ? getProjectsForSprint(sprint) : [];
             const membersData = viewMode === 'team' ? getMembersForSprint(sprint) : [];
@@ -557,7 +557,8 @@ export default function CapacityPlanning() {
             return (
               <div
                 key={`${sprint.year}-${sprint.month}-${sprint.sprint}`}
-                className="flex-shrink-0 w-96 bg-white rounded-lg border-2 border-gray-300 flex flex-col"
+                className="flex-shrink-0 w-80 min-w-[320px] bg-white rounded-lg border-2 border-gray-300 flex flex-col"
+                style={{ flexBasis: `${100 / Math.min(sprintCount, 4)}%` }}
               >
                 {/* Sprint Header */}
                 <div className="px-4 py-3 border-b-2 border-gray-300 bg-gradient-to-r from-blue-50 to-blue-100">
@@ -607,9 +608,8 @@ export default function CapacityPlanning() {
                               >
                                 {project.projectName}
                               </button>
-                              <div className={`text-xs mt-1 px-2 py-0.5 rounded inline-flex items-center gap-1 ${getCapacityColor(total)}`}>
-                                <span>{getCapacityBadge(total)}</span>
-                                <span className="font-semibold">Total: {total}%</span>
+                              <div className="text-xs text-gray-500 mt-1">
+                                Total: {total}%
                               </div>
                             </div>
                             {canWrite && (
@@ -752,7 +752,10 @@ export default function CapacityPlanning() {
                               {member.resourceType && (
                                 <div className="text-xs text-gray-600">{member.resourceType}</div>
                               )}
-                              <div className="text-xs text-gray-500 mt-1">Total: {total}%</div>
+                              <div className={`text-xs mt-1 px-2 py-0.5 rounded inline-flex items-center gap-1 ${getCapacityColor(total)}`}>
+                                <span>{getCapacityBadge(total)}</span>
+                                <span className="font-semibold">Total: {total}%</span>
+                              </div>
                             </div>
                           </div>
                           <div className="space-y-1 mt-2 border-t pt-2">
