@@ -56,6 +56,7 @@ async function initDB() {
         { id: '4', name: 'Product Operations Manager', isArchived: false, createdAt: new Date().toISOString() },
         { id: '5', name: 'PMO', isArchived: false, createdAt: new Date().toISOString() },
       ],
+      teams: [],
     };
     await fs.writeFile(DB_FILE, JSON.stringify(initialData, null, 2));
     console.log('✅ Database initialized with default data');
@@ -241,6 +242,18 @@ app.post('/api/history', async (req, res) => {
   try {
     const data = await readDB();
     data.history = req.body;
+    await writeDB(data);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update teams
+app.post('/api/teams', async (req, res) => {
+  try {
+    const data = await readDB();
+    data.teams = req.body;
     await writeDB(data);
     res.json({ success: true });
   } catch (error) {

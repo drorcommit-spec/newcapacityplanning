@@ -1,0 +1,4968 @@
+{
+  "teamMembers": [
+    {
+      "id": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "fullName": "Dror Shem-Tov",
+      "email": "drors@comm-it.com",
+      "role": "Product Director",
+      "team": "Admin",
+      "isActive": true,
+      "createdAt": "2025-11-22T10:41:17.956Z",
+      "managerId": "",
+      "capacity": 100
+    },
+    {
+      "id": "185c5a77-bd31-43e3-be33-1871533d3b3e",
+      "fullName": "Nogah Hendler",
+      "email": "Nogah.Hendler@comm-it.com",
+      "role": "VP Product",
+      "team": "Management",
+      "isActive": true,
+      "createdAt": "2025-11-22T10:43:54.895Z",
+      "managerId": "cec8368c-a8f2-4413-9ef5-68def6981520"
+    },
+    {
+      "id": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "fullName": "Miri Izhaki",
+      "email": "miri.izhaki@comm-it.com",
+      "role": "Product Manager",
+      "team": "Dror Shem-Tov",
+      "isActive": true,
+      "createdAt": "2025-11-22T10:44:37.464Z",
+      "managerId": "",
+      "capacity": 85
+    },
+    {
+      "id": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+      "fullName": "Stav Fuerstain",
+      "email": "Stav.Fuerstain@comm-it.com",
+      "role": "Product Manager",
+      "team": "Dror Shem-Tov",
+      "isActive": true,
+      "createdAt": "2025-11-22T12:06:51.381Z"
+    },
+    {
+      "id": "pmo-eran-preiskel",
+      "fullName": "Eran Preiskel",
+      "email": "eran.preiskel@pmo.com",
+      "role": "PMO",
+      "team": "",
+      "isActive": true,
+      "createdAt": "2025-11-22T12:30:00.000Z"
+    },
+    {
+      "id": "pmo-yonatan-likverman",
+      "fullName": "Yonatan Likverman",
+      "email": "yonatan.likverman@pmo.com",
+      "role": "PMO",
+      "team": "",
+      "isActive": true,
+      "createdAt": "2025-11-22T12:30:00.000Z"
+    },
+    {
+      "id": "pmo-david-shiprut",
+      "fullName": "David Shiprut",
+      "email": "david.shiprut@pmo.com",
+      "role": "PMO",
+      "team": "Management",
+      "isActive": true,
+      "createdAt": "2025-11-22T12:30:00.000Z",
+      "managerId": "",
+      "capacity": 100
+    },
+    {
+      "id": "pmo-itamar-gardus",
+      "fullName": "Itamar Gardus",
+      "email": "itamar.gardus@pmo.com",
+      "role": "PMO",
+      "team": "",
+      "isActive": true,
+      "createdAt": "2025-11-22T12:30:00.000Z"
+    },
+    {
+      "id": "pmo-niv-spector",
+      "fullName": "Niv Spector",
+      "email": "niv.spector@pmo.com",
+      "role": "PMO",
+      "team": "",
+      "isActive": true,
+      "createdAt": "2025-11-22T12:30:00.000Z"
+    },
+    {
+      "id": "090f521c-dc56-4a55-85b4-736f53f89f76",
+      "fullName": "Maor Avital",
+      "email": "Maor.Avital@comm-it.com",
+      "role": "Product Manager",
+      "team": "Dror Shem-Tov",
+      "isActive": true,
+      "createdAt": "2025-11-22T15:08:24.731Z"
+    },
+    {
+      "id": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+      "fullName": "Shachar Furman",
+      "email": "Shachar.Furman@comm-it.com",
+      "role": "Product Manager",
+      "team": "Dror Shem-Tov",
+      "isActive": true,
+      "createdAt": "2025-11-22T19:44:46.087Z"
+    },
+    {
+      "id": "76cd5e8d-9f36-4079-829b-375733fea906",
+      "fullName": "Yitzchak Shamia",
+      "email": "Yitzchak.Shamia@comm-it.com",
+      "role": "Product Director",
+      "team": "",
+      "isActive": true,
+      "createdAt": "2025-11-22T19:45:09.110Z"
+    },
+    {
+      "id": "b00845ba-00d5-4c5c-919c-97e17e2eed08",
+      "fullName": "Don Leshem",
+      "email": "Don.Leshem@comm-it.com",
+      "role": "Product Manager",
+      "team": "Member",
+      "isActive": true,
+      "createdAt": "2025-11-22T19:47:04.171Z",
+      "managerId": "",
+      "capacity": 100
+    },
+    {
+      "id": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+      "fullName": "Ariel Ratner",
+      "email": "Ariel.Ratner@comm-it.com",
+      "role": "Product Manager",
+      "team": "Management",
+      "isActive": true,
+      "createdAt": "2025-11-22T19:47:51.316Z",
+      "managerId": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "capacity": 100
+    },
+    {
+      "id": "a9f8fe7d-4e1e-4dfa-9469-535cb0717670",
+      "fullName": "Tzur Barak",
+      "email": "Tzur.Barak@comm-it.com",
+      "role": "Product Manager",
+      "team": "Yitzchak Shamia",
+      "isActive": false,
+      "createdAt": "2025-11-22T19:48:12.893Z",
+      "managerId": ""
+    },
+    {
+      "id": "56f51732-ba6a-486b-b9d9-e5ee3cd4446b",
+      "fullName": "Nir Sharon",
+      "email": "Nir.Sharon@comm-it.com",
+      "role": "Product Manager",
+      "team": "Yitzchak Shamia",
+      "isActive": true,
+      "createdAt": "2025-11-23T07:53:45.557Z"
+    },
+    {
+      "id": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+      "fullName": "Sarah Ben Shalom",
+      "email": "Sarah.BenShalom@comm-it.com",
+      "role": "UIX",
+      "team": "Dror Shem-Tov",
+      "isActive": true,
+      "createdAt": "2025-11-23T14:13:08.878Z",
+      "managerId": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "capacity": 80
+    },
+    {
+      "fullName": "Dudik Amira",
+      "email": "Dudika@comm-it.com",
+      "role": "Frontend",
+      "team": "Front End",
+      "managerId": "",
+      "isActive": true,
+      "id": "801a3d8b-15fa-4e38-8ebb-303874b54dc8",
+      "createdAt": "2025-11-27T22:54:38.912Z"
+    },
+    {
+      "fullName": "Nikita Komliev ",
+      "email": "Nikita.Komliev@comm-it.com",
+      "role": "Frontend",
+      "team": "Front End",
+      "managerId": "801a3d8b-15fa-4e38-8ebb-303874b54dc8",
+      "isActive": true,
+      "id": "7b4db598-ac5a-44d1-ae91-ae32102953ea",
+      "createdAt": "2025-11-27T23:06:21.287Z"
+    },
+    {
+      "fullName": "Shlomit Zevin ",
+      "email": "Shlomit.Zevin@comm-it.com",
+      "role": "QA Team Lead",
+      "team": "QA Team",
+      "managerId": "",
+      "isActive": true,
+      "id": "b10831a5-6e03-4344-a64a-27cfa55eb95a",
+      "createdAt": "2025-11-27T23:07:41.087Z"
+    },
+    {
+      "fullName": "Moran Ben Ghiat ",
+      "email": "Moran.BenGhiat@comm-it.com",
+      "role": "QA",
+      "team": "QA Team",
+      "managerId": "b10831a5-6e03-4344-a64a-27cfa55eb95a",
+      "isActive": true,
+      "id": "6000ee4e-ee20-4539-a0b2-0a9ab2acdee8",
+      "createdAt": "2025-11-27T23:08:11.406Z"
+    },
+    {
+      "fullName": "Slava horesh",
+      "email": "slavah@comm-it.com",
+      "role": "VP RnD",
+      "team": "Management",
+      "managerId": "cec8368c-a8f2-4413-9ef5-68def6981520",
+      "isActive": true,
+      "id": "6d22c7b5-4a86-44f1-8ee8-fe52b9d0b5a8",
+      "createdAt": "2025-11-28T12:22:31.756Z"
+    },
+    {
+      "fullName": "Alex Snitkovsky",
+      "email": "Alexs@comm-it.com",
+      "role": "SW Division CEO",
+      "team": "Management",
+      "managerId": "",
+      "isActive": true,
+      "id": "cec8368c-a8f2-4413-9ef5-68def6981520",
+      "createdAt": "2025-11-28T12:23:27.508Z",
+      "capacity": 100
+    },
+    {
+      "fullName": "Michael Korman",
+      "email": "michaelk@comm-it.com",
+      "role": "Backend",
+      "team": "",
+      "managerId": "6d22c7b5-4a86-44f1-8ee8-fe52b9d0b5a8",
+      "isActive": true,
+      "id": "5168e182-9af1-47fb-aac9-16ebcc4bbb1b",
+      "createdAt": "2025-11-28T12:25:02.851Z"
+    },
+    {
+      "fullName": "Ofer Lahan",
+      "email": "oferl@comm-it.com",
+      "role": "UIX",
+      "team": "External",
+      "managerId": "",
+      "isActive": true,
+      "id": "d3543658-542c-40ed-a160-b2a1a078483e",
+      "createdAt": "2025-11-28T12:44:23.683Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": "9b6c9fa4-b4f3-4023-b087-7d83968e5cc4",
+      "projectName": "Tadiran 2025 Delivery",
+      "status": "Active",
+      "createdAt": "2025-11-22T10:45:23.542Z",
+      "customerName": "Tadiran",
+      "pmoContact": "pmo-eran-preiskel",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 30,
+      "customerId": "e48db2c7-ac87-4d73-9ba5-539e3234e5b5"
+    },
+    {
+      "id": "9900b811-7241-4fc4-a3ce-6de1d6387403",
+      "projectName": "JarTracking Phase 1",
+      "status": "Active",
+      "createdAt": "2025-11-22T10:47:14.032Z",
+      "customerName": "JarTracking",
+      "pmoContact": "pmo-yonatan-likverman",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 40,
+      "customerId": "97e5871a-0179-4bdc-844d-df1abce85bf4"
+    },
+    {
+      "id": "cb9c7fd8-afa6-4e14-86d9-a7d8dca77813",
+      "projectName": "Ambient Intelligence - Scoping",
+      "status": "Active",
+      "createdAt": "2025-11-22T10:47:51.225Z",
+      "customerName": "Ambient Intelligence",
+      "pmoContact": "",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 20,
+      "customerId": "982dd371-fce7-4485-b39b-3c9f768d23c4"
+    },
+    {
+      "id": "590a2f6a-583d-4186-8000-e9dca0d2ed4b",
+      "projectName": "RoadRadar - Delivery",
+      "status": "Active",
+      "createdAt": "2025-11-22T10:48:47.217Z",
+      "customerName": "RoadRadar",
+      "pmoContact": "pmo-david-shiprut",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 20,
+      "customerId": "7714d0f1-652f-4404-80af-d4806365cb85"
+    },
+    {
+      "id": "36a052bb-0dd9-462e-8f8a-620b6c948a33",
+      "projectName": "HRS - On Going",
+      "status": "Active",
+      "createdAt": "2025-11-22T10:52:02.802Z",
+      "customerName": "HRS",
+      "pmoContact": "pmo-itamar-gardus",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 10,
+      "customerId": "dec24194-6c29-4f6e-993f-3f1d5f40a443"
+    },
+    {
+      "id": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+      "projectName": "DCG - MVP",
+      "status": "Active",
+      "createdAt": "2025-11-22T12:07:33.705Z",
+      "customerName": "DCG",
+      "pmoContact": "pmo-niv-spector",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 40,
+      "customerId": "f132ff3b-c208-452e-ac8f-3419f5561b9d"
+    },
+    {
+      "id": "db8af93d-fca6-4c08-8e8c-7663998d4136",
+      "projectName": "Superpharm - SPRIT",
+      "status": "Active",
+      "createdAt": "2025-11-22T15:17:14.813Z",
+      "customerName": "Super-Pharm",
+      "pmoContact": "pmo-itamar-gardus",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 50,
+      "customerId": "d0c9532f-a55d-4de4-95e2-b0fc06728f0c"
+    },
+    {
+      "id": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+      "projectName": "Hyp Pre-Discovery",
+      "status": "Active",
+      "createdAt": "2025-11-22T15:18:08.703Z",
+      "customerName": "Hyp",
+      "pmoContact": "",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 50,
+      "customerId": "cc913840-ee0b-4b9e-a2f3-372080fbf0c8"
+    },
+    {
+      "id": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+      "projectName": "Suddenly spaces - Phase 1",
+      "status": "Active",
+      "createdAt": "2025-11-22T15:18:57.582Z",
+      "customerName": "Suddenly spaces",
+      "pmoContact": "pmo-yonatan-likverman",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 50,
+      "customerId": "53248b50-3292-4ef8-970d-83593e475432"
+    },
+    {
+      "id": "59ab299a-fa07-4a93-9ffa-d9c14aae536e",
+      "projectName": "Operations",
+      "status": "Active",
+      "createdAt": "2025-11-22T15:50:10.012Z",
+      "customerName": "Product",
+      "pmoContact": "",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 30,
+      "customerId": "9d35fd7d-17fb-4be1-addc-db2834029c18"
+    },
+    {
+      "id": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+      "projectName": "Arie Delivery",
+      "status": "Pending",
+      "createdAt": "2025-11-22T19:13:57.897Z",
+      "customerName": "Aria",
+      "pmoContact": "pmo-david-shiprut",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 20,
+      "customerId": "eb4ccf90-3943-4c29-baa9-61214ecf6f07"
+    },
+    {
+      "id": "3186c9c1-5589-4528-9c6e-714138c830c9",
+      "projectName": "Cargo Scoping",
+      "status": "Active",
+      "createdAt": "2025-11-22T19:14:26.161Z",
+      "customerName": "Cargo",
+      "pmoContact": "pmo-yonatan-likverman",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 30,
+      "customerId": "d44d1a21-3353-4124-9055-093993658e5a",
+      "comment": "ירד ממליון וחצי למליון ו200K\nאלכס רוצה לרדת למליון\nמאור מנסה להוריד את  ספק של דינאמיקס"
+    },
+    {
+      "id": "3710af03-f82d-4e61-8c64-45fdc7375796",
+      "projectName": "Goomi MVP Delivery",
+      "status": "Active",
+      "createdAt": "2025-11-22T19:38:17.522Z",
+      "customerName": "Goomi",
+      "pmoContact": "",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 20,
+      "customerId": "afa74d8c-2560-4a5b-81ee-76f94145c892"
+    },
+    {
+      "id": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+      "projectName": "Superpharm SPARK",
+      "status": "Active",
+      "createdAt": "2025-11-22T20:40:29.186Z",
+      "customerName": "Super-Pharm",
+      "pmoContact": "pmo-itamar-gardus",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 300,
+      "customerId": "8e4778ee-92b8-48be-a3cf-ce3927601d45"
+    },
+    {
+      "id": "5dd5e4e4-e054-42be-8394-f8c2dff73c30",
+      "projectName": "GRIP MVP",
+      "status": "Active",
+      "createdAt": "2025-11-23T07:55:37.050Z",
+      "customerName": "GRIP",
+      "pmoContact": "pmo-eran-preiskel",
+      "isArchived": false,
+      "projectType": "Hybrid",
+      "maxCapacityPercentage": 30,
+      "customerId": "d4cca83b-d45a-4aaf-9e18-6ba58875dcdc"
+    },
+    {
+      "id": "0d403d4f-f437-4ba9-b7e7-c5742547db03",
+      "projectName": "Hedros Biotechnology - IoT Assessment - OCT 25",
+      "status": "Active",
+      "createdAt": "2025-11-23T08:26:58.047Z",
+      "customerName": "Hedros Biotechnology",
+      "pmoContact": "",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 30,
+      "customerId": "37e127af-f14b-4013-8272-23e57e0c2625"
+    },
+    {
+      "id": "bdc89968-5707-4a61-9160-1c645d0a11c5",
+      "projectName": "Rafael (Micky)",
+      "status": "Active",
+      "createdAt": "2025-11-23T14:15:14.071Z",
+      "customerName": "Rafael (Micky)",
+      "pmoContact": "",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 10,
+      "customerId": "7716f8b0-ab45-43ca-a523-5e3ff29fc29f"
+    },
+    {
+      "id": "b4c6f3ed-3217-41ed-95dc-5e149b045501",
+      "projectName": "Rachel - COMEX",
+      "status": "Active",
+      "createdAt": "2025-11-23T14:15:32.095Z",
+      "customerName": "Rachel - COMEX",
+      "pmoContact": "",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": "",
+      "customerId": "a2e8024a-95f8-4ee2-afad-e53fe95c78f7"
+    },
+    {
+      "id": "205b9c21-3075-43d3-8453-3be80a8e3797",
+      "projectName": "LinkMe - MVP",
+      "status": "Pending",
+      "createdAt": "2025-11-23T16:31:27.375Z",
+      "customerName": "LinkMe",
+      "pmoContact": "pmo-itamar-gardus",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 40,
+      "customerId": "cb42b270-247d-4f9f-bd8d-acffdb449e7f"
+    },
+    {
+      "customerId": "3d99416e-bb28-427f-a5aa-80b0bc13cfc9",
+      "customerName": "DanciFire",
+      "projectName": "MVP",
+      "projectType": "Software",
+      "status": "Active",
+      "maxCapacityPercentage": 30,
+      "isArchived": false,
+      "id": "702da501-ad49-42aa-9b8b-434f1d6aeeb9",
+      "createdAt": "2025-11-27T22:38:39.550Z",
+      "requiredRoles": {}
+    },
+    {
+      "customerId": "833409bb-2374-47c3-a710-3be9ddf8241b",
+      "customerName": "Auribus",
+      "projectName": "Assessment ",
+      "projectType": "AI",
+      "status": "Active",
+      "isArchived": false,
+      "id": "db94b434-8279-4172-a284-37b0ee67c385",
+      "createdAt": "2025-11-28T12:13:47.300Z",
+      "pmoContact": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+    },
+    {
+      "customerId": "52f0b113-05cf-42a0-9be1-384d6fd495fe",
+      "customerName": "Autonomy",
+      "projectName": "MVP",
+      "projectType": "AI",
+      "status": "Active",
+      "isArchived": false,
+      "id": "d8996a64-f685-4cc3-9ff2-37d51a98e280",
+      "createdAt": "2025-11-28T12:18:56.476Z",
+      "pmoContact": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+    },
+    {
+      "customerId": "01c7082b-9ed8-4aca-a1d0-6d2fe0ad2a3a",
+      "customerName": "Axian ",
+      "projectName": "POC international ",
+      "projectType": "AI",
+      "status": "Active",
+      "isArchived": false,
+      "id": "5fc7d05e-85e8-4959-bd0c-a7c173e01a6f",
+      "createdAt": "2025-11-28T12:25:51.437Z"
+    },
+    {
+      "customerId": "5cc6350e-606e-4256-be75-d1c60fd6067e",
+      "customerName": "Benchmark Labs ",
+      "projectName": "Assess international",
+      "projectType": "AI",
+      "status": "Active",
+      "isArchived": false,
+      "id": "ac2f4c75-4584-429c-ab1a-73914490dc9c",
+      "createdAt": "2025-11-28T12:30:33.951Z"
+    },
+    {
+      "customerId": "7f8c5982-d3c7-4da9-b5c9-76cc3e83978b",
+      "customerName": "Bloomfilter",
+      "projectName": "Bloomfilter",
+      "projectType": "Software",
+      "status": "Pending",
+      "isArchived": false,
+      "id": "de4d83da-b5b1-44f1-85f2-9b3722f33ac3",
+      "createdAt": "2025-11-28T12:34:25.660Z"
+    },
+    {
+      "customerId": "9f52a185-6145-4818-9116-c6162e5f6638",
+      "customerName": "Bloomfilter",
+      "projectName": "POC",
+      "projectType": "AI",
+      "status": "Active",
+      "isArchived": false,
+      "id": "f74c3aa6-9b5e-425b-b375-0883b2dafc7d",
+      "createdAt": "2025-11-28T12:34:46.704Z"
+    },
+    {
+      "customerId": "28a5dcd1-b869-4884-aa11-53406b70c34f",
+      "customerName": "Bonamark",
+      "projectName": "Bonamark POC",
+      "projectType": "AI",
+      "status": "Active",
+      "isArchived": false,
+      "id": "5ee6ca71-80da-441c-9788-0d681ef4549d",
+      "createdAt": "2025-11-28T12:38:14.455Z"
+    },
+    {
+      "customerId": "66f1c40c-299e-4b62-9c3f-0eeaa3e4a1db",
+      "customerName": "DI Global ",
+      "projectName": "(AI Assess)",
+      "projectType": "AI",
+      "status": "Pending",
+      "isArchived": false,
+      "id": "3175fab8-116e-49f2-a317-05cb86a2aa04",
+      "createdAt": "2025-11-28T20:35:37.953Z"
+    },
+    {
+      "customerId": "73b8e9cd-0d1b-47ae-aa67-1a84dcd942f8",
+      "customerName": "DI Global",
+      "projectName": " (AI Assess)",
+      "projectType": "AI",
+      "status": "Active",
+      "isArchived": false,
+      "id": "71b511a0-ba86-480b-bb7b-adcb0707fadf",
+      "createdAt": "2025-11-28T20:36:23.725Z"
+    }
+  ],
+  "allocations": [
+    {
+      "id": "e0297c35-079e-4824-becb-11d61cc5784e",
+      "projectId": "9900b811-7241-4fc4-a3ce-6de1d6387403",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "createdAt": "2025-11-22T13:25:08.454Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "allocationPercentage": 40,
+      "allocationDays": 4
+    },
+    {
+      "id": "40ca86cd-e148-4e09-a993-f2940da60832",
+      "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "createdAt": "2025-11-22T15:18:21.530Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+      "allocationPercentage": 25,
+      "allocationDays": 2.5
+    },
+    {
+      "id": "3b181288-0a07-48a9-ab1a-5776ce09c36d",
+      "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "createdAt": "2025-11-22T15:19:05.922Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+      "allocationPercentage": 15,
+      "allocationDays": 1.5
+    },
+    {
+      "id": "4bddfd55-941d-4baf-a4ab-442753e984cd",
+      "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "createdAt": "2025-11-22T15:49:34.267Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+      "allocationPercentage": 40,
+      "allocationDays": 4
+    },
+    {
+      "id": "bf582814-35e3-46cd-84ab-38581979799c",
+      "projectId": "59ab299a-fa07-4a93-9ffa-d9c14aae536e",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "createdAt": "2025-11-22T15:50:30.863Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+      "allocationPercentage": 30,
+      "allocationDays": 3
+    },
+    {
+      "id": "c2dc2b64-3c72-45d3-9cc6-c8bf8e4d421d",
+      "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "createdAt": "2025-11-22T19:15:59.373Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+      "allocationPercentage": 30,
+      "allocationDays": 3
+    },
+    {
+      "id": "f481e8da-3f11-4e56-9430-eea1e8a1565c",
+      "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-22T19:16:06.417Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+      "allocationPercentage": 30,
+      "allocationDays": 3
+    },
+    {
+      "id": "d24773cb-8abd-424c-9367-5e0e175902a8",
+      "projectId": "590a2f6a-583d-4186-8000-e9dca0d2ed4b",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "createdAt": "2025-11-22T19:16:38.407Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "allocationPercentage": 10,
+      "allocationDays": 1
+    },
+    {
+      "id": "3832ae50-c32c-4c84-b8d2-6d370bba9a3a",
+      "projectId": "590a2f6a-583d-4186-8000-e9dca0d2ed4b",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-22T19:16:45.715Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "allocationPercentage": 10,
+      "allocationDays": 1
+    },
+    {
+      "id": "3a9806e1-e6d6-4f2f-945c-3c9170ec803c",
+      "projectId": "590a2f6a-583d-4186-8000-e9dca0d2ed4b",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "createdAt": "2025-11-22T19:16:51.121Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "allocationPercentage": 10,
+      "allocationDays": 1
+    },
+    {
+      "id": "7c09f117-fa63-4bc2-912e-a59b32068935",
+      "projectId": "3710af03-f82d-4e61-8c64-45fdc7375796",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "createdAt": "2025-11-22T19:45:51.187Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+      "allocationPercentage": 15,
+      "allocationDays": 1.5
+    },
+    {
+      "id": "c5497438-5fc3-4d95-96ce-69f1635f2937",
+      "projectId": "db8af93d-fca6-4c08-8e8c-7663998d4136",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-22T20:30:04.298Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+      "allocationPercentage": 50,
+      "allocationDays": 5
+    },
+    {
+      "id": "bf48351f-8f85-4ff5-986d-5270b0dd2d63",
+      "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-22T20:30:04.298Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+      "allocationPercentage": 30,
+      "allocationDays": 3
+    },
+    {
+      "id": "40194515-1cc7-43db-b0a6-dd5aa742032c",
+      "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-22T20:30:04.298Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+      "allocationPercentage": 15,
+      "allocationDays": 1.5
+    },
+    {
+      "id": "7ec5ea24-e6af-4c39-a798-818d75c05f0e",
+      "projectId": "9b6c9fa4-b4f3-4023-b087-7d83968e5cc4",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "createdAt": "2025-11-22T20:30:50.594Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "allocationPercentage": 20,
+      "allocationDays": 2
+    },
+    {
+      "id": "4b569dac-9215-4343-9d25-7851bfa342a6",
+      "projectId": "9900b811-7241-4fc4-a3ce-6de1d6387403",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "createdAt": "2025-11-22T20:30:50.594Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "allocationPercentage": 40,
+      "allocationDays": 4
+    },
+    {
+      "id": "cfaa6844-28bb-4030-8cc9-a569fcd4c45d",
+      "projectId": "36a052bb-0dd9-462e-8f8a-620b6c948a33",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "createdAt": "2025-11-22T20:30:50.594Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "allocationPercentage": 5,
+      "allocationDays": 0.5
+    },
+    {
+      "id": "ae4a7cf1-222e-4164-bad0-39258dd92097",
+      "projectId": "9b6c9fa4-b4f3-4023-b087-7d83968e5cc4",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-22T20:31:00.937Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "allocationPercentage": 20,
+      "allocationDays": 2
+    },
+    {
+      "id": "44cd1430-286b-44e9-a1a3-adac8a5f6328",
+      "projectId": "9900b811-7241-4fc4-a3ce-6de1d6387403",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-22T20:31:00.937Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "allocationPercentage": 40,
+      "allocationDays": 4
+    },
+    {
+      "id": "4c4c98a7-4847-4034-82a5-cd02b023b5ee",
+      "projectId": "36a052bb-0dd9-462e-8f8a-620b6c948a33",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-22T20:31:00.937Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "allocationPercentage": 10,
+      "allocationDays": 1
+    },
+    {
+      "id": "edcba506-9e3d-4c76-b1cf-32a61f95bf42",
+      "projectId": "cb9c7fd8-afa6-4e14-86d9-a7d8dca77813",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-22T20:31:00.937Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "allocationPercentage": 5,
+      "allocationDays": 0.5
+    },
+    {
+      "id": "9a17aad1-b7a2-4b8b-8e82-06486bf5087e",
+      "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "createdAt": "2025-11-22T20:31:26.155Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+      "allocationPercentage": 40,
+      "allocationDays": 4
+    },
+    {
+      "id": "8f6b38fc-e4bc-440c-b48e-da46a9b7cfbd",
+      "projectId": "59ab299a-fa07-4a93-9ffa-d9c14aae536e",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "createdAt": "2025-11-22T20:31:26.155Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+      "allocationPercentage": 30,
+      "allocationDays": 3
+    },
+    {
+      "id": "a4c4e054-a877-44ce-b8f7-c42f92a0585f",
+      "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-22T20:31:34.143Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+      "allocationPercentage": 40,
+      "allocationDays": 4
+    },
+    {
+      "id": "be2bdc35-ec1d-4ac2-8d8e-30a85418d433",
+      "projectId": "59ab299a-fa07-4a93-9ffa-d9c14aae536e",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-22T20:31:34.143Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+      "allocationPercentage": 30,
+      "allocationDays": 3
+    },
+    {
+      "id": "fbd44b21-3da6-4b83-a617-2e125973d952",
+      "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "createdAt": "2025-11-22T20:40:58.675Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+      "allocationPercentage": 100,
+      "allocationDays": 10
+    },
+    {
+      "id": "cb29d344-eee3-4229-b950-a8409a78f94b",
+      "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "createdAt": "2025-11-22T20:41:01.413Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+      "allocationPercentage": 100,
+      "allocationDays": 10
+    },
+    {
+      "id": "9e21d9b0-6601-44f9-889c-d1a7240c825f",
+      "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-22T20:41:05.078Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+      "allocationPercentage": 100,
+      "allocationDays": 10
+    },
+    {
+      "id": "3d6341cd-b214-45f9-960e-8a0a3f1e5423",
+      "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+      "year": 2026,
+      "month": 1,
+      "sprint": 2,
+      "createdAt": "2025-11-22T20:41:16.881Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+      "allocationPercentage": 100,
+      "allocationDays": 10
+    },
+    {
+      "id": "56759211-9b74-4311-baf5-5e247daa1cf9",
+      "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "createdAt": "2025-11-22T20:42:43.910Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+      "allocationPercentage": 85,
+      "allocationDays": 8.5
+    },
+    {
+      "id": "c0ade2b9-3976-4aa7-a1a6-4618f05608b0",
+      "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "createdAt": "2025-11-22T20:54:32.955Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+      "allocationPercentage": 100,
+      "allocationDays": 10
+    },
+    {
+      "id": "8132e0b9-c7a5-4df0-a887-23b772880572",
+      "projectId": "3710af03-f82d-4e61-8c64-45fdc7375796",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "createdAt": "2025-11-23T08:10:06.575Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+      "allocationPercentage": 15,
+      "allocationDays": 1.5
+    },
+    {
+      "id": "7459d8e7-9093-4c32-a9b4-3b1490a4d4b0",
+      "projectId": "0d403d4f-f437-4ba9-b7e7-c5742547db03",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "createdAt": "2025-11-23T08:28:30.502Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "allocationPercentage": 15,
+      "allocationDays": 1.5
+    },
+    {
+      "id": "163cfbee-fbad-460e-893b-2d4e3421629d",
+      "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "createdAt": "2025-11-23T14:14:14.125Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+      "allocationPercentage": 40,
+      "allocationDays": 4
+    },
+    {
+      "id": "cc1bf195-3447-44ff-a4f0-2ac766a24cd9",
+      "projectId": "bdc89968-5707-4a61-9160-1c645d0a11c5",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "createdAt": "2025-11-23T14:16:05.743Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+      "allocationPercentage": 5,
+      "allocationDays": 0.5
+    },
+    {
+      "id": "576cdd7c-41f6-4a93-a570-88f7450201cf",
+      "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-23T14:16:41.374Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+      "allocationPercentage": 30,
+      "allocationDays": 3
+    },
+    {
+      "id": "8f84a6db-6682-4e24-a8b9-b9e53f05bbb7",
+      "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-23T14:16:41.374Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+      "allocationPercentage": 40,
+      "allocationDays": 4
+    },
+    {
+      "id": "107a85d5-7617-428c-b9de-a7ccbda62346",
+      "projectId": "b4c6f3ed-3217-41ed-95dc-5e149b045501",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-23T14:16:41.374Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+      "allocationPercentage": 5,
+      "allocationDays": 0.5
+    },
+    {
+      "id": "6cf40499-f090-4b01-a853-e1d8adf7eb51",
+      "projectId": "bdc89968-5707-4a61-9160-1c645d0a11c5",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-23T14:16:41.374Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+      "allocationPercentage": 5,
+      "allocationDays": 0.5
+    },
+    {
+      "id": "4830350d-a536-4df9-9660-a434611e9da6",
+      "projectId": "0d403d4f-f437-4ba9-b7e7-c5742547db03",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "createdAt": "2025-11-23T16:17:52.558Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "allocationPercentage": 20,
+      "allocationDays": 2
+    },
+    {
+      "id": "70002355-6039-460a-b5ec-930bed53deca",
+      "projectId": "5dd5e4e4-e054-42be-8394-f8c2dff73c30",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "createdAt": "2025-11-23T16:19:58.349Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "b00845ba-00d5-4c5c-919c-97e17e2eed08",
+      "allocationPercentage": 15,
+      "allocationDays": 1.5
+    },
+    {
+      "id": "6eed5f54-1076-47e5-9778-720d3012f96f",
+      "projectId": "5dd5e4e4-e054-42be-8394-f8c2dff73c30",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "createdAt": "2025-11-23T16:20:12.556Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "productManagerId": "b00845ba-00d5-4c5c-919c-97e17e2eed08",
+      "allocationPercentage": 15,
+      "allocationDays": 1.5
+    },
+    {
+      "projectId": "db8af93d-fca6-4c08-8e8c-7663998d4136",
+      "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "allocationPercentage": 50,
+      "allocationDays": 5,
+      "id": "0efad286-37e3-4c83-b5fa-8dac185ec16c",
+      "createdAt": "2025-11-24T15:42:22.651Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+    },
+    {
+      "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+      "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "allocationPercentage": 25,
+      "allocationDays": 2.5,
+      "id": "0dfa388c-611b-4e18-a54d-4a826af0f690",
+      "createdAt": "2025-11-24T15:42:22.651Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+    },
+    {
+      "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+      "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "allocationPercentage": 15,
+      "allocationDays": 1.5,
+      "id": "61d2c1b6-0966-414b-867b-8b9aa9ab6129",
+      "createdAt": "2025-11-24T15:42:22.651Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+    },
+    {
+      "projectId": "b4c6f3ed-3217-41ed-95dc-5e149b045501",
+      "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "allocationPercentage": 5,
+      "allocationDays": 0.5,
+      "id": "7fcca89e-bd48-4d3d-9d8f-56e2426b0ab5",
+      "createdAt": "2025-11-24T15:49:29.739Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+    },
+    {
+      "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+      "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "allocationPercentage": 30,
+      "allocationDays": 3,
+      "id": "4f37fb51-9728-41ae-be50-3c04bb91271d",
+      "createdAt": "2025-11-24T15:50:25.978Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+    },
+    {
+      "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+      "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "allocationPercentage": 40,
+      "allocationDays": 4,
+      "id": "df952a2e-184c-443e-ae78-3099be9a616d",
+      "createdAt": "2025-11-24T15:50:25.978Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+    },
+    {
+      "projectId": "bdc89968-5707-4a61-9160-1c645d0a11c5",
+      "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "allocationPercentage": 5,
+      "allocationDays": 0.5,
+      "id": "78990379-240b-4b23-92cc-5b9afa24d1c7",
+      "createdAt": "2025-11-24T15:50:25.978Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+    },
+    {
+      "projectId": "b4c6f3ed-3217-41ed-95dc-5e149b045501",
+      "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+      "year": 2025,
+      "month": 12,
+      "sprint": 1,
+      "allocationPercentage": 5,
+      "allocationDays": 0.5,
+      "id": "9e525634-cf40-48b8-aeb3-a84d49c05872",
+      "createdAt": "2025-11-24T15:50:25.978Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+    },
+    {
+      "projectId": "36a052bb-0dd9-462e-8f8a-620b6c948a33",
+      "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+      "year": 2025,
+      "month": 12,
+      "sprint": 2,
+      "allocationPercentage": 20,
+      "allocationDays": 2,
+      "id": "51c6b7c6-1fdd-4e55-8ac0-18a9d7aa024c",
+      "createdAt": "2025-11-27T13:58:25.976Z",
+      "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+    },
+    {
+      "projectId": "3710af03-f82d-4e61-8c64-45fdc7375796",
+      "productManagerId": "pmo-david-shiprut",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "allocationPercentage": 30,
+      "allocationDays": 3,
+      "isPlanned": true,
+      "id": "47e55e46-0a9d-41e1-a6b1-7f1686ac22e0",
+      "createdAt": "2025-11-27T23:35:44.575Z"
+    },
+    {
+      "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+      "productManagerId": "d3543658-542c-40ed-a160-b2a1a078483e",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "allocationPercentage": 30,
+      "allocationDays": 3,
+      "isPlanned": true,
+      "id": "c52fab42-eb48-4307-a0ca-097dd7f6670e",
+      "createdAt": "2025-11-28T21:06:22.080Z"
+    },
+    {
+      "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+      "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "allocationPercentage": 45,
+      "allocationDays": 4.5,
+      "isPlanned": true,
+      "id": "acc9a2e3-db66-4317-804c-cb3b9fbe281a",
+      "createdAt": "2025-11-28T21:06:34.215Z"
+    },
+    {
+      "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+      "productManagerId": "pmo-niv-spector",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "allocationPercentage": 50,
+      "allocationDays": 5,
+      "isPlanned": true,
+      "id": "690aa294-50ea-4fa3-9ed6-9f4016712083",
+      "createdAt": "2025-11-28T21:07:17.869Z"
+    },
+    {
+      "projectId": "db8af93d-fca6-4c08-8e8c-7663998d4136",
+      "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "allocationPercentage": 30,
+      "allocationDays": 3,
+      "isPlanned": true,
+      "id": "f3616cdd-e730-4abe-9259-0650c07f48f7",
+      "createdAt": "2025-11-28T22:53:13.128Z"
+    },
+    {
+      "projectId": "702da501-ad49-42aa-9b8b-434f1d6aeeb9",
+      "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "allocationPercentage": 40,
+      "allocationDays": 4,
+      "isPlanned": true,
+      "id": "3356e317-36d1-4554-ad6d-cbf94d46d15e",
+      "createdAt": "2025-11-28T22:54:32.408Z"
+    },
+    {
+      "projectId": "590a2f6a-583d-4186-8000-e9dca0d2ed4b",
+      "productManagerId": "pmo-david-shiprut",
+      "year": 2025,
+      "month": 11,
+      "sprint": 2,
+      "allocationPercentage": 30,
+      "allocationDays": 3,
+      "isPlanned": true,
+      "id": "0369c8c9-4346-4b44-80c4-2d89c69ede18",
+      "createdAt": "2025-11-29T09:11:41.554Z"
+    }
+  ],
+  "history": [
+    {
+      "id": "a92ef33a-a773-4c59-8845-1e11efdc45e7",
+      "allocationId": "e2f36259-d471-47b6-90fd-3a92c5031e91",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T13:25:01.333Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "9b6c9fa4-b4f3-4023-b087-7d83968e5cc4",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 20,
+        "allocationDays": 2,
+        "id": "e2f36259-d471-47b6-90fd-3a92c5031e91",
+        "createdAt": "2025-11-22T13:25:01.333Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "76aadba1-7263-4808-8ed8-0de08a081b21",
+      "allocationId": "e0297c35-079e-4824-becb-11d61cc5784e",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T13:25:08.454Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "9900b811-7241-4fc4-a3ce-6de1d6387403",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "e0297c35-079e-4824-becb-11d61cc5784e",
+        "createdAt": "2025-11-22T13:25:08.454Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "95d61b47-6a28-4e85-bcc1-2ad7dccd14f9",
+      "allocationId": "e4f5d4a2-3bae-4f20-ba45-f51d3128170f",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T15:17:26.915Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "db8af93d-fca6-4c08-8e8c-7663998d4136",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 50,
+        "allocationDays": 5,
+        "id": "e4f5d4a2-3bae-4f20-ba45-f51d3128170f",
+        "createdAt": "2025-11-22T15:17:26.914Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "4bc60cf4-7949-4b32-9cc3-1d067eef6149",
+      "allocationId": "40ca86cd-e148-4e09-a993-f2940da60832",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T15:18:21.530Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 50,
+        "allocationDays": 5,
+        "id": "40ca86cd-e148-4e09-a993-f2940da60832",
+        "createdAt": "2025-11-22T15:18:21.530Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "1539e4b1-5197-498d-a4e5-b324c2c0d434",
+      "allocationId": "3b181288-0a07-48a9-ab1a-5776ce09c36d",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T15:19:05.922Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "3b181288-0a07-48a9-ab1a-5776ce09c36d",
+        "createdAt": "2025-11-22T15:19:05.922Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "41a47c94-279d-4e33-9305-4e277e43efe6",
+      "allocationId": "265d900a-7e54-4bfe-be77-d454a5dc63f4",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T15:20:13.550Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "5c39808f-367d-4090-930c-d81e4bf615b3",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "265d900a-7e54-4bfe-be77-d454a5dc63f4",
+        "createdAt": "2025-11-22T15:20:13.550Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "b1ec962e-5eba-4523-a16f-40b5af03f155",
+      "allocationId": "5378812c-0356-4bb5-a878-875165ba3a0b",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T15:29:38.175Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "36a052bb-0dd9-462e-8f8a-620b6c948a33",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "5378812c-0356-4bb5-a878-875165ba3a0b",
+        "createdAt": "2025-11-22T15:29:38.175Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "8fab22b5-9bb0-4bfa-97f2-adbdff8707a1",
+      "allocationId": "7cb00117-4e79-4d65-aecc-a17f879187af",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T15:29:44.492Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "9900b811-7241-4fc4-a3ce-6de1d6387403",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "7cb00117-4e79-4d65-aecc-a17f879187af",
+        "createdAt": "2025-11-22T15:29:44.492Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "2073f677-16c1-4504-b555-026bbe9c7177",
+      "allocationId": "8b142f87-023d-4ce3-9b4b-6ce699ea84b1",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T15:30:26.356Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "36a052bb-0dd9-462e-8f8a-620b6c948a33",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "8b142f87-023d-4ce3-9b4b-6ce699ea84b1",
+        "createdAt": "2025-11-22T15:30:26.356Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "d0683e00-5571-46a2-a3e6-c53bfe0a0de0",
+      "allocationId": "769bbd4f-5b85-4253-9de2-6fb4090ce316",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T15:32:17.906Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "36a052bb-0dd9-462e-8f8a-620b6c948a33",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "769bbd4f-5b85-4253-9de2-6fb4090ce316",
+        "createdAt": "2025-11-22T15:32:17.906Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "d658bcfd-05d8-4071-88a0-e8c1e4b9a1bf",
+      "allocationId": "5992b6c7-f644-4f47-9ef9-b0ff706705b5",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T15:46:27.340Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "cb9c7fd8-afa6-4e14-86d9-a7d8dca77813",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "5992b6c7-f644-4f47-9ef9-b0ff706705b5",
+        "createdAt": "2025-11-22T15:46:27.340Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "9372cf86-496a-4d3f-ab51-7ac55142f2f9",
+      "allocationId": "4bddfd55-941d-4baf-a4ab-442753e984cd",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T15:49:34.267Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "4bddfd55-941d-4baf-a4ab-442753e984cd",
+        "createdAt": "2025-11-22T15:49:34.267Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "03bdbf55-b6c5-414a-bd1a-342e09591d13",
+      "allocationId": "bf582814-35e3-46cd-84ab-38581979799c",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T15:50:30.863Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "59ab299a-fa07-4a93-9ffa-d9c14aae536e",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "bf582814-35e3-46cd-84ab-38581979799c",
+        "createdAt": "2025-11-22T15:50:30.863Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "54b085c5-9bed-44ad-90e3-5834a4f800e9",
+      "allocationId": "9bdeae29-da8d-428f-822b-fe79eac86202",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T15:59:08.720Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "9bdeae29-da8d-428f-822b-fe79eac86202",
+        "createdAt": "2025-11-22T15:59:08.720Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "c26b4333-97ad-409e-b72f-67978c3a1706",
+      "allocationId": "40ca86cd-e148-4e09-a993-f2940da60832",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T15:59:47.972Z",
+      "changeType": "updated",
+      "oldValue": {
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 50,
+        "allocationDays": 5,
+        "id": "40ca86cd-e148-4e09-a993-f2940da60832",
+        "createdAt": "2025-11-22T15:18:21.530Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      },
+      "newValue": {
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "40ca86cd-e148-4e09-a993-f2940da60832",
+        "createdAt": "2025-11-22T15:18:21.530Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "15dcb03b-d2f2-4bd6-b06c-f6804c571123",
+      "allocationId": "88dbd24c-952a-4f74-b004-ce1d9adb210d",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T16:13:53.678Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "88dbd24c-952a-4f74-b004-ce1d9adb210d",
+        "createdAt": "2025-11-22T16:13:53.678Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "16f6f2c1-d758-48cf-90ea-18238a7ae370",
+      "allocationId": "f9ff128e-2bdd-4e88-8eb5-5e2b75ea156f",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:15:28.075Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "f9ff128e-2bdd-4e88-8eb5-5e2b75ea156f",
+        "createdAt": "2025-11-22T19:15:28.075Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "b192eb35-5938-4564-aed8-a0cc6b8f259e",
+      "allocationId": "c2dc2b64-3c72-45d3-9cc6-c8bf8e4d421d",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:15:59.374Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "c2dc2b64-3c72-45d3-9cc6-c8bf8e4d421d",
+        "createdAt": "2025-11-22T19:15:59.373Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "9ec11f01-c4cd-4df3-b919-1c3b09036e3e",
+      "allocationId": "f481e8da-3f11-4e56-9430-eea1e8a1565c",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:16:06.417Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "f481e8da-3f11-4e56-9430-eea1e8a1565c",
+        "createdAt": "2025-11-22T19:16:06.417Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "e51aff1c-9420-43bc-a5bf-217eaf1bcb9f",
+      "allocationId": "36e197f4-806e-4b52-a839-7fc464cf6682",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:16:17.573Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2026,
+        "month": 1,
+        "sprint": 1,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "36e197f4-806e-4b52-a839-7fc464cf6682",
+        "createdAt": "2025-11-22T19:16:17.573Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "bf597325-44de-49c8-830d-7d1b9d652ef4",
+      "allocationId": "7fbd79a7-905a-4c2c-a192-0227c6e17727",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:16:24.478Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2026,
+        "month": 1,
+        "sprint": 2,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "7fbd79a7-905a-4c2c-a192-0227c6e17727",
+        "createdAt": "2025-11-22T19:16:24.478Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "3a82fb6f-b486-41c2-bd16-a162df0ad934",
+      "allocationId": "d24773cb-8abd-424c-9367-5e0e175902a8",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:16:38.407Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "590a2f6a-583d-4186-8000-e9dca0d2ed4b",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "d24773cb-8abd-424c-9367-5e0e175902a8",
+        "createdAt": "2025-11-22T19:16:38.407Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "85e424af-5aa4-4042-8f75-3d8304974a0b",
+      "allocationId": "3832ae50-c32c-4c84-b8d2-6d370bba9a3a",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:16:45.715Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "590a2f6a-583d-4186-8000-e9dca0d2ed4b",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "3832ae50-c32c-4c84-b8d2-6d370bba9a3a",
+        "createdAt": "2025-11-22T19:16:45.715Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "af752562-28c8-4895-90a9-b5bf214485a3",
+      "allocationId": "3a9806e1-e6d6-4f2f-945c-3c9170ec803c",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:16:51.121Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "590a2f6a-583d-4186-8000-e9dca0d2ed4b",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "3a9806e1-e6d6-4f2f-945c-3c9170ec803c",
+        "createdAt": "2025-11-22T19:16:51.121Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "5a4ceac4-c1f8-4f80-9fef-16d707086577",
+      "allocationId": "114ad54a-5529-497e-91b2-65ec830b7364",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:17:09.408Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "3186c9c1-5589-4528-9c6e-714138c830c9",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "114ad54a-5529-497e-91b2-65ec830b7364",
+        "createdAt": "2025-11-22T19:17:09.408Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "eb462f3c-db4e-485b-8468-b281fdd034e1",
+      "allocationId": "785393b3-e539-46f7-a2db-2afeaf64f623",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:17:16.338Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "3186c9c1-5589-4528-9c6e-714138c830c9",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "785393b3-e539-46f7-a2db-2afeaf64f623",
+        "createdAt": "2025-11-22T19:17:16.338Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "93cb9934-9827-4cd4-8509-5e5f241da492",
+      "allocationId": "465c844c-696e-4327-9dfb-74aabf27acb2",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:17:21.877Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "3186c9c1-5589-4528-9c6e-714138c830c9",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "465c844c-696e-4327-9dfb-74aabf27acb2",
+        "createdAt": "2025-11-22T19:17:21.877Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "210d6b39-1f4f-4bb6-8c30-3b145fa21d70",
+      "allocationId": "ec4520dd-9ff3-48d7-a50f-3e0508e2bcb0",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:17:38.985Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "ec4520dd-9ff3-48d7-a50f-3e0508e2bcb0",
+        "createdAt": "2025-11-22T19:17:38.984Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "71670403-c5f6-4486-adaa-7926cf009f11",
+      "allocationId": "ec4520dd-9ff3-48d7-a50f-3e0508e2bcb0",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:17:44.847Z",
+      "changeType": "updated",
+      "oldValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "ec4520dd-9ff3-48d7-a50f-3e0508e2bcb0",
+        "createdAt": "2025-11-22T19:17:38.984Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      },
+      "newValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "ec4520dd-9ff3-48d7-a50f-3e0508e2bcb0",
+        "createdAt": "2025-11-22T19:17:38.984Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "ca4f49c7-2d2a-4fbc-afa2-56f016383565",
+      "allocationId": "2c15e6bc-21b6-4483-a5c8-e4289bf02a44",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:17:53.843Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "2c15e6bc-21b6-4483-a5c8-e4289bf02a44",
+        "createdAt": "2025-11-22T19:17:53.843Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "0a7e6415-cb6c-408d-9b3a-da7fa2a58024",
+      "allocationId": "2f13b23e-b58a-41d7-a2bd-ef0a944ad0d8",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:18:03.843Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "2f13b23e-b58a-41d7-a2bd-ef0a944ad0d8",
+        "createdAt": "2025-11-22T19:18:03.843Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "7bae1e9c-b14b-441c-844e-faf9a436da0c",
+      "allocationId": "d019262a-0973-4a9a-9624-088cc32f1ed2",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:27:39.362Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "cb9c7fd8-afa6-4e14-86d9-a7d8dca77813",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "d019262a-0973-4a9a-9624-088cc32f1ed2",
+        "createdAt": "2025-11-22T19:27:39.361Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "29489c93-0810-4224-baeb-126170a12b55",
+      "allocationId": "785393b3-e539-46f7-a2db-2afeaf64f623",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:28:45.817Z",
+      "changeType": "updated",
+      "oldValue": {
+        "projectId": "3186c9c1-5589-4528-9c6e-714138c830c9",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "785393b3-e539-46f7-a2db-2afeaf64f623",
+        "createdAt": "2025-11-22T19:17:16.338Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      },
+      "newValue": {
+        "projectId": "3186c9c1-5589-4528-9c6e-714138c830c9",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 0,
+        "allocationDays": 0,
+        "id": "785393b3-e539-46f7-a2db-2afeaf64f623",
+        "createdAt": "2025-11-22T19:17:16.338Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "dc746c6a-a622-4093-aea8-6ceb4b73959b",
+      "allocationId": "785393b3-e539-46f7-a2db-2afeaf64f623",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:28:53.492Z",
+      "changeType": "updated",
+      "oldValue": {
+        "projectId": "3186c9c1-5589-4528-9c6e-714138c830c9",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 0,
+        "allocationDays": 0,
+        "id": "785393b3-e539-46f7-a2db-2afeaf64f623",
+        "createdAt": "2025-11-22T19:17:16.338Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      },
+      "newValue": {
+        "projectId": "3186c9c1-5589-4528-9c6e-714138c830c9",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "785393b3-e539-46f7-a2db-2afeaf64f623",
+        "createdAt": "2025-11-22T19:17:16.338Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "08ad3f2f-2641-437a-bac9-e3833987b602",
+      "allocationId": "fa0827da-a195-4236-9add-e3e302199319",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:39:05.454Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "db8af93d-fca6-4c08-8e8c-7663998d4136",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 50,
+        "allocationDays": 5,
+        "id": "fa0827da-a195-4236-9add-e3e302199319",
+        "createdAt": "2025-11-22T19:39:05.454Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "dabce4bf-1cb8-4267-987c-ea7ba4a164eb",
+      "allocationId": "9f440a85-2f7f-43fa-ae8e-cfc4189bc7f9",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:39:05.454Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 50,
+        "allocationDays": 5,
+        "id": "9f440a85-2f7f-43fa-ae8e-cfc4189bc7f9",
+        "createdAt": "2025-11-22T19:39:05.454Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "daf8feb3-11a1-4f93-92f9-3d0330f7b634",
+      "allocationId": "8615725a-8c45-4014-bf46-d16a83e4e241",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:39:05.454Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "8615725a-8c45-4014-bf46-d16a83e4e241",
+        "createdAt": "2025-11-22T19:39:05.454Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "a0b59f96-3ccb-4b79-9249-0c8c371f3fb1",
+      "allocationId": "51a1d47e-0382-4613-84f6-31024c2841b7",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:39:05.455Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "51a1d47e-0382-4613-84f6-31024c2841b7",
+        "createdAt": "2025-11-22T19:39:05.455Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "6909bdfd-9bc7-4027-bdaf-28e909a7012b",
+      "allocationId": "e8cf641f-7470-426b-9fe4-4575118424d4",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:40:16.323Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "cb9c7fd8-afa6-4e14-86d9-a7d8dca77813",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "e8cf641f-7470-426b-9fe4-4575118424d4",
+        "createdAt": "2025-11-22T19:40:16.323Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "3018a885-4590-40f5-b1c5-fdfe960ac260",
+      "allocationId": "d019262a-0973-4a9a-9624-088cc32f1ed2",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:40:34.329Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "cb9c7fd8-afa6-4e14-86d9-a7d8dca77813",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "d019262a-0973-4a9a-9624-088cc32f1ed2",
+        "createdAt": "2025-11-22T19:27:39.361Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "6a08083a-5e0f-4b7e-8ab3-88fc851bde85",
+      "allocationId": "7c09f117-fa63-4bc2-912e-a59b32068935",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T19:45:51.187Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "3710af03-f82d-4e61-8c64-45fdc7375796",
+        "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 15,
+        "allocationDays": 1.5,
+        "id": "7c09f117-fa63-4bc2-912e-a59b32068935",
+        "createdAt": "2025-11-22T19:45:51.187Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "59ebc3ab-1bd4-4720-85b5-7eb21e0c7d90",
+      "allocationId": "c5497438-5fc3-4d95-96ce-69f1635f2937",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:30:04.298Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "db8af93d-fca6-4c08-8e8c-7663998d4136",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 50,
+        "allocationDays": 5,
+        "id": "c5497438-5fc3-4d95-96ce-69f1635f2937",
+        "createdAt": "2025-11-22T20:30:04.298Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "4c7ce76a-1e76-47c6-a87d-3a0da5b119e2",
+      "allocationId": "bf48351f-8f85-4ff5-986d-5270b0dd2d63",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:30:04.298Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 50,
+        "allocationDays": 5,
+        "id": "bf48351f-8f85-4ff5-986d-5270b0dd2d63",
+        "createdAt": "2025-11-22T20:30:04.298Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "315619c7-8bd7-422a-af03-2c2f86ddae4f",
+      "allocationId": "40194515-1cc7-43db-b0a6-dd5aa742032c",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:30:04.298Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "40194515-1cc7-43db-b0a6-dd5aa742032c",
+        "createdAt": "2025-11-22T20:30:04.298Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "0e4e252a-de0b-4f9f-a2e4-1f15dcecbbf9",
+      "allocationId": "bb5fe29d-cc9c-47dc-99f0-2ca6cd4b3d6c",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:30:04.298Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "bb5fe29d-cc9c-47dc-99f0-2ca6cd4b3d6c",
+        "createdAt": "2025-11-22T20:30:04.298Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "4f6e12f0-38ae-4cb1-8953-da124041a459",
+      "allocationId": "7ec5ea24-e6af-4c39-a798-818d75c05f0e",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:30:50.594Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "9b6c9fa4-b4f3-4023-b087-7d83968e5cc4",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 20,
+        "allocationDays": 2,
+        "id": "7ec5ea24-e6af-4c39-a798-818d75c05f0e",
+        "createdAt": "2025-11-22T20:30:50.594Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "abcf7b89-9f6d-456b-9993-2edba6bd05bc",
+      "allocationId": "4b569dac-9215-4343-9d25-7851bfa342a6",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:30:50.594Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "9900b811-7241-4fc4-a3ce-6de1d6387403",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "4b569dac-9215-4343-9d25-7851bfa342a6",
+        "createdAt": "2025-11-22T20:30:50.594Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "6ab6d20c-53d1-4fdc-85a5-0eca61f374b2",
+      "allocationId": "cfaa6844-28bb-4030-8cc9-a569fcd4c45d",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:30:50.594Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "36a052bb-0dd9-462e-8f8a-620b6c948a33",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "cfaa6844-28bb-4030-8cc9-a569fcd4c45d",
+        "createdAt": "2025-11-22T20:30:50.594Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "4068f417-5537-44bb-a10e-2bba967d6048",
+      "allocationId": "822598ef-01bc-4ce5-aa29-d484d03f010c",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:30:50.594Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "cb9c7fd8-afa6-4e14-86d9-a7d8dca77813",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "822598ef-01bc-4ce5-aa29-d484d03f010c",
+        "createdAt": "2025-11-22T20:30:50.594Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "55cc377d-c611-4f20-8d9d-63e555e12142",
+      "allocationId": "ae4a7cf1-222e-4164-bad0-39258dd92097",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:31:00.937Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "9b6c9fa4-b4f3-4023-b087-7d83968e5cc4",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 20,
+        "allocationDays": 2,
+        "id": "ae4a7cf1-222e-4164-bad0-39258dd92097",
+        "createdAt": "2025-11-22T20:31:00.937Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "ad3d6f2f-99d8-4ec9-81e2-a5f7066ffcb1",
+      "allocationId": "44cd1430-286b-44e9-a1a3-adac8a5f6328",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:31:00.937Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "9900b811-7241-4fc4-a3ce-6de1d6387403",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "44cd1430-286b-44e9-a1a3-adac8a5f6328",
+        "createdAt": "2025-11-22T20:31:00.937Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "2069d98a-24ff-41c8-9456-f0ddb715d1cc",
+      "allocationId": "4c4c98a7-4847-4034-82a5-cd02b023b5ee",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:31:00.937Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "36a052bb-0dd9-462e-8f8a-620b6c948a33",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "4c4c98a7-4847-4034-82a5-cd02b023b5ee",
+        "createdAt": "2025-11-22T20:31:00.937Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "f28b62fb-ef69-42fd-8085-cbaa9a63558f",
+      "allocationId": "edcba506-9e3d-4c76-b1cf-32a61f95bf42",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:31:00.937Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "cb9c7fd8-afa6-4e14-86d9-a7d8dca77813",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "edcba506-9e3d-4c76-b1cf-32a61f95bf42",
+        "createdAt": "2025-11-22T20:31:00.937Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "78ca973f-1239-4b8e-8942-7293d41340c9",
+      "allocationId": "9a17aad1-b7a2-4b8b-8e82-06486bf5087e",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:31:26.155Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "9a17aad1-b7a2-4b8b-8e82-06486bf5087e",
+        "createdAt": "2025-11-22T20:31:26.155Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "2ac63631-93f4-41a2-9f43-35c106350072",
+      "allocationId": "8f6b38fc-e4bc-440c-b48e-da46a9b7cfbd",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:31:26.155Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "59ab299a-fa07-4a93-9ffa-d9c14aae536e",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "8f6b38fc-e4bc-440c-b48e-da46a9b7cfbd",
+        "createdAt": "2025-11-22T20:31:26.155Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "b53d99e2-8cd4-42bb-aee9-dedc56018fee",
+      "allocationId": "a4c4e054-a877-44ce-b8f7-c42f92a0585f",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:31:34.143Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "a4c4e054-a877-44ce-b8f7-c42f92a0585f",
+        "createdAt": "2025-11-22T20:31:34.143Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "688e827f-9fcb-4d97-bcf8-ce2cde6b6bea",
+      "allocationId": "be2bdc35-ec1d-4ac2-8d8e-30a85418d433",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:31:34.143Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "59ab299a-fa07-4a93-9ffa-d9c14aae536e",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "be2bdc35-ec1d-4ac2-8d8e-30a85418d433",
+        "createdAt": "2025-11-22T20:31:34.143Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "0d1830ad-d87e-4c1c-ba10-65bc10ceeb42",
+      "allocationId": "fbd44b21-3da6-4b83-a617-2e125973d952",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:40:58.675Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 100,
+        "allocationDays": 10,
+        "id": "fbd44b21-3da6-4b83-a617-2e125973d952",
+        "createdAt": "2025-11-22T20:40:58.675Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "755e16a8-d2e3-4e0d-ad4f-85eb83785767",
+      "allocationId": "cb29d344-eee3-4229-b950-a8409a78f94b",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:41:01.413Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 100,
+        "allocationDays": 10,
+        "id": "cb29d344-eee3-4229-b950-a8409a78f94b",
+        "createdAt": "2025-11-22T20:41:01.413Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "348fe09e-774d-4139-b780-e4f77647a685",
+      "allocationId": "9e21d9b0-6601-44f9-889c-d1a7240c825f",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:41:05.078Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 100,
+        "allocationDays": 10,
+        "id": "9e21d9b0-6601-44f9-889c-d1a7240c825f",
+        "createdAt": "2025-11-22T20:41:05.078Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "ce153782-c1d0-465d-8cc9-0612b668d2e5",
+      "allocationId": "6102bbfc-18d9-4c30-82d9-82e392835461",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:41:13.233Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+        "year": 2026,
+        "month": 1,
+        "sprint": 1,
+        "allocationPercentage": 100,
+        "allocationDays": 10,
+        "id": "6102bbfc-18d9-4c30-82d9-82e392835461",
+        "createdAt": "2025-11-22T20:41:13.232Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "3a898130-1ccd-48b9-a574-a7de6123870c",
+      "allocationId": "3d6341cd-b214-45f9-960e-8a0a3f1e5423",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:41:16.881Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+        "year": 2026,
+        "month": 1,
+        "sprint": 2,
+        "allocationPercentage": 100,
+        "allocationDays": 10,
+        "id": "3d6341cd-b214-45f9-960e-8a0a3f1e5423",
+        "createdAt": "2025-11-22T20:41:16.881Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "771a2b54-4117-4ef9-91ca-e7702bfea411",
+      "allocationId": "56759211-9b74-4311-baf5-5e247daa1cf9",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:42:43.910Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 85,
+        "allocationDays": 8.5,
+        "id": "56759211-9b74-4311-baf5-5e247daa1cf9",
+        "createdAt": "2025-11-22T20:42:43.910Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "0efd08f2-17e9-4c11-a580-24df7a9e48a9",
+      "allocationId": "d6f94a59-e80f-414a-a91a-df4cf9f2d004",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:43:23.206Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2026,
+        "month": 1,
+        "sprint": 1,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "d6f94a59-e80f-414a-a91a-df4cf9f2d004",
+        "createdAt": "2025-11-22T20:43:23.206Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "b53de3f0-855f-4ec8-b140-722ec233299f",
+      "allocationId": "91a0fc8b-39f1-4c78-b78e-99e7346d931a",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:43:23.206Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "59ab299a-fa07-4a93-9ffa-d9c14aae536e",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2026,
+        "month": 1,
+        "sprint": 1,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "91a0fc8b-39f1-4c78-b78e-99e7346d931a",
+        "createdAt": "2025-11-22T20:43:23.206Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "97159b8e-486e-4586-a6a9-a66b745b7f66",
+      "allocationId": "dbb07db4-9df4-451a-ac2c-17d493b1c52c",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:43:28.955Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2026,
+        "month": 1,
+        "sprint": 2,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "dbb07db4-9df4-451a-ac2c-17d493b1c52c",
+        "createdAt": "2025-11-22T20:43:28.955Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "a04c762d-cdad-4a99-815d-bfa19ce3f336",
+      "allocationId": "6a2c04fb-4a16-4143-bb41-9adb44d535b3",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:43:28.955Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "59ab299a-fa07-4a93-9ffa-d9c14aae536e",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2026,
+        "month": 1,
+        "sprint": 2,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "6a2c04fb-4a16-4143-bb41-9adb44d535b3",
+        "createdAt": "2025-11-22T20:43:28.955Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "de328f33-3b1e-40ed-b9de-88a43752708d",
+      "allocationId": "ca864919-b86a-4343-8dc2-2c4ef91814a8",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:44:09.765Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2026,
+        "month": 1,
+        "sprint": 2,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "ca864919-b86a-4343-8dc2-2c4ef91814a8",
+        "createdAt": "2025-11-22T20:44:09.765Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "a741e56d-07d4-4826-9b26-cccff2b7bde8",
+      "allocationId": "8ec2b2b9-e897-4c7e-b071-9095ab6696be",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:44:09.765Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "59ab299a-fa07-4a93-9ffa-d9c14aae536e",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "year": 2026,
+        "month": 1,
+        "sprint": 2,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "8ec2b2b9-e897-4c7e-b071-9095ab6696be",
+        "createdAt": "2025-11-22T20:44:09.765Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "0ec43a87-ebd2-4a70-8421-294091da12f1",
+      "allocationId": "7e5ef167-c14e-4590-8185-7e4d481f4308",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:54:32.955Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "3710af03-f82d-4e61-8c64-45fdc7375796",
+        "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 15,
+        "allocationDays": 1.5,
+        "id": "7e5ef167-c14e-4590-8185-7e4d481f4308",
+        "createdAt": "2025-11-22T20:54:32.955Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "eb1e6eab-1236-4aad-ab36-1954c20d624e",
+      "allocationId": "c0ade2b9-3976-4aa7-a1a6-4618f05608b0",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:54:32.955Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 85,
+        "allocationDays": 8.5,
+        "id": "c0ade2b9-3976-4aa7-a1a6-4618f05608b0",
+        "createdAt": "2025-11-22T20:54:32.955Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "6624d844-290b-4f1d-9b67-4b91d0e7b5a5",
+      "allocationId": "7e5ef167-c14e-4590-8185-7e4d481f4308",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:54:38.801Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "3710af03-f82d-4e61-8c64-45fdc7375796",
+        "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 15,
+        "allocationDays": 1.5,
+        "id": "7e5ef167-c14e-4590-8185-7e4d481f4308",
+        "createdAt": "2025-11-22T20:54:32.955Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "ff675ff1-e64c-48c8-8ad2-c562c631a2c5",
+      "allocationId": "c0ade2b9-3976-4aa7-a1a6-4618f05608b0",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:54:48.846Z",
+      "changeType": "updated",
+      "oldValue": {
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 85,
+        "allocationDays": 8.5,
+        "id": "c0ade2b9-3976-4aa7-a1a6-4618f05608b0",
+        "createdAt": "2025-11-22T20:54:32.955Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      },
+      "newValue": {
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 100,
+        "allocationDays": 10,
+        "id": "c0ade2b9-3976-4aa7-a1a6-4618f05608b0",
+        "createdAt": "2025-11-22T20:54:32.955Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "cabf4c99-f73f-4b8d-bf9d-37d1480278fd",
+      "allocationId": "acb422b3-fc83-4766-a7dc-fdb3a0a0f0e3",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T20:54:53.597Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 100,
+        "allocationDays": 10,
+        "id": "acb422b3-fc83-4766-a7dc-fdb3a0a0f0e3",
+        "createdAt": "2025-11-22T20:54:53.597Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "116b72db-4113-48e9-81ed-3c016b846889",
+      "allocationId": "cb29d344-eee3-4229-b950-a8409a78f94b",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T21:42:43.322Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 100,
+        "allocationDays": 10,
+        "id": "cb29d344-eee3-4229-b950-a8409a78f94b",
+        "createdAt": "2025-11-22T20:41:01.413Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "415b9f94-3084-4ca1-b693-7d16fa813972",
+      "allocationId": "a7a1bf9a-8390-47c3-bd49-f4376cc94c47",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T21:45:28.304Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 100,
+        "allocationDays": 10,
+        "id": "a7a1bf9a-8390-47c3-bd49-f4376cc94c47",
+        "createdAt": "2025-11-22T21:45:28.304Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "87ead4c3-37af-432f-b76e-5b4038909156",
+      "allocationId": "08404e85-81db-409b-afb7-12ee5c3bdda4",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-22T21:49:24.021Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "3710af03-f82d-4e61-8c64-45fdc7375796",
+        "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 15,
+        "allocationDays": 1.5,
+        "id": "08404e85-81db-409b-afb7-12ee5c3bdda4",
+        "createdAt": "2025-11-22T21:49:24.021Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "4bf72bcb-b6b8-4184-bd13-efa58e50f37e",
+      "allocationId": "7c09f117-fa63-4bc2-912e-a59b32068935",
+      "changedBy": "185c5a77-bd31-43e3-be33-1871533d3b3e",
+      "changedAt": "2025-11-22T22:32:07.098Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "3710af03-f82d-4e61-8c64-45fdc7375796",
+        "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 15,
+        "allocationDays": 1.5,
+        "id": "7c09f117-fa63-4bc2-912e-a59b32068935",
+        "createdAt": "2025-11-22T19:45:51.187Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "0009f44a-4f36-4f5e-b40b-a27ebd63008b",
+      "allocationId": "a5df7393-5374-4ad1-be93-7bd0b801d490",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T07:55:50.240Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "5dd5e4e4-e054-42be-8394-f8c2dff73c30",
+        "productManagerId": "56f51732-ba6a-486b-b9d9-e5ee3cd4446b",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "a5df7393-5374-4ad1-be93-7bd0b801d490",
+        "createdAt": "2025-11-23T07:55:50.240Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "41fb9675-4bd4-4ef8-b53b-646e8ceab50d",
+      "allocationId": "e0e65946-7b0c-4927-aa48-a808070ec556",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T07:56:25.414Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "5dd5e4e4-e054-42be-8394-f8c2dff73c30",
+        "productManagerId": "56f51732-ba6a-486b-b9d9-e5ee3cd4446b",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "e0e65946-7b0c-4927-aa48-a808070ec556",
+        "createdAt": "2025-11-23T07:56:25.414Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "7d52d555-e6bb-4265-a39c-5498952ff274",
+      "allocationId": "8132e0b9-c7a5-4df0-a887-23b772880572",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T08:10:06.575Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "3710af03-f82d-4e61-8c64-45fdc7375796",
+        "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 15,
+        "allocationDays": 1.5,
+        "id": "8132e0b9-c7a5-4df0-a887-23b772880572",
+        "createdAt": "2025-11-23T08:10:06.575Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "77d4cd8e-9d5a-4836-809a-4a0412bab055",
+      "allocationId": "7459d8e7-9093-4c32-a9b4-3b1490a4d4b0",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T08:28:30.502Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "0d403d4f-f437-4ba9-b7e7-c5742547db03",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 15,
+        "allocationDays": 1.5,
+        "id": "7459d8e7-9093-4c32-a9b4-3b1490a4d4b0",
+        "createdAt": "2025-11-23T08:28:30.502Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "0817ca01-c018-4efa-aadb-97d426a0aee4",
+      "allocationId": "cfaa6844-28bb-4030-8cc9-a569fcd4c45d",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T08:29:00.110Z",
+      "changeType": "updated",
+      "oldValue": {
+        "projectId": "36a052bb-0dd9-462e-8f8a-620b6c948a33",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "cfaa6844-28bb-4030-8cc9-a569fcd4c45d",
+        "createdAt": "2025-11-22T20:30:50.594Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      },
+      "newValue": {
+        "projectId": "36a052bb-0dd9-462e-8f8a-620b6c948a33",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "cfaa6844-28bb-4030-8cc9-a569fcd4c45d",
+        "createdAt": "2025-11-22T20:30:50.594Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "ae96fb7b-42b2-429c-b6d5-37293f516cb2",
+      "allocationId": "f40846af-7b47-4101-b73a-8758c0924e30",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:13:50.756Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "f40846af-7b47-4101-b73a-8758c0924e30",
+        "createdAt": "2025-11-23T14:13:50.756Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "4b25bb15-81a7-42df-b408-1923d06c5653",
+      "allocationId": "163cfbee-fbad-460e-893b-2d4e3421629d",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:14:14.125Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 50,
+        "allocationDays": 5,
+        "id": "163cfbee-fbad-460e-893b-2d4e3421629d",
+        "createdAt": "2025-11-23T14:14:14.125Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "1b762d76-f4fd-4b92-94b6-596189048140",
+      "allocationId": "163cfbee-fbad-460e-893b-2d4e3421629d",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:14:23.557Z",
+      "changeType": "updated",
+      "oldValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 50,
+        "allocationDays": 5,
+        "id": "163cfbee-fbad-460e-893b-2d4e3421629d",
+        "createdAt": "2025-11-23T14:14:14.125Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      },
+      "newValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "163cfbee-fbad-460e-893b-2d4e3421629d",
+        "createdAt": "2025-11-23T14:14:14.125Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "da43f78b-f153-4f85-87d2-fb803cffd477",
+      "allocationId": "b3031412-ecb0-4b2c-b74b-b029ee662b5a",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:14:42.798Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "b3031412-ecb0-4b2c-b74b-b029ee662b5a",
+        "createdAt": "2025-11-23T14:14:42.798Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "90ee4e67-a887-4e5f-8451-3ebf0050611c",
+      "allocationId": "cea1bdb6-8cd6-4675-89f8-f52a8d860e71",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:15:51.864Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "b4c6f3ed-3217-41ed-95dc-5e149b045501",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "cea1bdb6-8cd6-4675-89f8-f52a8d860e71",
+        "createdAt": "2025-11-23T14:15:51.864Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "3a64d9cf-3a54-4824-a3cf-00c02d6f836d",
+      "allocationId": "cc1bf195-3447-44ff-a4f0-2ac766a24cd9",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:16:05.743Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "bdc89968-5707-4a61-9160-1c645d0a11c5",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "cc1bf195-3447-44ff-a4f0-2ac766a24cd9",
+        "createdAt": "2025-11-23T14:16:05.743Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "263af301-bde3-460d-b1a1-028d5448e07e",
+      "allocationId": "e3391da8-8fa3-4902-871b-649719fd6c20",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:16:23.086Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "e3391da8-8fa3-4902-871b-649719fd6c20",
+        "createdAt": "2025-11-23T14:16:23.086Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "7e7e21eb-cbf9-4d81-84f2-8c0167f8f502",
+      "allocationId": "4393dcb4-b1fd-4e69-9bc2-a77d82c27469",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:16:23.086Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "4393dcb4-b1fd-4e69-9bc2-a77d82c27469",
+        "createdAt": "2025-11-23T14:16:23.086Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "442e761a-2b68-41d3-8b85-ff624d8b3f3b",
+      "allocationId": "7037b11d-b629-4d27-849d-336e14f96fb9",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:16:23.086Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "7037b11d-b629-4d27-849d-336e14f96fb9",
+        "createdAt": "2025-11-23T14:16:23.086Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "d3f1fb58-ebaf-4914-81dc-3318340dc0f5",
+      "allocationId": "d24042a3-3926-4b24-9ab3-23901d91bd99",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:16:23.086Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "b4c6f3ed-3217-41ed-95dc-5e149b045501",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "d24042a3-3926-4b24-9ab3-23901d91bd99",
+        "createdAt": "2025-11-23T14:16:23.086Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "b82c311a-d40d-4cbe-a867-094695417364",
+      "allocationId": "42d50d67-17a1-4ea2-9e74-42cf23e81f26",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:16:23.086Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "bdc89968-5707-4a61-9160-1c645d0a11c5",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "42d50d67-17a1-4ea2-9e74-42cf23e81f26",
+        "createdAt": "2025-11-23T14:16:23.086Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "0a2a8445-9e37-4b47-b87e-428378c6d9cb",
+      "allocationId": "7037b11d-b629-4d27-849d-336e14f96fb9",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:16:32.941Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "7037b11d-b629-4d27-849d-336e14f96fb9",
+        "createdAt": "2025-11-23T14:16:23.086Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "ea8d0ee1-0b7e-4cfa-bed3-f1a1f8a2ce5c",
+      "allocationId": "576cdd7c-41f6-4a93-a570-88f7450201cf",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:16:41.374Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "576cdd7c-41f6-4a93-a570-88f7450201cf",
+        "createdAt": "2025-11-23T14:16:41.374Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "590239e5-c03c-4ddb-876d-aa9bde219449",
+      "allocationId": "8f84a6db-6682-4e24-a8b9-b9e53f05bbb7",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:16:41.374Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "8f84a6db-6682-4e24-a8b9-b9e53f05bbb7",
+        "createdAt": "2025-11-23T14:16:41.374Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "93da94a6-43ff-40d0-b5c4-aac2c2c95461",
+      "allocationId": "107a85d5-7617-428c-b9de-a7ccbda62346",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:16:41.374Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "b4c6f3ed-3217-41ed-95dc-5e149b045501",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "107a85d5-7617-428c-b9de-a7ccbda62346",
+        "createdAt": "2025-11-23T14:16:41.374Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "96380a7e-281e-42e9-8b33-1d1d534f063d",
+      "allocationId": "6cf40499-f090-4b01-a853-e1d8adf7eb51",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T14:16:41.374Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "bdc89968-5707-4a61-9160-1c645d0a11c5",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "6cf40499-f090-4b01-a853-e1d8adf7eb51",
+        "createdAt": "2025-11-23T14:16:41.374Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "1e6889bb-8797-4b7c-93e9-eb42d8bb4375",
+      "allocationId": "4830350d-a536-4df9-9660-a434611e9da6",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T16:17:52.558Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "0d403d4f-f437-4ba9-b7e7-c5742547db03",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 20,
+        "allocationDays": 2,
+        "id": "4830350d-a536-4df9-9660-a434611e9da6",
+        "createdAt": "2025-11-23T16:17:52.558Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "c417f058-4278-4302-8ee2-910dbebc4dee",
+      "allocationId": "70002355-6039-460a-b5ec-930bed53deca",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T16:19:58.349Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "5dd5e4e4-e054-42be-8394-f8c2dff73c30",
+        "productManagerId": "b00845ba-00d5-4c5c-919c-97e17e2eed08",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 15,
+        "allocationDays": 1.5,
+        "id": "70002355-6039-460a-b5ec-930bed53deca",
+        "createdAt": "2025-11-23T16:19:58.349Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "4ff19cfb-4092-4fac-9aea-e2d9a5a2cd81",
+      "allocationId": "6eed5f54-1076-47e5-9778-720d3012f96f",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T16:20:12.556Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "5dd5e4e4-e054-42be-8394-f8c2dff73c30",
+        "productManagerId": "b00845ba-00d5-4c5c-919c-97e17e2eed08",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 15,
+        "allocationDays": 1.5,
+        "id": "6eed5f54-1076-47e5-9778-720d3012f96f",
+        "createdAt": "2025-11-23T16:20:12.556Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "30ea47ec-930f-4fed-8236-b750d85ace83",
+      "allocationId": "63bd962f-7160-48ea-bad3-17a69b154ec2",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T16:32:47.238Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "205b9c21-3075-43d3-8453-3be80a8e3797",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 20,
+        "allocationDays": 2,
+        "id": "63bd962f-7160-48ea-bad3-17a69b154ec2",
+        "createdAt": "2025-11-23T16:32:47.238Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "893d7ffd-70d6-480d-affd-433299ab7bef",
+      "allocationId": "cea1bdb6-8cd6-4675-89f8-f52a8d860e71",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T16:33:02.390Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "b4c6f3ed-3217-41ed-95dc-5e149b045501",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "cea1bdb6-8cd6-4675-89f8-f52a8d860e71",
+        "createdAt": "2025-11-23T14:15:51.864Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "be622e54-aaeb-4a75-99b6-7f4a462f8952",
+      "allocationId": "b3031412-ecb0-4b2c-b74b-b029ee662b5a",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T16:33:31.942Z",
+      "changeType": "updated",
+      "oldValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "id": "b3031412-ecb0-4b2c-b74b-b029ee662b5a",
+        "createdAt": "2025-11-23T14:14:42.798Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      },
+      "newValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "b3031412-ecb0-4b2c-b74b-b029ee662b5a",
+        "createdAt": "2025-11-23T14:14:42.798Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "5cc6e98b-bfef-4a8b-bbdc-641bb481ba9e",
+      "allocationId": "63bd962f-7160-48ea-bad3-17a69b154ec2",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T16:34:25.382Z",
+      "changeType": "updated",
+      "oldValue": {
+        "projectId": "205b9c21-3075-43d3-8453-3be80a8e3797",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 20,
+        "allocationDays": 2,
+        "id": "63bd962f-7160-48ea-bad3-17a69b154ec2",
+        "createdAt": "2025-11-23T16:32:47.238Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      },
+      "newValue": {
+        "projectId": "205b9c21-3075-43d3-8453-3be80a8e3797",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "63bd962f-7160-48ea-bad3-17a69b154ec2",
+        "createdAt": "2025-11-23T16:32:47.238Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "3258026c-a1d6-42b7-a325-c5459e302d8c",
+      "allocationId": "63bd962f-7160-48ea-bad3-17a69b154ec2",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T16:34:42.326Z",
+      "changeType": "updated",
+      "oldValue": {
+        "projectId": "205b9c21-3075-43d3-8453-3be80a8e3797",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "63bd962f-7160-48ea-bad3-17a69b154ec2",
+        "createdAt": "2025-11-23T16:32:47.238Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      },
+      "newValue": {
+        "projectId": "205b9c21-3075-43d3-8453-3be80a8e3797",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "63bd962f-7160-48ea-bad3-17a69b154ec2",
+        "createdAt": "2025-11-23T16:32:47.238Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "2adb1840-be79-4b5f-835c-31195b31991e",
+      "allocationId": "e2f36259-d471-47b6-90fd-3a92c5031e91",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T20:06:13.961Z",
+      "changeType": "updated",
+      "oldValue": {
+        "projectId": "9b6c9fa4-b4f3-4023-b087-7d83968e5cc4",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 20,
+        "allocationDays": 2,
+        "id": "e2f36259-d471-47b6-90fd-3a92c5031e91",
+        "createdAt": "2025-11-22T13:25:01.333Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      },
+      "newValue": {
+        "projectId": "9b6c9fa4-b4f3-4023-b087-7d83968e5cc4",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 80,
+        "allocationDays": 8,
+        "id": "e2f36259-d471-47b6-90fd-3a92c5031e91",
+        "createdAt": "2025-11-22T13:25:01.333Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "1fa18a20-6aab-4d73-84fe-a3e74674e57b",
+      "allocationId": "e2f36259-d471-47b6-90fd-3a92c5031e91",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T20:06:38.303Z",
+      "changeType": "updated",
+      "oldValue": {
+        "projectId": "9b6c9fa4-b4f3-4023-b087-7d83968e5cc4",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 80,
+        "allocationDays": 8,
+        "id": "e2f36259-d471-47b6-90fd-3a92c5031e91",
+        "createdAt": "2025-11-22T13:25:01.333Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      },
+      "newValue": {
+        "projectId": "9b6c9fa4-b4f3-4023-b087-7d83968e5cc4",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 20,
+        "allocationDays": 2,
+        "id": "e2f36259-d471-47b6-90fd-3a92c5031e91",
+        "createdAt": "2025-11-22T13:25:01.333Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "d12f7afa-6cff-494d-81d0-ec57db3bfff7",
+      "allocationId": "9ecf09a1-fee6-4931-a373-d0ada4727bdb",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T20:08:52.703Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "productManagerId": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "allocationPercentage": 100,
+        "allocationDays": 10,
+        "id": "9ecf09a1-fee6-4931-a373-d0ada4727bdb",
+        "createdAt": "2025-11-23T20:08:52.703Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "1042ad7f-0ca7-47bd-9fb3-2542dca8036d",
+      "allocationId": "3469907c-91b3-4661-a686-11ebd30fcd8a",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-23T20:37:59.786Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "5dd5e4e4-e054-42be-8394-f8c2dff73c30",
+        "productManagerId": "56f51732-ba6a-486b-b9d9-e5ee3cd4446b",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "3469907c-91b3-4661-a686-11ebd30fcd8a",
+        "createdAt": "2025-11-23T20:37:59.786Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "fdfdc255-ab1a-49de-bf21-3f2a657a2f40",
+      "allocationId": "5992b6c7-f644-4f47-9ef9-b0ff706705b5",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T10:28:06.302Z",
+      "changeType": "updated",
+      "oldValue": {
+        "id": "5992b6c7-f644-4f47-9ef9-b0ff706705b5",
+        "projectId": "cb9c7fd8-afa6-4e14-86d9-a7d8dca77813",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "createdAt": "2025-11-22T15:46:27.340Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "allocationPercentage": 5,
+        "allocationDays": 0.5
+      },
+      "newValue": {
+        "id": "5992b6c7-f644-4f47-9ef9-b0ff706705b5",
+        "projectId": "cb9c7fd8-afa6-4e14-86d9-a7d8dca77813",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "createdAt": "2025-11-22T15:46:27.340Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "comment": "customer wants to have a POC using his device + HIPA for regulation "
+      }
+    },
+    {
+      "id": "47f53800-86fb-4f8f-ab85-639fa48f4825",
+      "allocationId": "40ca86cd-e148-4e09-a993-f2940da60832",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:39:57.542Z",
+      "changeType": "updated",
+      "oldValue": {
+        "id": "40ca86cd-e148-4e09-a993-f2940da60832",
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "createdAt": "2025-11-22T15:18:21.530Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 50,
+        "allocationDays": 5
+      },
+      "newValue": {
+        "id": "40ca86cd-e148-4e09-a993-f2940da60832",
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "createdAt": "2025-11-22T15:18:21.530Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 25,
+        "allocationDays": 2.5
+      }
+    },
+    {
+      "id": "0d36fac2-5b27-4298-b92b-fa17fc573dde",
+      "allocationId": "3b181288-0a07-48a9-ab1a-5776ce09c36d",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:40:09.767Z",
+      "changeType": "updated",
+      "oldValue": {
+        "id": "3b181288-0a07-48a9-ab1a-5776ce09c36d",
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "createdAt": "2025-11-22T15:19:05.922Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 10,
+        "allocationDays": 1
+      },
+      "newValue": {
+        "id": "3b181288-0a07-48a9-ab1a-5776ce09c36d",
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "createdAt": "2025-11-22T15:19:05.922Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 15,
+        "allocationDays": 1.5
+      }
+    },
+    {
+      "id": "72687b83-cfc0-4758-ba86-f738f78358e2",
+      "allocationId": "fa0827da-a195-4236-9add-e3e302199319",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:42:13.854Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "fa0827da-a195-4236-9add-e3e302199319",
+        "projectId": "db8af93d-fca6-4c08-8e8c-7663998d4136",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "createdAt": "2025-11-22T19:39:05.454Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 50,
+        "allocationDays": 5
+      }
+    },
+    {
+      "id": "5da85d93-3386-44e6-9159-0da1d4bbfd18",
+      "allocationId": "9f440a85-2f7f-43fa-ae8e-cfc4189bc7f9",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:42:16.419Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "9f440a85-2f7f-43fa-ae8e-cfc4189bc7f9",
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "createdAt": "2025-11-22T19:39:05.454Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 50,
+        "allocationDays": 5
+      }
+    },
+    {
+      "id": "12b6ed70-e289-4545-a999-1f1533d3d700",
+      "allocationId": "8615725a-8c45-4014-bf46-d16a83e4e241",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:42:17.584Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "8615725a-8c45-4014-bf46-d16a83e4e241",
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "createdAt": "2025-11-22T19:39:05.454Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 10,
+        "allocationDays": 1
+      }
+    },
+    {
+      "id": "2f7efd5d-c831-4530-996d-4daab97b0574",
+      "allocationId": "785393b3-e539-46f7-a2db-2afeaf64f623",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:42:18.582Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "785393b3-e539-46f7-a2db-2afeaf64f623",
+        "projectId": "3186c9c1-5589-4528-9c6e-714138c830c9",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "createdAt": "2025-11-22T19:17:16.338Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 5,
+        "allocationDays": 0.5
+      }
+    },
+    {
+      "id": "72df6723-328e-42a2-a25e-c0e920a2515e",
+      "allocationId": "51a1d47e-0382-4613-84f6-31024c2841b7",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:42:19.577Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "51a1d47e-0382-4613-84f6-31024c2841b7",
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "createdAt": "2025-11-22T19:39:05.455Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 5,
+        "allocationDays": 0.5
+      }
+    },
+    {
+      "id": "712d46ee-beb8-4331-8dda-8c48257edd50",
+      "allocationId": "0efad286-37e3-4c83-b5fa-8dac185ec16c",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:42:22.651Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "db8af93d-fca6-4c08-8e8c-7663998d4136",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 50,
+        "allocationDays": 5,
+        "id": "0efad286-37e3-4c83-b5fa-8dac185ec16c",
+        "createdAt": "2025-11-24T15:42:22.651Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "4a15e287-ba4c-42ca-8ed6-c634cfdf22ac",
+      "allocationId": "0dfa388c-611b-4e18-a54d-4a826af0f690",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:42:22.651Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 25,
+        "allocationDays": 2.5,
+        "id": "0dfa388c-611b-4e18-a54d-4a826af0f690",
+        "createdAt": "2025-11-24T15:42:22.651Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "50f65824-b8f9-4934-bd17-6101f2c9b7ba",
+      "allocationId": "61d2c1b6-0966-414b-867b-8b9aa9ab6129",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:42:22.651Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 15,
+        "allocationDays": 1.5,
+        "id": "61d2c1b6-0966-414b-867b-8b9aa9ab6129",
+        "createdAt": "2025-11-24T15:42:22.651Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "9cd5cdd0-2560-4f5f-810b-e5c14688c665",
+      "allocationId": "c0343b84-f2b7-4bf0-ab98-fbc9f2b36eb5",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:42:22.651Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "3186c9c1-5589-4528-9c6e-714138c830c9",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "c0343b84-f2b7-4bf0-ab98-fbc9f2b36eb5",
+        "createdAt": "2025-11-24T15:42:22.651Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "55f447a1-fb78-4902-8e85-9e97abdfc3fc",
+      "allocationId": "9a60409a-520b-469e-b4fc-d22d2a4bd512",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:42:22.651Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "9a60409a-520b-469e-b4fc-d22d2a4bd512",
+        "createdAt": "2025-11-24T15:42:22.651Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "8d0fb3b3-e558-4dba-bf72-75b567549b25",
+      "allocationId": "0dfa388c-611b-4e18-a54d-4a826af0f690",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:42:36.316Z",
+      "changeType": "updated",
+      "oldValue": {
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 25,
+        "allocationDays": 2.5,
+        "id": "0dfa388c-611b-4e18-a54d-4a826af0f690",
+        "createdAt": "2025-11-24T15:42:22.651Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      },
+      "newValue": {
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "0dfa388c-611b-4e18-a54d-4a826af0f690",
+        "createdAt": "2025-11-24T15:42:22.651Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "3fbc854a-dba7-4352-aa90-65fde998170b",
+      "allocationId": "0dfa388c-611b-4e18-a54d-4a826af0f690",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:42:59.635Z",
+      "changeType": "updated",
+      "oldValue": {
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "0dfa388c-611b-4e18-a54d-4a826af0f690",
+        "createdAt": "2025-11-24T15:42:22.651Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      },
+      "newValue": {
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 25,
+        "allocationDays": 2.5,
+        "id": "0dfa388c-611b-4e18-a54d-4a826af0f690",
+        "createdAt": "2025-11-24T15:42:22.651Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "931b296b-b7ae-456f-ab86-998e69e5cbfb",
+      "allocationId": "c0343b84-f2b7-4bf0-ab98-fbc9f2b36eb5",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:43:09.157Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "3186c9c1-5589-4528-9c6e-714138c830c9",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "c0343b84-f2b7-4bf0-ab98-fbc9f2b36eb5",
+        "createdAt": "2025-11-24T15:42:22.651Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "02732d43-aad6-4495-897d-764c8da6d9d1",
+      "allocationId": "9a60409a-520b-469e-b4fc-d22d2a4bd512",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:43:13.731Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "9a60409a-520b-469e-b4fc-d22d2a4bd512",
+        "createdAt": "2025-11-24T15:42:22.651Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "1f423cd9-f7bf-48df-87cc-ff0da7705e80",
+      "allocationId": "bb5fe29d-cc9c-47dc-99f0-2ca6cd4b3d6c",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:43:22.607Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "bb5fe29d-cc9c-47dc-99f0-2ca6cd4b3d6c",
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "createdAt": "2025-11-22T20:30:04.298Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 5,
+        "allocationDays": 0.5
+      }
+    },
+    {
+      "id": "7ec63c91-e20a-407d-95e2-9b7da809055f",
+      "allocationId": "bf48351f-8f85-4ff5-986d-5270b0dd2d63",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:44:58.884Z",
+      "changeType": "updated",
+      "oldValue": {
+        "id": "bf48351f-8f85-4ff5-986d-5270b0dd2d63",
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "createdAt": "2025-11-22T20:30:04.298Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 50,
+        "allocationDays": 5
+      },
+      "newValue": {
+        "id": "bf48351f-8f85-4ff5-986d-5270b0dd2d63",
+        "projectId": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "createdAt": "2025-11-22T20:30:04.298Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 30,
+        "allocationDays": 3
+      }
+    },
+    {
+      "id": "90acc064-8923-4b8c-9401-35a84d21aca6",
+      "allocationId": "40194515-1cc7-43db-b0a6-dd5aa742032c",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:45:07.266Z",
+      "changeType": "updated",
+      "oldValue": {
+        "id": "40194515-1cc7-43db-b0a6-dd5aa742032c",
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "createdAt": "2025-11-22T20:30:04.298Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 10,
+        "allocationDays": 1
+      },
+      "newValue": {
+        "id": "40194515-1cc7-43db-b0a6-dd5aa742032c",
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "createdAt": "2025-11-22T20:30:04.298Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 15,
+        "allocationDays": 1.5
+      }
+    },
+    {
+      "id": "c99b3d8d-9b28-4ac8-85a2-11fee4b4bfd5",
+      "allocationId": "465c844c-696e-4327-9dfb-74aabf27acb2",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:45:14.188Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "465c844c-696e-4327-9dfb-74aabf27acb2",
+        "projectId": "3186c9c1-5589-4528-9c6e-714138c830c9",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "createdAt": "2025-11-22T19:17:21.877Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 5,
+        "allocationDays": 0.5
+      }
+    },
+    {
+      "id": "b6d8e184-d956-4058-a561-f467bf298bca",
+      "allocationId": "7fcca89e-bd48-4d3d-9d8f-56e2426b0ab5",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:49:29.739Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "b4c6f3ed-3217-41ed-95dc-5e149b045501",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "7fcca89e-bd48-4d3d-9d8f-56e2426b0ab5",
+        "createdAt": "2025-11-24T15:49:29.739Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "c88f3468-9311-426b-9ced-66088480924f",
+      "allocationId": "63bd962f-7160-48ea-bad3-17a69b154ec2",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:49:57.981Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "63bd962f-7160-48ea-bad3-17a69b154ec2",
+        "projectId": "205b9c21-3075-43d3-8453-3be80a8e3797",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "createdAt": "2025-11-23T16:32:47.238Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "allocationPercentage": 30,
+        "allocationDays": 3
+      }
+    },
+    {
+      "id": "a0aecf71-5f47-4a4a-80a5-2336f6cddecd",
+      "allocationId": "4393dcb4-b1fd-4e69-9bc2-a77d82c27469",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:50:16.942Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "4393dcb4-b1fd-4e69-9bc2-a77d82c27469",
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "createdAt": "2025-11-23T14:16:23.086Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "allocationPercentage": 40,
+        "allocationDays": 4
+      }
+    },
+    {
+      "id": "b6a7dd29-bc15-4b72-a132-eac3d5aeabf8",
+      "allocationId": "e3391da8-8fa3-4902-871b-649719fd6c20",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:50:19.007Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "e3391da8-8fa3-4902-871b-649719fd6c20",
+        "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "createdAt": "2025-11-23T14:16:23.086Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "allocationPercentage": 30,
+        "allocationDays": 3
+      }
+    },
+    {
+      "id": "2353c50f-36c2-474d-801d-0d75cb97559c",
+      "allocationId": "d24042a3-3926-4b24-9ab3-23901d91bd99",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:50:20.820Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "d24042a3-3926-4b24-9ab3-23901d91bd99",
+        "projectId": "b4c6f3ed-3217-41ed-95dc-5e149b045501",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "createdAt": "2025-11-23T14:16:23.086Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "allocationPercentage": 5,
+        "allocationDays": 0.5
+      }
+    },
+    {
+      "id": "8ec0cdb5-b3b8-4ce2-8b91-d7ef52e60751",
+      "allocationId": "42d50d67-17a1-4ea2-9e74-42cf23e81f26",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:50:23.220Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "42d50d67-17a1-4ea2-9e74-42cf23e81f26",
+        "projectId": "bdc89968-5707-4a61-9160-1c645d0a11c5",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "createdAt": "2025-11-23T14:16:23.086Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "allocationPercentage": 5,
+        "allocationDays": 0.5
+      }
+    },
+    {
+      "id": "6191f325-c6e3-4db5-9540-71934d26dfb2",
+      "allocationId": "4f37fb51-9728-41ae-be50-3c04bb91271d",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:50:25.978Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 30,
+        "allocationDays": 3,
+        "id": "4f37fb51-9728-41ae-be50-3c04bb91271d",
+        "createdAt": "2025-11-24T15:50:25.978Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "eae8e94b-959c-4a14-8346-c72697fa0b91",
+      "allocationId": "df952a2e-184c-443e-ae78-3099be9a616d",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:50:25.978Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 40,
+        "allocationDays": 4,
+        "id": "df952a2e-184c-443e-ae78-3099be9a616d",
+        "createdAt": "2025-11-24T15:50:25.978Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "571cf59b-3d01-4e9f-b8dc-a7b5aaedbc67",
+      "allocationId": "2dd1917d-7cd4-46a5-984a-345b940a7b60",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:50:25.978Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "2dd1917d-7cd4-46a5-984a-345b940a7b60",
+        "createdAt": "2025-11-24T15:50:25.978Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "c531ea0c-89d8-453b-a7fc-11dce6d3046a",
+      "allocationId": "78990379-240b-4b23-92cc-5b9afa24d1c7",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:50:25.978Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "bdc89968-5707-4a61-9160-1c645d0a11c5",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "78990379-240b-4b23-92cc-5b9afa24d1c7",
+        "createdAt": "2025-11-24T15:50:25.978Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "62c140be-f270-46c2-8fc4-b993119cfafb",
+      "allocationId": "9e525634-cf40-48b8-aeb3-a84d49c05872",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:50:25.978Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "b4c6f3ed-3217-41ed-95dc-5e149b045501",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "9e525634-cf40-48b8-aeb3-a84d49c05872",
+        "createdAt": "2025-11-24T15:50:25.978Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "ace953df-c8ed-4680-9cba-cd7f07163da3",
+      "allocationId": "2dd1917d-7cd4-46a5-984a-345b940a7b60",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:50:37.955Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "2dd1917d-7cd4-46a5-984a-345b940a7b60",
+        "createdAt": "2025-11-24T15:50:25.978Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "c564e6db-d3be-4979-bd81-604710da8c64",
+      "allocationId": "9e525634-cf40-48b8-aeb3-a84d49c05872",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:50:41.992Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "b4c6f3ed-3217-41ed-95dc-5e149b045501",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 12,
+        "sprint": 1,
+        "allocationPercentage": 5,
+        "allocationDays": 0.5,
+        "id": "9e525634-cf40-48b8-aeb3-a84d49c05872",
+        "createdAt": "2025-11-24T15:50:25.978Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+      }
+    },
+    {
+      "id": "41ded564-98aa-4550-87a9-d50485cba63a",
+      "allocationId": "8f84a6db-6682-4e24-a8b9-b9e53f05bbb7",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:50:54.229Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "8f84a6db-6682-4e24-a8b9-b9e53f05bbb7",
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "createdAt": "2025-11-23T14:16:41.374Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "allocationPercentage": 40,
+        "allocationDays": 4
+      }
+    },
+    {
+      "id": "458c26cc-5a17-4785-bb79-3061c57acdeb",
+      "allocationId": "576cdd7c-41f6-4a93-a570-88f7450201cf",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:50:56.579Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "576cdd7c-41f6-4a93-a570-88f7450201cf",
+        "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "createdAt": "2025-11-23T14:16:41.374Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "allocationPercentage": 30,
+        "allocationDays": 3
+      }
+    },
+    {
+      "id": "f04a99b2-d0f2-4c9f-a739-425fca50bf98",
+      "allocationId": "107a85d5-7617-428c-b9de-a7ccbda62346",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:50:58.388Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "107a85d5-7617-428c-b9de-a7ccbda62346",
+        "projectId": "b4c6f3ed-3217-41ed-95dc-5e149b045501",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "createdAt": "2025-11-23T14:16:41.374Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "allocationPercentage": 5,
+        "allocationDays": 0.5
+      }
+    },
+    {
+      "id": "5fb91fbd-6e6b-413b-a3c6-06b6410dd492",
+      "allocationId": "6cf40499-f090-4b01-a853-e1d8adf7eb51",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-24T15:51:00.483Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "6cf40499-f090-4b01-a853-e1d8adf7eb51",
+        "projectId": "bdc89968-5707-4a61-9160-1c645d0a11c5",
+        "year": 2025,
+        "month": 12,
+        "sprint": 2,
+        "createdAt": "2025-11-23T14:16:41.374Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "allocationPercentage": 5,
+        "allocationDays": 0.5
+      }
+    },
+    {
+      "id": "e58cbe2d-438b-45d0-8e83-0d4ede278cf5",
+      "allocationId": "b3031412-ecb0-4b2c-b74b-b029ee662b5a",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-25T09:16:04.364Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "b3031412-ecb0-4b2c-b74b-b029ee662b5a",
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "createdAt": "2025-11-23T14:14:42.798Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "allocationPercentage": 5,
+        "allocationDays": 0.5
+      }
+    },
+    {
+      "id": "3ce910f8-b843-4100-aa3a-522c64a4b09a",
+      "allocationId": "ec4520dd-9ff3-48d7-a50f-3e0508e2bcb0",
+      "changedBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "changedAt": "2025-11-25T09:16:06.825Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "ec4520dd-9ff3-48d7-a50f-3e0508e2bcb0",
+        "projectId": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "createdAt": "2025-11-22T19:17:38.984Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 5,
+        "allocationDays": 0.5
+      }
+    },
+    {
+      "id": "e2027a4e-da17-4b00-8fa4-dfcd8ae895cc",
+      "allocationId": "e4f5d4a2-3bae-4f20-ba45-f51d3128170f",
+      "changedAt": "2025-11-27T22:25:19.472Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "e4f5d4a2-3bae-4f20-ba45-f51d3128170f",
+        "projectId": "db8af93d-fca6-4c08-8e8c-7663998d4136",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "createdAt": "2025-11-22T15:17:26.914Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "allocationPercentage": 50,
+        "allocationDays": 5
+      }
+    },
+    {
+      "id": "0e9f3be5-b96b-480e-a0e7-d7474c8bc4b5",
+      "allocationId": "fd758078-ad48-4555-a4b5-9e6f8b80e6dd",
+      "changedAt": "2025-11-27T22:25:37.436Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "db8af93d-fca6-4c08-8e8c-7663998d4136",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 50,
+        "allocationDays": 5,
+        "isPlanned": true,
+        "id": "fd758078-ad48-4555-a4b5-9e6f8b80e6dd",
+        "createdAt": "2025-11-27T22:25:37.436Z"
+      }
+    },
+    {
+      "id": "14adc631-6a8a-466e-91d0-a6bae27645e4",
+      "allocationId": "6102bbfc-18d9-4c30-82d9-82e392835461",
+      "changedAt": "2025-11-27T22:31:26.757Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "6102bbfc-18d9-4c30-82d9-82e392835461",
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "year": 2026,
+        "month": 1,
+        "sprint": 1,
+        "createdAt": "2025-11-22T20:41:13.232Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+        "allocationPercentage": 100,
+        "allocationDays": 10
+      }
+    },
+    {
+      "id": "b0e29914-8024-416e-b14f-b8e29740a740",
+      "allocationId": "d6f94a59-e80f-414a-a91a-df4cf9f2d004",
+      "changedAt": "2025-11-27T22:31:29.546Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "d6f94a59-e80f-414a-a91a-df4cf9f2d004",
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "year": 2026,
+        "month": 1,
+        "sprint": 1,
+        "createdAt": "2025-11-22T20:43:23.206Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "allocationPercentage": 40,
+        "allocationDays": 4
+      }
+    },
+    {
+      "id": "681d629e-ac5b-4fb9-9da7-db2fc53223de",
+      "allocationId": "91a0fc8b-39f1-4c78-b78e-99e7346d931a",
+      "changedAt": "2025-11-27T22:31:31.848Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "91a0fc8b-39f1-4c78-b78e-99e7346d931a",
+        "projectId": "59ab299a-fa07-4a93-9ffa-d9c14aae536e",
+        "year": 2026,
+        "month": 1,
+        "sprint": 1,
+        "createdAt": "2025-11-22T20:43:23.206Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "allocationPercentage": 30,
+        "allocationDays": 3
+      }
+    },
+    {
+      "id": "6d03c479-2281-44fc-b57b-eba7fa543add",
+      "allocationId": "36e197f4-806e-4b52-a839-7fc464cf6682",
+      "changedAt": "2025-11-27T22:31:33.940Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "36e197f4-806e-4b52-a839-7fc464cf6682",
+        "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+        "year": 2026,
+        "month": 1,
+        "sprint": 1,
+        "createdAt": "2025-11-22T19:16:17.573Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "allocationPercentage": 30,
+        "allocationDays": 3
+      }
+    },
+    {
+      "id": "827e0991-d05c-4bae-aba6-82a4474a0413",
+      "allocationId": "7fbd79a7-905a-4c2c-a192-0227c6e17727",
+      "changedAt": "2025-11-27T22:31:36.171Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "7fbd79a7-905a-4c2c-a192-0227c6e17727",
+        "projectId": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+        "year": 2026,
+        "month": 1,
+        "sprint": 2,
+        "createdAt": "2025-11-22T19:16:24.478Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "allocationPercentage": 30,
+        "allocationDays": 3
+      }
+    },
+    {
+      "id": "9c5b8542-9261-45d4-a1cd-f7327a2f9485",
+      "allocationId": "8ec2b2b9-e897-4c7e-b071-9095ab6696be",
+      "changedAt": "2025-11-27T22:31:38.200Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "8ec2b2b9-e897-4c7e-b071-9095ab6696be",
+        "projectId": "59ab299a-fa07-4a93-9ffa-d9c14aae536e",
+        "year": 2026,
+        "month": 1,
+        "sprint": 2,
+        "createdAt": "2025-11-22T20:44:09.765Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "allocationPercentage": 30,
+        "allocationDays": 3
+      }
+    },
+    {
+      "id": "2adac39f-6e30-4e30-b2c9-27ee8cdbf0b8",
+      "allocationId": "ca864919-b86a-4343-8dc2-2c4ef91814a8",
+      "changedAt": "2025-11-27T22:31:40.066Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "ca864919-b86a-4343-8dc2-2c4ef91814a8",
+        "projectId": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+        "year": 2026,
+        "month": 1,
+        "sprint": 2,
+        "createdAt": "2025-11-22T20:44:09.765Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+        "allocationPercentage": 40,
+        "allocationDays": 4
+      }
+    },
+    {
+      "id": "4785adf0-f13b-4246-bf97-15251b5486b0",
+      "allocationId": "3d6341cd-b214-45f9-960e-8a0a3f1e5423",
+      "changedAt": "2025-11-27T22:31:42.279Z",
+      "changeType": "updated",
+      "oldValue": {
+        "id": "3d6341cd-b214-45f9-960e-8a0a3f1e5423",
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "year": 2026,
+        "month": 1,
+        "sprint": 2,
+        "createdAt": "2025-11-22T20:41:16.881Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+        "allocationPercentage": 100,
+        "allocationDays": 10
+      },
+      "newValue": {
+        "id": "3d6341cd-b214-45f9-960e-8a0a3f1e5423",
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "year": 2026,
+        "month": 1,
+        "sprint": 2,
+        "createdAt": "2025-11-22T20:41:16.881Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+        "allocationPercentage": 100,
+        "allocationDays": 10
+      }
+    },
+    {
+      "id": "a689433a-b1ab-4cb4-bcdf-bfa78eb175bc",
+      "allocationId": "3d6341cd-b214-45f9-960e-8a0a3f1e5423",
+      "changedAt": "2025-11-27T22:31:44.151Z",
+      "changeType": "updated",
+      "oldValue": {
+        "id": "3d6341cd-b214-45f9-960e-8a0a3f1e5423",
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "year": 2026,
+        "month": 1,
+        "sprint": 2,
+        "createdAt": "2025-11-22T20:41:16.881Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+        "allocationPercentage": 100,
+        "allocationDays": 10
+      },
+      "newValue": {
+        "id": "3d6341cd-b214-45f9-960e-8a0a3f1e5423",
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "year": 2026,
+        "month": 1,
+        "sprint": 2,
+        "createdAt": "2025-11-22T20:41:16.881Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+        "allocationPercentage": 100,
+        "allocationDays": 10
+      }
+    },
+    {
+      "id": "47e5c25c-7184-4ecb-871a-4bcc7198e73e",
+      "allocationId": "3d6341cd-b214-45f9-960e-8a0a3f1e5423",
+      "changedAt": "2025-11-27T22:31:46.854Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "3d6341cd-b214-45f9-960e-8a0a3f1e5423",
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "year": 2026,
+        "month": 1,
+        "sprint": 2,
+        "createdAt": "2025-11-22T20:41:16.881Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+        "allocationPercentage": 100,
+        "allocationDays": 10
+      }
+    },
+    {
+      "id": "3db3e105-6ded-40dc-9b6d-3c78e4fa23b7",
+      "allocationId": "fd758078-ad48-4555-a4b5-9e6f8b80e6dd",
+      "changedAt": "2025-11-27T22:38:11.391Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "db8af93d-fca6-4c08-8e8c-7663998d4136",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 50,
+        "allocationDays": 5,
+        "isPlanned": true,
+        "id": "fd758078-ad48-4555-a4b5-9e6f8b80e6dd",
+        "createdAt": "2025-11-27T22:25:37.436Z"
+      }
+    },
+    {
+      "id": "d1f88668-3e4c-4782-9d7a-6c836bd7dc71",
+      "allocationId": "395d1720-e88c-4ae7-b521-834eb1823c3f",
+      "changedAt": "2025-11-27T22:38:54.173Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "702da501-ad49-42aa-9b8b-434f1d6aeeb9",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 15,
+        "allocationDays": 1.5,
+        "isPlanned": true,
+        "id": "395d1720-e88c-4ae7-b521-834eb1823c3f",
+        "createdAt": "2025-11-27T22:38:54.173Z"
+      }
+    },
+    {
+      "id": "9ac5cef5-f758-432e-9724-d14aba990b51",
+      "allocationId": "395d1720-e88c-4ae7-b521-834eb1823c3f",
+      "changedAt": "2025-11-27T22:39:14.593Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "702da501-ad49-42aa-9b8b-434f1d6aeeb9",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 15,
+        "allocationDays": 1.5,
+        "isPlanned": true,
+        "id": "395d1720-e88c-4ae7-b521-834eb1823c3f",
+        "createdAt": "2025-11-27T22:38:54.173Z"
+      }
+    },
+    {
+      "id": "1b14bec7-3e8f-4d9a-93a4-70c567d6413d",
+      "allocationId": "73eaeb51-524f-4be9-a4c3-da7459220996",
+      "changedAt": "2025-11-27T22:43:25.501Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "702da501-ad49-42aa-9b8b-434f1d6aeeb9",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 15,
+        "allocationDays": 1.5,
+        "isPlanned": true,
+        "id": "73eaeb51-524f-4be9-a4c3-da7459220996",
+        "createdAt": "2025-11-27T22:43:25.500Z"
+      }
+    },
+    {
+      "id": "d1e66661-3a95-4d59-9e49-fe6d842288ec",
+      "allocationId": "73eaeb51-524f-4be9-a4c3-da7459220996",
+      "changedAt": "2025-11-27T22:43:31.791Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "702da501-ad49-42aa-9b8b-434f1d6aeeb9",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 15,
+        "allocationDays": 1.5,
+        "isPlanned": true,
+        "id": "73eaeb51-524f-4be9-a4c3-da7459220996",
+        "createdAt": "2025-11-27T22:43:25.500Z"
+      }
+    },
+    {
+      "id": "e81d8283-abca-44e4-9fc7-eecb9173a84e",
+      "allocationId": "20fd4965-4e1e-4661-85b4-9802b5a845a3",
+      "changedAt": "2025-11-27T22:49:25.120Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "db8af93d-fca6-4c08-8e8c-7663998d4136",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 35,
+        "allocationDays": 3.5,
+        "isPlanned": true,
+        "id": "20fd4965-4e1e-4661-85b4-9802b5a845a3",
+        "createdAt": "2025-11-27T22:49:25.120Z"
+      }
+    },
+    {
+      "id": "a06062f8-186c-491b-8e05-17a2322512b2",
+      "allocationId": "20fd4965-4e1e-4661-85b4-9802b5a845a3",
+      "changedAt": "2025-11-27T22:49:37.159Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "db8af93d-fca6-4c08-8e8c-7663998d4136",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 35,
+        "allocationDays": 3.5,
+        "isPlanned": true,
+        "id": "20fd4965-4e1e-4661-85b4-9802b5a845a3",
+        "createdAt": "2025-11-27T22:49:25.120Z"
+      }
+    },
+    {
+      "id": "48635923-b718-4793-8d26-ec0522c2b2c2",
+      "allocationId": "3d6341cd-b214-45f9-960e-8a0a3f1e5423",
+      "changedAt": "2025-11-27T22:50:02.256Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "id": "3d6341cd-b214-45f9-960e-8a0a3f1e5423",
+        "projectId": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+        "year": 2026,
+        "month": 1,
+        "sprint": 2,
+        "createdAt": "2025-11-22T20:41:16.881Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+        "allocationPercentage": 100,
+        "allocationDays": 10
+      }
+    },
+    {
+      "id": "a0d835ef-793e-4db4-a623-3c0dadbdba23",
+      "allocationId": "5992b6c7-f644-4f47-9ef9-b0ff706705b5",
+      "changedAt": "2025-11-27T22:56:06.543Z",
+      "changeType": "updated",
+      "oldValue": {
+        "id": "5992b6c7-f644-4f47-9ef9-b0ff706705b5",
+        "projectId": "cb9c7fd8-afa6-4e14-86d9-a7d8dca77813",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "createdAt": "2025-11-22T15:46:27.340Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "allocationPercentage": 5,
+        "allocationDays": 0.5
+      },
+      "newValue": {
+        "id": "5992b6c7-f644-4f47-9ef9-b0ff706705b5",
+        "projectId": "cb9c7fd8-afa6-4e14-86d9-a7d8dca77813",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "createdAt": "2025-11-22T15:46:27.340Z",
+        "createdBy": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+        "productManagerId": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+        "allocationPercentage": 5,
+        "allocationDays": 0.5
+      }
+    },
+    {
+      "id": "25ec8683-b712-48e2-8801-9c0b04b05a51",
+      "allocationId": "860ee4b5-636b-4ea5-a23f-66ad5a680b03",
+      "changedAt": "2025-11-27T23:08:42.758Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "702da501-ad49-42aa-9b8b-434f1d6aeeb9",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "isPlanned": true,
+        "id": "860ee4b5-636b-4ea5-a23f-66ad5a680b03",
+        "createdAt": "2025-11-27T23:08:42.758Z"
+      }
+    },
+    {
+      "id": "668de632-a46f-4668-b10c-34e7ce5f1921",
+      "allocationId": "860ee4b5-636b-4ea5-a23f-66ad5a680b03",
+      "changedAt": "2025-11-27T23:09:13.890Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "702da501-ad49-42aa-9b8b-434f1d6aeeb9",
+        "productManagerId": "090f521c-dc56-4a55-85b4-736f53f89f76",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "isPlanned": true,
+        "id": "860ee4b5-636b-4ea5-a23f-66ad5a680b03",
+        "createdAt": "2025-11-27T23:08:42.758Z"
+      }
+    },
+    {
+      "id": "530558dd-3ca0-41a1-9b26-627b7e301cb4",
+      "allocationId": "6c500d43-1021-4dd5-b720-642135eae16c",
+      "changedAt": "2025-11-27T23:10:05.278Z",
+      "changeType": "created",
+      "newValue": {
+        "projectId": "702da501-ad49-42aa-9b8b-434f1d6aeeb9",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "isPlanned": true,
+        "id": "6c500d43-1021-4dd5-b720-642135eae16c",
+        "createdAt": "2025-11-27T23:10:05.278Z"
+      }
+    },
+    {
+      "id": "c1869526-8ed5-4005-98aa-4be48829cd2d",
+      "allocationId": "6c500d43-1021-4dd5-b720-642135eae16c",
+      "changedAt": "2025-11-27T23:22:32.985Z",
+      "changeType": "deleted",
+      "oldValue": {
+        "projectId": "702da501-ad49-42aa-9b8b-434f1d6aeeb9",
+        "productManagerId": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+        "year": 2025,
+        "month": 11,
+        "sprint": 2,
+        "allocationPercentage": 10,
+        "allocationDays": 1,
+        "isPlanned": true,
+        "id": "6c500d43-1021-4dd5-b720-642135eae16c",
+        "createdAt": "2025-11-27T23:10:05.278Z"
+      }
+    }
+  ],
+  "sprintProjects": {
+    "2025-11-2": [
+      "db8af93d-fca6-4c08-8e8c-7663998d4136",
+      "702da501-ad49-42aa-9b8b-434f1d6aeeb9",
+      "9b6c9fa4-b4f3-4023-b087-7d83968e5cc4",
+      "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+      "cb9c7fd8-afa6-4e14-86d9-a7d8dca77813",
+      "d8996a64-f685-4cc3-9ff2-37d51a98e280",
+      "db94b434-8279-4172-a284-37b0ee67c385",
+      "5fc7d05e-85e8-4959-bd0c-a7c173e01a6f",
+      "f74c3aa6-9b5e-425b-b375-0883b2dafc7d",
+      "36a052bb-0dd9-462e-8f8a-620b6c948a33",
+      "ac2f4c75-4584-429c-ab1a-73914490dc9c",
+      "3186c9c1-5589-4528-9c6e-714138c830c9",
+      "5ee6ca71-80da-441c-9788-0d681ef4549d",
+      "71b511a0-ba86-480b-bb7b-adcb0707fadf",
+      "5dd5e4e4-e054-42be-8394-f8c2dff73c30",
+      "590a2f6a-583d-4186-8000-e9dca0d2ed4b"
+    ]
+  },
+  "sprintRoleRequirements": {
+    "702da501-ad49-42aa-9b8b-434f1d6aeeb9-2025-11-2": {
+      "UIX": 50,
+      "Product Manager": 50
+    },
+    "db8af93d-fca6-4c08-8e8c-7663998d4136-2025-11-2": {
+      "UIX": 50
+    }
+  },
+  "resourceRoles": [
+    {
+      "id": "1",
+      "name": "VP Product",
+      "isArchived": false,
+      "createdAt": "2025-11-28T22:20:55.113Z"
+    },
+    {
+      "id": "2",
+      "name": "Product Director",
+      "isArchived": false,
+      "createdAt": "2025-11-28T22:20:55.114Z"
+    },
+    {
+      "id": "3",
+      "name": "Product Manager",
+      "isArchived": false,
+      "createdAt": "2025-11-28T22:20:55.114Z"
+    },
+    {
+      "id": "4",
+      "name": "Product Operations Manager",
+      "isArchived": true,
+      "createdAt": "2025-11-28T22:20:55.114Z"
+    },
+    {
+      "id": "5",
+      "name": "PMO",
+      "isArchived": false,
+      "createdAt": "2025-11-28T22:20:55.114Z"
+    },
+    {
+      "id": "7b755e80-c5aa-4a7d-bf2e-e88c1ef7acdb",
+      "name": "Backend",
+      "isArchived": false,
+      "createdAt": "2025-11-29T12:19:59.446Z"
+    },
+    {
+      "id": "67582f3f-5c3c-4cdd-b04e-2c678470b4e6",
+      "name": "Frontend",
+      "isArchived": false,
+      "createdAt": "2025-11-29T12:20:08.432Z"
+    },
+    {
+      "id": "551d5169-4a9e-4161-920e-c4f81ee5f51c",
+      "name": "DevOps",
+      "isArchived": false,
+      "createdAt": "2025-11-29T12:20:16.752Z"
+    },
+    {
+      "id": "8f9a88e5-cc09-400a-8645-7263cebb0640",
+      "name": "Architecture",
+      "isArchived": false,
+      "createdAt": "2025-11-29T12:20:36.002Z"
+    },
+    {
+      "id": "857f6af5-e65d-4712-95fa-a06901d50ca8",
+      "name": "UIX",
+      "isArchived": false,
+      "createdAt": "2025-11-29T12:21:26.157Z"
+    },
+    {
+      "id": "f7e5138d-362f-40d8-8f6a-1b87e3d4de92",
+      "name": "AI Data Science",
+      "isArchived": false,
+      "createdAt": "2025-11-29T12:25:35.419Z"
+    }
+  ]
+}

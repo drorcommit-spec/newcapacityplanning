@@ -38,7 +38,7 @@ export default function TeamsManagement() {
   }, []);
 
   useEffect(() => {
-    if (!teamsLoaded || teams.length === 0) return;
+    if (!teamsLoaded) return;
     
     saveTeams(teams).catch(error => {
       console.error('Failed to save teams:', error);
