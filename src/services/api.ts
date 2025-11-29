@@ -19,6 +19,7 @@ export interface DatabaseData {
   sprintProjects?: Record<string, string[]>;
   sprintRoleRequirements?: Record<string, Record<string, number>>;
   resourceRoles?: any[];
+  teams?: any[];
 }
 
 export async function fetchAllData(): Promise<DatabaseData> {
@@ -180,4 +181,24 @@ export async function saveResourceRoles(resourceRoles: any[]): Promise<void> {
     body: JSON.stringify(resourceRoles),
   });
   if (!response.ok) throw new Error('Failed to save resource roles');
+}
+
+// Save teams
+export async function saveTeams(teams: any[]): Promise<void> {
+  // Use Supabase if enabled (production)
+  if (isSupabaseEnabled()) {
+    const { saveTeamsToSupabase } = await import('./supabaseApi');
+    await saveTeamsToSupabase(teams);
+    return;
+  }
+
+  // Local development: use JSON file via backend
+  if (!API_URL) return;
+  
+  const response = await fetch(`${API_URL}/teams`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(teams),
+  });
+  if (!response.ok) throw new Error('Failed to save teams');
 }

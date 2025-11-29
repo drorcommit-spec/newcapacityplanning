@@ -69,12 +69,13 @@ export default function Login() {
           Use your registered email to login
         </p>
         <div className="text-center mt-4">
-          <Link 
-            to="/setup" 
+          <button
+            type="button"
+            onClick={() => alert('Coming soon! Sign up functionality will be available in the next release.')}
             className="text-sm text-blue-600 hover:text-blue-800 underline"
           >
-            Need to create an account? Go to Setup
-          </Link>
+            Need to create an account? Sign Up.
+          </button>
         </div>
       </div>
       

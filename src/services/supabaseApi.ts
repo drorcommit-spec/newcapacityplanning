@@ -11,12 +11,13 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
   console.log('📥 Fetching data from Supabase...');
 
   // Fetch all data in parallel
-  const [teamMembersRes, projectsRes, allocationsRes, historyRes, resourceTypesRes] = await Promise.all([
+  const [teamMembersRes, projectsRes, allocationsRes, historyRes, resourceTypesRes, teamsRes] = await Promise.all([
     supabase.from('team_members').select('*').order('created_at', { ascending: false }),
     supabase.from('projects').select('*').order('created_at', { ascending: false }),
     supabase.from('allocations').select('*').order('created_at', { ascending: false }),
     supabase.from('allocation_history').select('*').order('changed_at', { ascending: false }),
     supabase.from('resource_types').select('*').order('created_at', { ascending: false }),
+    supabase.from('teams').select('*').order('created_at', { ascending: false }),
   ]);
 
   // Check for errors
@@ -25,6 +26,7 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
   if (allocationsRes.error) throw allocationsRes.error;
   if (historyRes.error) throw historyRes.error;
   if (resourceTypesRes.error) throw resourceTypesRes.error;
+  if (teamsRes.error) throw teamsRes.error;
 
   // Transform Supabase data to match our format
   const data: DatabaseData = {
@@ -33,6 +35,7 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
     allocations: (allocationsRes.data || []).map(transformAllocation),
     history: (historyRes.data || []).map(transformHistory),
     resourceRoles: (resourceTypesRes.data || []).map(transformResourceType),
+    teams: (teamsRes.data || []).map(transformTeam),
   };
 
   console.log('✅ Data loaded from Supabase:', {
@@ -41,6 +44,7 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
     allocations: data.allocations.length,
     history: data.history.length,
     resourceTypes: data.resourceRoles?.length || 0,
+    teams: data.teams?.length || 0,
   });
 
   return data;
@@ -112,6 +116,19 @@ export async function saveResourceTypesToSupabase(resourceTypes: any[]): Promise
   console.log('✅ Resource types saved');
 }
 
+export async function saveTeamsToSupabase(teams: any[]): Promise<void> {
+  if (!isSupabaseEnabled() || !supabase) return;
+
+  console.log('💾 Saving teams to Supabase...');
+
+  const { error } = await supabase
+    .from('teams')
+    .upsert(teams.map(transformTeamToSupabase), { onConflict: 'id' });
+
+  if (error) throw error;
+  console.log('✅ Teams saved');
+}
+
 // Create automatic backup in Supabase
 export async function createSupabaseBackup(): Promise<void> {
   if (!isSupabaseEnabled() || !supabase) return;
@@ -135,7 +152,7 @@ function transformTeamMember(data: any): any {
     fullName: data.full_name,
     email: data.email,
     role: data.role,
-    team: data.team,
+    teams: data.teams || [],
     isActive: data.is_active,
     createdAt: data.created_at,
   };
@@ -147,7 +164,7 @@ function transformTeamMemberToSupabase(data: any): any {
     full_name: data.fullName,
     email: data.email,
     role: data.role,
-    team: data.team,
+    teams: data.teams || [],
     is_active: data.isActive,
     created_at: data.createdAt,
   };
@@ -249,6 +266,24 @@ function transformResourceType(data: any): any {
 }
 
 function transformResourceTypeToSupabase(data: any): any {
+  return {
+    id: data.id,
+    name: data.name,
+    is_archived: data.isArchived,
+    created_at: data.createdAt,
+  };
+}
+
+function transformTeam(data: any): any {
+  return {
+    id: data.id,
+    name: data.name,
+    isArchived: data.is_archived,
+    createdAt: data.created_at,
+  };
+}
+
+function transformTeamToSupabase(data: any): any {
   return {
     id: data.id,
     name: data.name,

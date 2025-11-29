@@ -56,7 +56,7 @@ export default function Layout({ children }: LayoutProps) {
                   {showSettingsDropdown && (
                     <div className="absolute top-full left-0 mt-0 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-50">
                       <Link 
-                        to="/team" 
+                        to="/members" 
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                         onClick={() => setShowSettingsDropdown(false)}
                       >
@@ -75,6 +75,13 @@ export default function Layout({ children }: LayoutProps) {
                         onClick={() => setShowSettingsDropdown(false)}
                       >
                         Resource Types
+                      </Link>
+                      <Link 
+                        to="/teams" 
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                        onClick={() => setShowSettingsDropdown(false)}
+                      >
+                        Teams
                       </Link>
                     </div>
                   )}

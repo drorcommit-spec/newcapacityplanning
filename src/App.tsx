@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import TeamManagement from './pages/TeamManagement';
 import ProjectManagement from './pages/ProjectManagement';
+import TeamsManagement from './pages/TeamsManagement';
 import AllocationPlanning from './pages/AllocationPlanning';
 import AllocationRawdata from './pages/AllocationRawdata';
 import AllocationCanvas from './pages/AllocationCanvas';
@@ -29,7 +30,7 @@ function AppRoutes() {
           <Layout><Dashboard /></Layout>
         </ProtectedRoute>
       } />
-      <Route path="/team" element={
+      <Route path="/members" element={
         <ProtectedRoute>
           <Layout><TeamManagement /></Layout>
         </ProtectedRoute>
@@ -67,6 +68,11 @@ function AppRoutes() {
       <Route path="/roles" element={
         <ProtectedRoute>
           <Layout><RoleManagement /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/teams" element={
+        <ProtectedRoute>
+          <Layout><TeamsManagement /></Layout>
         </ProtectedRoute>
       } />
     </Routes>

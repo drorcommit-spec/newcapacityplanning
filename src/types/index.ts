@@ -11,7 +11,7 @@ export interface TeamMember {
   fullName: string;
   email: string;
   role: UserRole;
-  team?: string;
+  teams?: string[]; // Array of team names - members can belong to multiple teams
   isActive: boolean;
   createdAt: string;
   employeeNumber?: string;
