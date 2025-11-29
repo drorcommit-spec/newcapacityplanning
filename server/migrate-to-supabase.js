@@ -57,6 +57,7 @@ async function migrateToSupabase() {
   console.log(`   Projects: ${localData.projects?.length || 0}`);
   console.log(`   Allocations: ${localData.allocations?.length || 0}`);
   console.log(`   History: ${localData.history?.length || 0}`);
+  console.log(`   Resource Types: ${localData.resourceRoles?.length || 0}`);
 
   // Create backup before migration
   const backupFile = path.join(__dirname, `database.pre-migration.${Date.now()}.json`);
@@ -163,6 +164,24 @@ async function migrateToSupabase() {
 
       if (error) throw new Error(`History migration failed: ${error.message}`);
       console.log(`✅ Migrated ${history.length} history records`);
+    }
+
+    // Migrate Resource Types
+    if (localData.resourceRoles && localData.resourceRoles.length > 0) {
+      console.log('📤 Migrating resource types...');
+      const resourceTypes = localData.resourceRoles.map(r => ({
+        id: r.id,
+        name: r.name,
+        is_archived: r.isArchived || false,
+        created_at: r.createdAt,
+      }));
+
+      const { error } = await supabase
+        .from('resource_types')
+        .upsert(resourceTypes, { onConflict: 'id' });
+
+      if (error) throw new Error(`Resource types migration failed: ${error.message}`);
+      console.log(`✅ Migrated ${resourceTypes.length} resource types`);
     }
 
     // Create automatic backup in Supabase

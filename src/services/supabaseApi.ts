@@ -11,11 +11,12 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
   console.log('📥 Fetching data from Supabase...');
 
   // Fetch all data in parallel
-  const [teamMembersRes, projectsRes, allocationsRes, historyRes] = await Promise.all([
+  const [teamMembersRes, projectsRes, allocationsRes, historyRes, resourceTypesRes] = await Promise.all([
     supabase.from('team_members').select('*').order('created_at', { ascending: false }),
     supabase.from('projects').select('*').order('created_at', { ascending: false }),
     supabase.from('allocations').select('*').order('created_at', { ascending: false }),
     supabase.from('allocation_history').select('*').order('changed_at', { ascending: false }),
+    supabase.from('resource_types').select('*').order('created_at', { ascending: false }),
   ]);
 
   // Check for errors
@@ -23,6 +24,7 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
   if (projectsRes.error) throw projectsRes.error;
   if (allocationsRes.error) throw allocationsRes.error;
   if (historyRes.error) throw historyRes.error;
+  if (resourceTypesRes.error) throw resourceTypesRes.error;
 
   // Transform Supabase data to match our format
   const data: DatabaseData = {
@@ -30,6 +32,7 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
     projects: (projectsRes.data || []).map(transformProject),
     allocations: (allocationsRes.data || []).map(transformAllocation),
     history: (historyRes.data || []).map(transformHistory),
+    resourceRoles: (resourceTypesRes.data || []).map(transformResourceType),
   };
 
   console.log('✅ Data loaded from Supabase:', {
@@ -37,6 +40,7 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
     projects: data.projects.length,
     allocations: data.allocations.length,
     history: data.history.length,
+    resourceTypes: data.resourceRoles?.length || 0,
   });
 
   return data;
@@ -93,6 +97,19 @@ export async function saveHistoryToSupabase(history: any[]): Promise<void> {
 
   if (error) throw error;
   console.log('✅ History saved');
+}
+
+export async function saveResourceTypesToSupabase(resourceTypes: any[]): Promise<void> {
+  if (!isSupabaseEnabled() || !supabase) return;
+
+  console.log('💾 Saving resource types to Supabase...');
+
+  const { error } = await supabase
+    .from('resource_types')
+    .upsert(resourceTypes.map(transformResourceTypeToSupabase), { onConflict: 'id' });
+
+  if (error) throw error;
+  console.log('✅ Resource types saved');
 }
 
 // Create automatic backup in Supabase
@@ -219,5 +236,23 @@ function transformHistoryToSupabase(data: any): any {
     change_type: data.changeType,
     old_value: data.oldValue,
     new_value: data.newValue,
+  };
+}
+
+function transformResourceType(data: any): any {
+  return {
+    id: data.id,
+    name: data.name,
+    isArchived: data.is_archived,
+    createdAt: data.created_at,
+  };
+}
+
+function transformResourceTypeToSupabase(data: any): any {
+  return {
+    id: data.id,
+    name: data.name,
+    is_archived: data.isArchived,
+    created_at: data.createdAt,
   };
 }

@@ -56,12 +56,22 @@ CREATE TABLE IF NOT EXISTS allocation_history (
     new_value JSONB
 );
 
+-- Resource Types Table
+CREATE TABLE IF NOT EXISTS resource_types (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    is_archived BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_allocations_project ON allocations(project_id);
 CREATE INDEX IF NOT EXISTS idx_allocations_pm ON allocations(product_manager_id);
 CREATE INDEX IF NOT EXISTS idx_allocations_sprint ON allocations(year, month, sprint);
 CREATE INDEX IF NOT EXISTS idx_history_allocation ON allocation_history(allocation_id);
 CREATE INDEX IF NOT EXISTS idx_history_changed_at ON allocation_history(changed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_resource_types_name ON resource_types(name);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -82,11 +92,15 @@ CREATE TRIGGER update_projects_updated_at BEFORE UPDATE ON projects
 CREATE TRIGGER update_allocations_updated_at BEFORE UPDATE ON allocations
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_resource_types_updated_at BEFORE UPDATE ON resource_types
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE allocations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE allocation_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resource_types ENABLE ROW LEVEL SECURITY;
 
 -- Create policies (allow all operations for authenticated users)
 -- You can make these more restrictive based on your needs
@@ -102,6 +116,9 @@ CREATE POLICY "Allow all for authenticated users" ON allocations
 CREATE POLICY "Allow all for authenticated users" ON allocation_history
     FOR ALL USING (true);
 
+CREATE POLICY "Allow all for authenticated users" ON resource_types
+    FOR ALL USING (true);
+
 -- Create a backup table for safety
 CREATE TABLE IF NOT EXISTS data_backups (
     id SERIAL PRIMARY KEY,
@@ -110,6 +127,7 @@ CREATE TABLE IF NOT EXISTS data_backups (
     projects_count INTEGER,
     allocations_count INTEGER,
     history_count INTEGER,
+    resource_types_count INTEGER,
     full_backup JSONB NOT NULL
 );
 
@@ -122,6 +140,7 @@ BEGIN
         projects_count,
         allocations_count,
         history_count,
+        resource_types_count,
         full_backup
     )
     SELECT
@@ -129,11 +148,13 @@ BEGIN
         (SELECT COUNT(*) FROM projects),
         (SELECT COUNT(*) FROM allocations),
         (SELECT COUNT(*) FROM allocation_history),
+        (SELECT COUNT(*) FROM resource_types),
         jsonb_build_object(
             'team_members', (SELECT jsonb_agg(to_jsonb(team_members.*)) FROM team_members),
             'projects', (SELECT jsonb_agg(to_jsonb(projects.*)) FROM projects),
             'allocations', (SELECT jsonb_agg(to_jsonb(allocations.*)) FROM allocations),
-            'history', (SELECT jsonb_agg(to_jsonb(allocation_history.*)) FROM allocation_history)
+            'history', (SELECT jsonb_agg(to_jsonb(allocation_history.*)) FROM allocation_history),
+            'resource_types', (SELECT jsonb_agg(to_jsonb(resource_types.*)) FROM resource_types)
         );
 END;
 $$ LANGUAGE plpgsql;
@@ -145,4 +166,5 @@ COMMENT ON TABLE team_members IS 'Stores all team members and their information'
 COMMENT ON TABLE projects IS 'Stores all projects with customer and capacity information';
 COMMENT ON TABLE allocations IS 'Stores sprint allocations for team members to projects';
 COMMENT ON TABLE allocation_history IS 'Audit trail for all allocation changes';
+COMMENT ON TABLE resource_types IS 'Stores resource/role types for team members';
 COMMENT ON TABLE data_backups IS 'Automatic backups of all data for disaster recovery';

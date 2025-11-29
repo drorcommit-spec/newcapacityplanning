@@ -164,12 +164,14 @@ export async function saveSprintRoleRequirements(sprintRoleRequirements: Record<
 
 // Save resource roles
 export async function saveResourceRoles(resourceRoles: any[]): Promise<void> {
-  // Supabase support can be added later if needed
+  // Use Supabase if enabled (production)
   if (isSupabaseEnabled()) {
-    console.warn('Resource roles not yet supported in Supabase');
+    const { saveResourceTypesToSupabase } = await import('./supabaseApi');
+    await saveResourceTypesToSupabase(resourceRoles);
     return;
   }
 
+  // Local development: use JSON file via backend
   if (!API_URL) return;
   
   const response = await fetch(`${API_URL}/resourceRoles`, {
