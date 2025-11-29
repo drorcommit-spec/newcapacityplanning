@@ -40,3 +40,14 @@ export function getCurrentSprint(): { year: number; month: number; sprint: numbe
   
   return { year, month, sprint };
 }
+
+export function getSprintDateRange(year: number, month: number, sprint: number): { startDate: string; endDate: string } {
+  // Sprint 1: 1st-15th, Sprint 2: 16th-end of month
+  const startDay = sprint === 1 ? 1 : 16;
+  const endDay = sprint === 1 ? 15 : new Date(year, month, 0).getDate(); // 0 gets last day of previous month (which is current month)
+  
+  const startDate = `${month}/${startDay}`;
+  const endDate = `${month}/${endDay}`;
+  
+  return { startDate, endDate };
+}

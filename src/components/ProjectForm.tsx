@@ -21,33 +21,60 @@ export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
     projectName: '',
     projectType: 'Software' as ProjectType,
     status: 'Pending' as ProjectStatus,
-    maxCapacityPercentage: '',
     pmoContact: '',
     latestStatus: '',
   });
+  const [customerError, setCustomerError] = useState('');
+  const [projectError, setProjectError] = useState('');
 
   const existingCustomers = Array.from(new Set(projects.map(p => p.customerName))).sort((a, b) => a.localeCompare(b));
+  
+  // Separate PMO and non-PMO members, both sorted alphabetically
   const pmoMembers = teamMembers
     .filter(m => m.role === 'PMO' && m.isActive)
+    .sort((a, b) => a.fullName.localeCompare(b.fullName));
+  
+  const otherMembers = teamMembers
+    .filter(m => m.role !== 'PMO' && m.isActive)
     .sort((a, b) => a.fullName.localeCompare(b.fullName));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setCustomerError('');
+    setProjectError('');
+
+    const trimmedCustomer = formData.customerName.trim();
+    const trimmedProject = formData.projectName.trim();
+
+    if (!trimmedCustomer || !trimmedProject) {
+      if (!trimmedCustomer) setCustomerError('Customer name is required');
+      if (!trimmedProject) setProjectError('Project name is required');
+      return;
+    }
+
+    // Check for duplicate customer + project combination (case-insensitive)
+    const duplicateProject = projects.find(
+      p => p.customerName.toLowerCase() === trimmedCustomer.toLowerCase() &&
+           p.projectName.toLowerCase() === trimmedProject.toLowerCase()
+    );
+
+    if (duplicateProject) {
+      setProjectError(`Project "${trimmedProject}" already exists for customer "${trimmedCustomer}"`);
+      return;
+    }
     
     const projectData = {
       customerId: crypto.randomUUID(),
-      customerName: formData.customerName,
-      projectName: formData.projectName,
+      customerName: trimmedCustomer,
+      projectName: trimmedProject,
       projectType: formData.projectType,
       status: formData.status,
-      maxCapacityPercentage: formData.maxCapacityPercentage ? Number(formData.maxCapacityPercentage) : undefined,
       pmoContact: formData.pmoContact || undefined,
       latestStatus: formData.latestStatus || undefined,
       isArchived: false,
     };
 
-    const newProjectId = crypto.randomUUID();
-    addProject({ ...projectData, id: newProjectId } as any);
+    const newProjectId = addProject(projectData as any);
     
     if (onSuccess) {
       onSuccess(newProjectId);
@@ -105,31 +132,55 @@ export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
         )}
         
         {isNewCustomer ? (
-          <Input
-            label="Customer Name"
-            value={formData.customerName}
-            onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-            required
-          />
+          <div>
+            <Input
+              label="Customer Name"
+              value={formData.customerName}
+              onChange={(e) => {
+                setFormData({ ...formData, customerName: e.target.value });
+                setCustomerError('');
+              }}
+              required
+            />
+            {customerError && (
+              <p className="text-red-600 text-sm mt-1">{customerError}</p>
+            )}
+          </div>
         ) : (
-          <Select
-            label="Customer Name"
-            options={[
-              { value: '', label: 'Select Customer' },
-              ...existingCustomers.map(c => ({ value: c, label: c })),
-            ]}
-            value={formData.customerName}
-            onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-            required
-          />
+          <div>
+            <Select
+              label="Customer Name"
+              options={[
+                { value: '', label: 'Select Customer' },
+                ...existingCustomers.map(c => ({ value: c, label: c })),
+              ]}
+              value={formData.customerName}
+              onChange={(e) => {
+                setFormData({ ...formData, customerName: e.target.value });
+                setCustomerError('');
+              }}
+              required
+            />
+            {customerError && (
+              <p className="text-red-600 text-sm mt-1">{customerError}</p>
+            )}
+          </div>
         )}
         
-        <Input
-          label="Project Name"
-          value={formData.projectName}
-          onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
-          required
-        />
+        <div>
+          <Input
+            label="Project Name"
+            value={formData.projectName}
+            onChange={(e) => {
+              setFormData({ ...formData, projectName: e.target.value });
+              setProjectError('');
+            }}
+            required
+          />
+          {projectError && (
+            <p className="text-red-600 text-sm mt-1">{projectError}</p>
+          )}
+        </div>
         <Select
           label="Project Type"
           options={typeOptions}
@@ -141,16 +192,6 @@ export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
           options={statusOptions}
           value={formData.status}
           onChange={(e) => setFormData({ ...formData, status: e.target.value as ProjectStatus })}
-        />
-        <Input
-          label="Max Capacity (%) - Multiple PMs can be allocated"
-          type="number"
-          min="0"
-          max="10000"
-          step="10"
-          value={formData.maxCapacityPercentage}
-          onChange={(e) => setFormData({ ...formData, maxCapacityPercentage: e.target.value })}
-          placeholder="e.g., 300 for 3 PMs"
         />
         
         <div>
@@ -168,11 +209,24 @@ export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
           >
             <option value="">Select PMO Contact</option>
             <option value="NEW_PMO" className="font-semibold text-blue-600">+ New PMO Contact</option>
-            {pmoMembers.map(pmo => (
-              <option key={pmo.id} value={pmo.id}>
-                {pmo.fullName}
-              </option>
-            ))}
+            {pmoMembers.length > 0 && (
+              <optgroup label="PMO Resources">
+                {pmoMembers.map(pmo => (
+                  <option key={pmo.id} value={pmo.id}>
+                    {pmo.fullName}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {otherMembers.length > 0 && (
+              <optgroup label="Other Resources">
+                {otherMembers.map(member => (
+                  <option key={member.id} value={member.id}>
+                    {member.fullName}
+                  </option>
+                ))}
+              </optgroup>
+            )}
           </select>
         </div>
         

@@ -47,6 +47,15 @@ async function initDB() {
       projects: [],
       allocations: [],
       history: [],
+      sprintProjects: {},
+      sprintRoleRequirements: {},
+      resourceRoles: [
+        { id: '1', name: 'VP Product', isArchived: false, createdAt: new Date().toISOString() },
+        { id: '2', name: 'Product Director', isArchived: false, createdAt: new Date().toISOString() },
+        { id: '3', name: 'Product Manager', isArchived: false, createdAt: new Date().toISOString() },
+        { id: '4', name: 'Product Operations Manager', isArchived: false, createdAt: new Date().toISOString() },
+        { id: '5', name: 'PMO', isArchived: false, createdAt: new Date().toISOString() },
+      ],
     };
     await fs.writeFile(DB_FILE, JSON.stringify(initialData, null, 2));
     console.log('✅ Database initialized with default data');
@@ -307,6 +316,42 @@ app.post('/api/import/hubspot-email', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error importing from HubSpot email:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update sprint projects
+app.post('/api/sprintProjects', async (req, res) => {
+  try {
+    const data = await readDB();
+    data.sprintProjects = req.body;
+    await writeDB(data);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update sprint role requirements
+app.post('/api/sprintRoleRequirements', async (req, res) => {
+  try {
+    const data = await readDB();
+    data.sprintRoleRequirements = req.body;
+    await writeDB(data);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update resource roles
+app.post('/api/resourceRoles', async (req, res) => {
+  try {
+    const data = await readDB();
+    data.resourceRoles = req.body;
+    await writeDB(data);
+    res.json({ success: true });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });

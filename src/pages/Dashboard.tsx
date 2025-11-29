@@ -1,56 +1,50 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
-import { calculateUtilization, getUtilizationColor } from '../utils/capacityUtils';
-import { getCurrentSprint, getMonthName } from '../utils/dateUtils';
+import { getCurrentSprint, getMonthName, getSprintDateRange } from '../utils/dateUtils';
 import Card from '../components/Card';
-import Input from '../components/Input';
 
-const UNDER_CAPACITY_THRESHOLD_KEY = 'capacityThreshold_under';
-const OVER_CAPACITY_THRESHOLD_KEY = 'capacityThreshold_over';
-const DEFAULT_UNDER_THRESHOLD = 85;
-const DEFAULT_OVER_THRESHOLD = 120;
+interface SprintInfo {
+  year: number;
+  month: number;
+  sprint: number;
+}
 
 export default function Dashboard() {
   const { teamMembers, projects, allocations } = useData();
   const navigate = useNavigate();
   const currentSprint = getCurrentSprint();
-  
-  // Load thresholds from localStorage or use defaults
-  const [underCapacityThreshold, setUnderCapacityThreshold] = useState(() => {
-    const saved = localStorage.getItem(UNDER_CAPACITY_THRESHOLD_KEY);
-    return saved ? Number(saved) : DEFAULT_UNDER_THRESHOLD;
-  });
-  
-  const [overCapacityThreshold, setOverCapacityThreshold] = useState(() => {
-    const saved = localStorage.getItem(OVER_CAPACITY_THRESHOLD_KEY);
-    return saved ? Number(saved) : DEFAULT_OVER_THRESHOLD;
-  });
+  const [sprintCount] = useState(3);
+  const [expandedSprints, setExpandedSprints] = useState<Record<string, { projects: boolean; members: boolean }>>({});
 
-  const [sortBy, setSortBy] = useState<'name' | 'capacity'>('name');
+  // Capacity thresholds - editable and synced with localStorage
+  const [underCapacityThreshold, setUnderCapacityThreshold] = useState(() => {
+    const saved = localStorage.getItem('underCapacityThreshold');
+    return saved ? parseInt(saved) : 70;
+  });
+  const [overCapacityThreshold, setOverCapacityThreshold] = useState(() => {
+    const saved = localStorage.getItem('overCapacityThreshold');
+    return saved ? parseInt(saved) : 100;
+  });
+  const [editingThreshold, setEditingThreshold] = useState<'under' | 'over' | null>(null);
+  const [thresholdInputValue, setThresholdInputValue] = useState('');
 
   // Save thresholds to localStorage when they change
   useEffect(() => {
-    localStorage.setItem(UNDER_CAPACITY_THRESHOLD_KEY, underCapacityThreshold.toString());
+    localStorage.setItem('underCapacityThreshold', underCapacityThreshold.toString());
   }, [underCapacityThreshold]);
 
   useEffect(() => {
-    localStorage.setItem(OVER_CAPACITY_THRESHOLD_KEY, overCapacityThreshold.toString());
+    localStorage.setItem('overCapacityThreshold', overCapacityThreshold.toString());
   }, [overCapacityThreshold]);
 
-  const activeProjects = projects
-    .filter(p => p.status === 'Active' && !p.isArchived)
-    .sort((a, b) => a.projectName.localeCompare(b.projectName));
-  const activeManagers = teamMembers
-    .filter(m => (m.role === 'Product Manager' || m.role === 'Product Operations Manager') && m.isActive)
-    .sort((a, b) => a.fullName.localeCompare(b.fullName));
-
-  const getNextSprints = (count: number) => {
-    const sprints = [];
+  // Generate sprint list
+  const sprints = useMemo(() => {
+    const result: SprintInfo[] = [];
     let { year, month, sprint } = currentSprint;
     
-    for (let i = 0; i < count; i++) {
-      sprints.push({ year, month, sprint });
+    for (let i = 0; i < sprintCount; i++) {
+      result.push({ year, month, sprint });
       sprint++;
       if (sprint > 2) {
         sprint = 1;
@@ -61,281 +55,576 @@ export default function Dashboard() {
         }
       }
     }
-    return sprints;
-  };
+    return result;
+  }, [currentSprint, sprintCount]);
 
-  const getSprintDates = (year: number, month: number, sprint: number) => {
-    const startDay = sprint === 1 ? 1 : 16;
-    const endDay = sprint === 1 ? 15 : new Date(year, month, 0).getDate();
-    return {
-      from: `${month}/${startDay}/${year}`,
-      to: `${month}/${endDay}/${year}`,
-    };
-  };
-
-  const timelineData = useMemo(() => {
-    const sprints = getNextSprints(3);
+  // Calculate overall summary
+  const overallSummary = useMemo(() => {
+    const activeProjects = projects.filter(p => p.status === 'Active' && !p.isArchived);
+    const activeMembers = teamMembers.filter(m => m.isActive);
     
-    return sprints.map(({ year, month, sprint }) => {
-      const dates = getSprintDates(year, month, sprint);
+    const currentSprintAllocs = allocations.filter(
+      a => a.year === currentSprint.year && 
+           a.month === currentSprint.month && 
+           a.sprint === currentSprint.sprint
+    );
+    
+    const totalCapacity = currentSprintAllocs.reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
+    const avgUtilization = activeMembers.length > 0 ? Math.round(totalCapacity / activeMembers.length) : 0;
+    
+    return {
+      totalProjects: activeProjects.length,
+      totalMembers: activeMembers.length,
+      avgUtilization,
+    };
+  }, [projects, teamMembers, allocations, currentSprint]);
+
+  // Calculate KPIs for each sprint
+  const sprintKPIs = useMemo(() => {
+    return sprints.map(sprint => {
+      const activeProjects = projects.filter(p => p.status === 'Active' && !p.isArchived);
+      const activeMembers = teamMembers.filter(m => m.isActive);
       
-      // Unallocated projects for this sprint
-      const unallocatedProjects = activeProjects.filter(project => {
-        const hasAllocation = allocations.some(
-          a => a.projectId === project.id && 
-               a.year === year && 
-               a.month === month && 
-               a.sprint === sprint
-        );
-        return !hasAllocation;
-      });
+      const sprintAllocations = allocations.filter(
+        a => a.year === sprint.year && 
+             a.month === sprint.month && 
+             a.sprint === sprint.sprint
+      );
 
-      // Under capacity members for this sprint
-      const underCapacityMembers = activeManagers.filter(pm => {
-        const pmAllocations = allocations.filter(
-          a => a.productManagerId === pm.id &&
-               a.year === year &&
-               a.month === month &&
-               a.sprint === sprint
-        );
-        const utilization = calculateUtilization(pmAllocations);
-        return utilization < underCapacityThreshold;
-      });
+      const allocatedProjectIds = new Set(sprintAllocations.map(a => a.projectId));
+      const projectsWithAllocations = activeProjects.filter(p => allocatedProjectIds.has(p.id));
 
-      // Over capacity members for this sprint
-      const overCapacityMembers = activeManagers.filter(pm => {
-        const pmAllocations = allocations.filter(
-          a => a.productManagerId === pm.id &&
-               a.year === year &&
-               a.month === month &&
-               a.sprint === sprint
-        );
-        const utilization = calculateUtilization(pmAllocations);
-        return utilization > overCapacityThreshold;
+      // PROJECT KPIs
+      const projectsMissingCapacity = activeProjects.filter(p => !allocatedProjectIds.has(p.id)).length;
+      
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      
+      const newOrStaleProjects = projectsWithAllocations.filter(project => {
+        const previousAllocations = allocations.filter(a => {
+          if (a.projectId !== project.id) return false;
+          const allocDate = new Date(a.year, a.month - 1);
+          const currentDate = new Date(sprint.year, sprint.month - 1);
+          return allocDate < currentDate;
+        });
+        
+        if (previousAllocations.length === 0) return true;
+        
+        const lastAllocation = previousAllocations.sort((a, b) => {
+          const dateA = new Date(a.year, a.month - 1);
+          const dateB = new Date(b.year, b.month - 1);
+          return dateB.getTime() - dateA.getTime();
+        })[0];
+        
+        const lastAllocDate = new Date(lastAllocation.year, lastAllocation.month - 1);
+        return lastAllocDate < sixMonthsAgo;
+      }).length;
+      
+      // Projects with no PMO contact OR no PMO resource type allocation
+      const projectsNoPMO = activeProjects.filter(project => {
+        // Check if project has no PMO contact field
+        if (!project.pmoContact || project.pmoContact.trim() === '') return true;
+        
+        // Check if project has 0% PMO resource type allocation
+        const projectAllocs = sprintAllocations.filter(a => a.projectId === project.id);
+        const pmoAllocation = projectAllocs.reduce((sum, alloc) => {
+          const member = teamMembers.find(m => m.id === alloc.productManagerId);
+          if (member && member.role && member.role.toLowerCase().includes('pmo')) {
+            return sum + alloc.allocationPercentage;
+          }
+          return sum;
+        }, 0);
+        
+        return pmoAllocation === 0;
+      }).length;
+      
+      // Pending projects (status is Pending) that are in this sprint
+      const pendingProjectIds = new Set(
+        sprintAllocations
+          .map(a => a.projectId)
+          .filter(projectId => {
+            const project = projects.find(p => p.id === projectId);
+            return project && project.status === 'Pending' && !project.isArchived;
+          })
+      );
+      const pendingProjects = pendingProjectIds.size;
+
+      // MEMBER KPIs
+      const memberAllocations = activeMembers.map(member => {
+        const memberAllocs = sprintAllocations.filter(a => a.productManagerId === member.id);
+        const total = memberAllocs.reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
+        const projectCount = new Set(memberAllocs.map(a => a.projectId)).size;
+        
+        const memberCapacity = member.capacity ?? 100;
+        const underThreshold = (memberCapacity * underCapacityThreshold) / 100;
+        const overThreshold = (memberCapacity * overCapacityThreshold) / 100;
+        
+        return {
+          total,
+          projectCount,
+          isUnder: total < underThreshold,
+          isOver: total > overThreshold,
+          isGood: total >= underThreshold && total <= overThreshold,
+          isUnallocated: total === 0,
+        };
       });
+      
+      const membersUnderCapacity = memberAllocations.filter(m => m.isUnder).length;
+      const membersOverCapacity = memberAllocations.filter(m => m.isOver).length;
+      const unallocatedMembers = memberAllocations.filter(m => m.isUnallocated).length;
+      const membersGoodCapacity = memberAllocations.filter(m => m.isGood).length;
+      const membersSingleProject = memberAllocations.filter(m => m.projectCount === 1).length;
+      const membersMultipleProjects = memberAllocations.filter(m => m.projectCount >= 3).length;
+
+      const totalSprintCapacity = memberAllocations.reduce((sum, m) => sum + m.total, 0);
+      const avgMemberUtilization = activeMembers.length > 0 
+        ? Math.round(totalSprintCapacity / activeMembers.length) 
+        : 0;
 
       return {
-        year,
-        month,
         sprint,
-        dates,
-        unallocatedProjects,
-        underCapacityMembers,
-        overCapacityMembers,
+        projectsMissingCapacity,
+        newOrStaleProjects,
+        projectsNoPMO,
+        pendingProjects,
+        membersUnderCapacity,
+        membersOverCapacity,
+        unallocatedMembers,
+        membersSingleProject,
+        membersMultipleProjects,
+        totalSprintCapacity,
+        avgMemberUtilization,
+        totalActiveProjects: activeProjects.length,
+        totalActiveMembers: activeMembers.length,
       };
     });
-  }, [activeProjects, activeManagers, allocations, currentSprint, underCapacityThreshold, overCapacityThreshold]);
+  }, [sprints, teamMembers, projects, allocations, underCapacityThreshold, overCapacityThreshold]);
 
-  const currentSprintUtilization = useMemo(() => {
-    const data = activeManagers.map(pm => {
-      const pmAllocations = allocations.filter(
-        a => a.productManagerId === pm.id &&
-        a.year === currentSprint.year &&
-        a.month === currentSprint.month &&
-        a.sprint === currentSprint.sprint
-      );
-      const utilization = calculateUtilization(pmAllocations);
-      return { pm, utilization };
-    });
-
-    // Sort based on selected option
-    if (sortBy === 'capacity') {
-      return data.sort((a, b) => b.utilization - a.utilization);
-    } else {
-      return data.sort((a, b) => a.pm.fullName.localeCompare(b.pm.fullName));
-    }
-  }, [activeManagers, allocations, currentSprint, sortBy]);
-
-  const handleUnallocatedClick = (projectIds: string[]) => {
-    // Navigate to allocation board with project filter
-    const projectIdsParam = projectIds.join(',');
-    navigate(`/allocations/canvas?view=capacity&mode=project&projects=${projectIdsParam}`);
-  };
-
-  const handleCapacityClick = (year: number, month: number, sprint: number, filter: 'under' | 'over') => {
-    // Navigate to allocation board with team filter
-    navigate(`/allocations/canvas?view=capacity&mode=team&filter=${filter}&year=${year}&month=${month}&sprint=${sprint}&underThreshold=${underCapacityThreshold}&overThreshold=${overCapacityThreshold}`);
-  };
-
-  const handleMemberClick = (pmId: string) => {
-    // Navigate to allocation board with member highlighted
-    navigate(`/allocations/canvas?view=capacity&mode=team&highlightMember=${pmId}`);
+  const toggleExpanded = (sprintKey: string, section: 'projects' | 'members') => {
+    setExpandedSprints(prev => ({
+      ...prev,
+      [sprintKey]: {
+        ...prev[sprintKey],
+        [section]: !prev[sprintKey]?.[section],
+      },
+    }));
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">
-            Current Sprint: {currentSprint.year} - {getMonthName(currentSprint.month)} - Sprint {currentSprint.sprint}
-          </p>
-        </div>
-        <div className="flex gap-4 items-end">
-          <Input
-            label="Under Capacity Threshold (%)"
-            type="number"
-            min="0"
-            max="100"
-            value={underCapacityThreshold.toString()}
-            onChange={(e) => setUnderCapacityThreshold(Number(e.target.value))}
-            className="w-32"
-          />
-          <Input
-            label="Over Capacity Threshold (%)"
-            type="number"
-            min="100"
-            max="200"
-            value={overCapacityThreshold.toString()}
-            onChange={(e) => setOverCapacityThreshold(Number(e.target.value))}
-            className="w-32"
-          />
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600 mt-1">
+              Current Sprint: {currentSprint.year} {getMonthName(currentSprint.month)} Sprint {currentSprint.sprint}
+            </p>
+          </div>
+          
+          {/* Capacity Thresholds Legend - Editable */}
+          <div className="flex items-center gap-3 text-sm border-l pl-6">
+            <span className="text-sm font-semibold text-gray-700">Capacity Thresholds:</span>
+            <div className="flex items-center gap-1">
+              <span className="text-yellow-600">⚠️</span>
+              <span className="text-gray-600">&lt;</span>
+              {editingThreshold === 'under' ? (
+                <input
+                  type="number"
+                  value={thresholdInputValue}
+                  onChange={(e) => setThresholdInputValue(e.target.value)}
+                  onBlur={() => {
+                    const val = parseInt(thresholdInputValue);
+                    if (!isNaN(val) && val > 0 && val < overCapacityThreshold) {
+                      setUnderCapacityThreshold(val);
+                    }
+                    setEditingThreshold(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const val = parseInt(thresholdInputValue);
+                      if (!isNaN(val) && val > 0 && val < overCapacityThreshold) {
+                        setUnderCapacityThreshold(val);
+                      }
+                      setEditingThreshold(null);
+                    } else if (e.key === 'Escape') {
+                      setEditingThreshold(null);
+                    }
+                  }}
+                  autoFocus
+                  className="w-12 px-1 border border-blue-300 rounded text-center"
+                />
+              ) : (
+                <button
+                  onClick={() => {
+                    setEditingThreshold('under');
+                    setThresholdInputValue(underCapacityThreshold.toString());
+                  }}
+                  className="text-blue-600 hover:text-blue-800 underline font-medium"
+                  title="Click to edit"
+                >
+                  {underCapacityThreshold}
+                </button>
+              )}
+              <span className="text-gray-600">%</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-green-600">✓</span>
+              <span className="text-gray-600">{underCapacityThreshold}-{overCapacityThreshold}%</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-red-600">❗</span>
+              <span className="text-gray-600">&gt;</span>
+              {editingThreshold === 'over' ? (
+                <input
+                  type="number"
+                  value={thresholdInputValue}
+                  onChange={(e) => setThresholdInputValue(e.target.value)}
+                  onBlur={() => {
+                    const val = parseInt(thresholdInputValue);
+                    if (!isNaN(val) && val > underCapacityThreshold) {
+                      setOverCapacityThreshold(val);
+                    }
+                    setEditingThreshold(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const val = parseInt(thresholdInputValue);
+                      if (!isNaN(val) && val > underCapacityThreshold) {
+                        setOverCapacityThreshold(val);
+                      }
+                      setEditingThreshold(null);
+                    } else if (e.key === 'Escape') {
+                      setEditingThreshold(null);
+                    }
+                  }}
+                  autoFocus
+                  className="w-12 px-1 border border-blue-300 rounded text-center"
+                />
+              ) : (
+                <button
+                  onClick={() => {
+                    setEditingThreshold('over');
+                    setThresholdInputValue(overCapacityThreshold.toString());
+                  }}
+                  className="text-blue-600 hover:text-blue-800 underline font-medium"
+                  title="Click to edit"
+                >
+                  {overCapacityThreshold}
+                </button>
+              )}
+              <span className="text-gray-600">%</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Active Projects Count */}
+      {/* Overall Summary */}
       <Card>
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <div className="text-sm text-gray-600">Active Projects</div>
-            <div 
-              className="text-3xl font-bold text-blue-600 mt-2 cursor-pointer hover:text-blue-700"
-              onClick={() => navigate('/projects?status=Active')}
-              title="Click to view active projects"
-            >
-              {activeProjects.length}
-            </div>
+        <h2 className="text-xl font-semibold mb-4">📊 Overall Summary</h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="p-4 rounded-lg border-2 border-blue-200 bg-blue-50">
+            <div className="text-sm font-semibold text-gray-700 mb-1">📁 Total Active Projects</div>
+            <div className="text-3xl font-bold text-blue-600">{overallSummary.totalProjects}</div>
+            <div className="text-xs text-gray-600 mt-1">All active projects</div>
           </div>
+
+          <div className="p-4 rounded-lg border-2 border-green-200 bg-green-50">
+            <div className="text-sm font-semibold text-gray-700 mb-1">👥 Total Active Members</div>
+            <div className="text-3xl font-bold text-green-600">{overallSummary.totalMembers}</div>
+            <div className="text-xs text-gray-600 mt-1">Team size</div>
+          </div>
+
+          <div className="p-4 rounded-lg border-2 border-purple-200 bg-purple-50">
+            <div className="text-sm font-semibold text-gray-700 mb-1">📈 Avg Utilization</div>
+            <div className="text-3xl font-bold text-purple-600">{overallSummary.avgUtilization}%</div>
+            <div className="text-xs text-gray-600 mt-1">Current sprint average</div>
+          </div>
+
           <button
-            onClick={() => navigate('/projects?addNew=true')}
-            className="text-green-600 hover:text-green-700 text-sm font-medium flex items-center gap-1"
-            title="Add new project"
+            onClick={() => navigate('/capacity-planning')}
+            className="p-4 rounded-lg border-2 border-blue-400 bg-blue-50 hover:bg-blue-100 text-left transition-all"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Project
+            <div className="text-sm font-semibold text-blue-900 mb-1">⚡ Capacity Planning</div>
+            <div className="text-3xl font-bold text-blue-600">→</div>
+            <div className="text-xs text-gray-600 mt-1">Manage allocations</div>
           </button>
         </div>
       </Card>
 
-      {/* Timeline View */}
+      {/* Sprint Swimlanes */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {sprintKPIs.map((kpi, index) => {
+          const sprintLabel = index === 0 ? 'Current Sprint' : index === 1 ? 'Next Sprint' : '2 Sprints Ahead';
+          const sprintKey = `${kpi.sprint.year}-${kpi.sprint.month}-${kpi.sprint.sprint}`;
+          const projectsExpanded = expandedSprints[sprintKey]?.projects || false;
+          const membersExpanded = expandedSprints[sprintKey]?.members || false;
+          const { startDate, endDate } = getSprintDateRange(kpi.sprint.year, kpi.sprint.month, kpi.sprint.sprint);
+          
+          return (
+            <Card key={sprintKey}>
+              {/* Sprint Header */}
+              <div className="mb-4 pb-3 border-b-2 border-blue-200">
+                <h2 className="text-lg font-bold text-blue-900">{sprintLabel}</h2>
+                <p className="text-sm text-gray-600">
+                  {getMonthName(kpi.sprint.month)} {kpi.sprint.year} - Sprint {kpi.sprint.sprint}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {startDate} - {endDate}
+                </p>
+              </div>
+
+              {/* PROJECT KPIs Section */}
+              <div className="mb-4">
+                <h3 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                  <span>📊 PROJECT KPIs</span>
+                </h3>
+                
+                <div className="space-y-2">
+                  <button
+                    onClick={() => navigate(`/capacity-planning?view=projects&kpi=missing-resources&sprint=${index}`)}
+                    className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
+                      kpi.projectsMissingCapacity > 0 
+                        ? 'border-red-300 bg-red-50 hover:bg-red-100' 
+                        : 'border-gray-200 bg-white hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="text-xs font-semibold text-gray-700">❗ Missing Resources</div>
+                        <div className="text-xs text-gray-600 mt-1">Projects with no allocations</div>
+                      </div>
+                      <div className={`text-2xl font-bold ${kpi.projectsMissingCapacity > 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                        {kpi.projectsMissingCapacity}
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => navigate(`/capacity-planning?view=projects&kpi=new-reactivated&sprint=${index}`)}
+                    className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
+                      kpi.newOrStaleProjects > 0 
+                        ? 'border-blue-300 bg-blue-50 hover:bg-blue-100' 
+                        : 'border-gray-200 bg-white hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="text-xs font-semibold text-gray-700">🆕 New/Reactivated</div>
+                        <div className="text-xs text-gray-600 mt-1">First sprint or 6+ month gap</div>
+                      </div>
+                      <div className={`text-2xl font-bold ${kpi.newOrStaleProjects > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
+                        {kpi.newOrStaleProjects}
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Expandable Project KPIs */}
+                  <button
+                    onClick={() => toggleExpanded(sprintKey, 'projects')}
+                    className="w-full py-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors flex items-center justify-center gap-1"
+                  >
+                    <span>{projectsExpanded ? '▼' : '▶'}</span>
+                    <span>{projectsExpanded ? 'Hide' : 'Show'} More Project KPIs</span>
+                  </button>
+
+                  {projectsExpanded && (
+                    <div className="space-y-2 pt-2 border-t">
+                      <button
+                        onClick={() => navigate(`/capacity-planning?view=projects&kpi=no-pmo&sprint=${index}`)}
+                        className={`w-full p-2 rounded border text-left hover:shadow ${
+                          kpi.projectsNoPMO > 0 ? 'border-purple-300 bg-purple-50' : 'border-gray-200 bg-white'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="text-xs font-semibold">📋 No PMO Contact</div>
+                            <div className="text-[10px] text-gray-600">No PMO contact or 0% PMO allocation</div>
+                          </div>
+                          <span className={`text-lg font-bold ${kpi.projectsNoPMO > 0 ? 'text-purple-600' : 'text-gray-400'}`}>
+                            {kpi.projectsNoPMO}
+                          </span>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => navigate(`/capacity-planning?view=projects&kpi=pending&sprint=${index}`)}
+                        className={`w-full p-2 rounded border text-left hover:shadow ${
+                          kpi.pendingProjects > 0 ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200 bg-white'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="text-xs font-semibold">⏳ Pending Projects</div>
+                            <div className="text-[10px] text-gray-600">Projects with Pending status</div>
+                          </div>
+                          <span className={`text-lg font-bold ${kpi.pendingProjects > 0 ? 'text-yellow-600' : 'text-gray-400'}`}>
+                            {kpi.pendingProjects}
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* MEMBER KPIs Section */}
+              <div className="mb-4">
+                <h3 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                  <span>👥 MEMBER KPIs</span>
+                </h3>
+                
+                <div className="space-y-2">
+                  <button
+                    onClick={() => navigate(`/capacity-planning?view=team&kpi=over-capacity&sprint=${index}`)}
+                    className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
+                      kpi.membersOverCapacity > 0 
+                        ? 'border-red-300 bg-red-50 hover:bg-red-100' 
+                        : 'border-gray-200 bg-white hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="text-xs font-semibold text-gray-700">❗ Over Capacity</div>
+                        <div className="text-xs text-gray-600 mt-1">Members allocated &gt;{overCapacityThreshold}%</div>
+                      </div>
+                      <div className={`text-2xl font-bold ${kpi.membersOverCapacity > 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                        {kpi.membersOverCapacity}
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => navigate(`/capacity-planning?view=team&kpi=under-capacity&sprint=${index}`)}
+                    className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
+                      kpi.membersUnderCapacity > 0 
+                        ? 'border-yellow-300 bg-yellow-50 hover:bg-yellow-100' 
+                        : 'border-gray-200 bg-white hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="text-xs font-semibold text-gray-700">⚠️ Under Capacity</div>
+                        <div className="text-xs text-gray-600 mt-1">Members allocated &lt;{underCapacityThreshold}%</div>
+                      </div>
+                      <div className={`text-2xl font-bold ${kpi.membersUnderCapacity > 0 ? 'text-yellow-600' : 'text-gray-400'}`}>
+                        {kpi.membersUnderCapacity}
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Expandable Member KPIs */}
+                  <button
+                    onClick={() => toggleExpanded(sprintKey, 'members')}
+                    className="w-full py-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors flex items-center justify-center gap-1"
+                  >
+                    <span>{membersExpanded ? '▼' : '▶'}</span>
+                    <span>{membersExpanded ? 'Hide' : 'Show'} More Member KPIs</span>
+                  </button>
+
+                  {membersExpanded && (
+                    <div className="space-y-2 pt-2 border-t">
+                      <button
+                        onClick={() => navigate(`/capacity-planning?view=team&kpi=unallocated&sprint=${index}`)}
+                        className={`w-full p-2 rounded border text-left hover:shadow ${
+                          kpi.unallocatedMembers > 0 ? 'border-gray-300 bg-gray-50' : 'border-gray-200 bg-white'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="text-xs font-semibold">👤 Unallocated</div>
+                            <div className="text-[10px] text-gray-600">Members with 0% allocation</div>
+                          </div>
+                          <span className={`text-lg font-bold ${kpi.unallocatedMembers > 0 ? 'text-gray-600' : 'text-gray-400'}`}>
+                            {kpi.unallocatedMembers}
+                          </span>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => navigate(`/capacity-planning?view=team&kpi=single-project&sprint=${index}`)}
+                        className="w-full p-2 rounded border border-gray-200 bg-white text-left hover:shadow"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="text-xs font-semibold">🎯 Single Project</div>
+                            <div className="text-[10px] text-gray-600">Members focused on 1 project</div>
+                          </div>
+                          <span className="text-lg font-bold text-blue-600">{kpi.membersSingleProject}</span>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => navigate(`/capacity-planning?view=team&kpi=multi-project&sprint=${index}`)}
+                        className="w-full p-2 rounded border border-gray-200 bg-white text-left hover:shadow"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="text-xs font-semibold">🔀 Multi-Project</div>
+                            <div className="text-[10px] text-gray-600">Members working on 3+ projects</div>
+                          </div>
+                          <span className="text-lg font-bold text-indigo-600">{kpi.membersMultipleProjects}</span>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Sprint Summary */}
+              <div className="pt-3 border-t border-gray-200">
+                <h3 className="text-xs font-semibold text-gray-600 mb-2">📈 SPRINT SUMMARY</h3>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-2 bg-purple-50 rounded text-center">
+                    <div className="text-gray-600">Total Capacity</div>
+                    <div className="text-lg font-bold text-purple-600">{kpi.totalSprintCapacity}%</div>
+                  </div>
+                  <div className="p-2 bg-purple-50 rounded text-center">
+                    <div className="text-gray-600">Avg Utilization</div>
+                    <div className="text-lg font-bold text-purple-600">{kpi.avgMemberUtilization}%</div>
+                  </div>
+                  <div className="p-2 bg-blue-50 rounded text-center">
+                    <div className="text-gray-600">Projects</div>
+                    <div className="text-lg font-bold text-blue-600">{kpi.totalActiveProjects}</div>
+                  </div>
+                  <div className="p-2 bg-green-50 rounded text-center">
+                    <div className="text-gray-600">Members</div>
+                    <div className="text-lg font-bold text-green-600">{kpi.totalActiveMembers}</div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Quick Actions */}
       <Card>
-        <h2 className="text-xl font-semibold mb-4">Timeline View</h2>
+        <h2 className="text-xl font-semibold mb-4">⚡ Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {timelineData.map((data, index) => {
-            const title = index === 0 ? 'Current Sprint' : index === 1 ? 'Next Sprint' : '2 Sprints Ahead';
-            return (
-              <div key={`${data.year}-${data.month}-${data.sprint}`} className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
-                <h3 className="text-lg font-bold text-blue-900 mb-2">{title}</h3>
-                <div className="text-sm text-gray-700 mb-1">
-                  {getMonthName(data.month)} {data.year} - Sprint {data.sprint}
-                </div>
-                <div className="text-xs text-gray-600 mb-4">
-                  {data.dates.from} to {data.dates.to}
-                </div>
+          <button
+            onClick={() => navigate('/projects')}
+            className="p-4 rounded-lg border-2 border-green-400 bg-green-50 hover:bg-green-100 text-left transition-all hover:shadow-md"
+          >
+            <div className="text-lg font-semibold text-green-900 mb-2">📁 Projects</div>
+            <div className="text-sm text-gray-600">Manage all projects</div>
+          </button>
 
-                <div className="space-y-3">
-                  {/* Unallocated Projects */}
-                  <div 
-                    className={`p-3 rounded-lg ${data.unallocatedProjects.length > 0 ? 'bg-orange-100 cursor-pointer hover:bg-orange-200' : 'bg-white'}`}
-                    onClick={() => data.unallocatedProjects.length > 0 && handleUnallocatedClick(data.unallocatedProjects.map(p => p.id))}
-                  >
-                    <div className="text-xs text-gray-600 mb-1">Unallocated Active Projects</div>
-                    <div className={`text-2xl font-bold ${data.unallocatedProjects.length > 0 ? 'text-orange-600' : 'text-green-600'}`}>
-                      {data.unallocatedProjects.length}
-                    </div>
-                  </div>
+          <button
+            onClick={() => navigate('/team')}
+            className="p-4 rounded-lg border-2 border-purple-400 bg-purple-50 hover:bg-purple-100 text-left transition-all hover:shadow-md"
+          >
+            <div className="text-lg font-semibold text-purple-900 mb-2">👥 Team</div>
+            <div className="text-sm text-gray-600">Manage team members</div>
+          </button>
 
-                  {/* Under Capacity Members */}
-                  <div 
-                    className={`p-3 rounded-lg ${data.underCapacityMembers.length > 0 ? 'bg-yellow-100 cursor-pointer hover:bg-yellow-200' : 'bg-white'}`}
-                    onClick={() => data.underCapacityMembers.length > 0 && handleCapacityClick(data.year, data.month, data.sprint, 'under')}
-                  >
-                    <div className="text-xs text-gray-600 mb-1 flex items-center gap-1">
-                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                      </svg>
-                      Under Capacity Members
-                    </div>
-                    <div className={`text-2xl font-bold ${data.underCapacityMembers.length > 0 ? 'text-yellow-600' : 'text-green-600'}`}>
-                      {data.underCapacityMembers.length}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">&lt; {underCapacityThreshold}%</div>
-                  </div>
-
-                  {/* Over Capacity Members */}
-                  <div 
-                    className={`p-3 rounded-lg ${data.overCapacityMembers.length > 0 ? 'bg-red-100 cursor-pointer hover:bg-red-200' : 'bg-white'}`}
-                    onClick={() => data.overCapacityMembers.length > 0 && handleCapacityClick(data.year, data.month, data.sprint, 'over')}
-                  >
-                    <div className="text-xs text-gray-600 mb-1 flex items-center gap-1">
-                      <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                      </svg>
-                      Over Capacity Members
-                    </div>
-                    <div className={`text-2xl font-bold ${data.overCapacityMembers.length > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      {data.overCapacityMembers.length}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">&gt; {overCapacityThreshold}%</div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </Card>
-
-      {/* Current Sprint Capacity */}
-      <Card>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Current Sprint Capacity</h2>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setSortBy('name')}
-              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                sortBy === 'name'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Sort by Name
-            </button>
-            <button
-              onClick={() => setSortBy('capacity')}
-              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                sortBy === 'capacity'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Sort by Capacity
-            </button>
-          </div>
-        </div>
-        <div className="space-y-3">
-          {currentSprintUtilization.length === 0 ? (
-            <p className="text-gray-500">No Product Managers found</p>
-          ) : (
-            currentSprintUtilization.map(({ pm, utilization }) => (
-              <div key={pm.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <div 
-                    className="font-medium text-blue-600 hover:text-blue-700 cursor-pointer hover:underline"
-                    onClick={() => handleMemberClick(pm.id)}
-                    title="Click to view in Allocation Board"
-                  >
-                    {pm.fullName}
-                  </div>
-                  {pm.team && <div className="text-sm text-gray-600">Team: {pm.team}</div>}
-                </div>
-                <div className={`px-3 py-1 rounded-full text-sm font-medium ${getUtilizationColor(utilization)}`}>
-                  {utilization}%
-                </div>
-              </div>
-            ))
-          )}
+          <button
+            onClick={() => navigate('/roles')}
+            className="p-4 rounded-lg border-2 border-orange-400 bg-orange-50 hover:bg-orange-100 text-left transition-all hover:shadow-md"
+          >
+            <div className="text-lg font-semibold text-orange-900 mb-2">👔 Roles</div>
+            <div className="text-sm text-gray-600">Manage resource roles</div>
+          </button>
         </div>
       </Card>
     </div>

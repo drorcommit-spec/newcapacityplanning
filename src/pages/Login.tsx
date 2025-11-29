@@ -37,9 +37,16 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex flex-col items-center justify-center px-4">
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-        <h1 className="text-2xl font-bold text-center mb-6">Product Capacity Planning</h1>
+        {/* Logo and Brand */}
+        <div className="flex flex-col items-center justify-center mb-6">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-5xl">🧩</span>
+            <h1 className="text-3xl font-bold text-gray-900">Puzzle</h1>
+          </div>
+          <p className="text-center text-gray-600 text-sm">Solve Your Capacity Planning</p>
+        </div>
         <form onSubmit={handleLogin} className="space-y-4">
           <Input
             label="Email"

@@ -16,6 +16,9 @@ export interface DatabaseData {
   projects: any[];
   allocations: any[];
   history: any[];
+  sprintProjects?: Record<string, string[]>;
+  sprintRoleRequirements?: Record<string, Record<string, number>>;
+  resourceRoles?: any[];
 }
 
 export async function fetchAllData(): Promise<DatabaseData> {
@@ -121,4 +124,58 @@ export async function createBackup(): Promise<void> {
     await createSupabaseBackup();
   }
   // JSON backups are automatic in the backend
+}
+
+// Save sprint projects
+export async function saveSprintProjects(sprintProjects: Record<string, string[]>): Promise<void> {
+  // Supabase support can be added later if needed
+  if (isSupabaseEnabled()) {
+    console.warn('Sprint projects not yet supported in Supabase');
+    return;
+  }
+
+  if (!API_URL) return;
+  
+  const response = await fetch(`${API_URL}/sprintProjects`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(sprintProjects),
+  });
+  if (!response.ok) throw new Error('Failed to save sprint projects');
+}
+
+// Save sprint role requirements
+export async function saveSprintRoleRequirements(sprintRoleRequirements: Record<string, Record<string, number>>): Promise<void> {
+  // Supabase support can be added later if needed
+  if (isSupabaseEnabled()) {
+    console.warn('Sprint role requirements not yet supported in Supabase');
+    return;
+  }
+
+  if (!API_URL) return;
+  
+  const response = await fetch(`${API_URL}/sprintRoleRequirements`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(sprintRoleRequirements),
+  });
+  if (!response.ok) throw new Error('Failed to save sprint role requirements');
+}
+
+// Save resource roles
+export async function saveResourceRoles(resourceRoles: any[]): Promise<void> {
+  // Supabase support can be added later if needed
+  if (isSupabaseEnabled()) {
+    console.warn('Resource roles not yet supported in Supabase');
+    return;
+  }
+
+  if (!API_URL) return;
+  
+  const response = await fetch(`${API_URL}/resourceRoles`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(resourceRoles),
+  });
+  if (!response.ok) throw new Error('Failed to save resource roles');
 }

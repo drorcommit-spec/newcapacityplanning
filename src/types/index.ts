@@ -1,13 +1,10 @@
-export type UserRole = 'VP Product' | 'Product Director' | 'Product Manager' | 'Product Operations Manager' | 'PMO';
+export type UserRole = 'VP Product' | 'Product Director' | 'Product Manager' | 'Product Operations Manager' | 'PMO' | string;
 
 export type ProjectType = 'AI' | 'Software' | 'Hybrid';
 
-export type ProjectStatus = 'Pending' | 'Active' | 'Inactive' | 'Completed';
+export type ProjectStatus = 'Pending' | 'Active' | 'Inactive' | 'Completed' | 'Blocked' | 'On Hold';
 
 export type ProjectRegion = 'UK' | 'US' | 'Canada' | 'Israel';
-
-// Resource Types for Capacity Planning
-export type ResourceType = 'BE' | 'FE' | 'Tech Lead' | 'QA' | 'QA Lead' | 'VP' | 'Director' | 'DevOps' | 'AI' | 'Architect' | 'Design' | string;
 
 export interface TeamMember {
   id: string;
@@ -17,9 +14,9 @@ export interface TeamMember {
   team?: string;
   isActive: boolean;
   createdAt: string;
-  // New fields for Capacity Planning
-  resourceType?: ResourceType;
   employeeNumber?: string;
+  managerId?: string; // ID of the manager (another team member)
+  capacity?: number; // Member capacity percentage (0-100), default 100
 }
 
 export interface Customer {
@@ -43,8 +40,18 @@ export interface Project {
   createdAt: string;
   isArchived: boolean;
   comment?: string;
-  // New field for Capacity Planning - max capacity per resource type per sprint
-  maxCapacityPerResourceType?: Record<string, number>; // { "BE": 80, "FE": 60 }
+}
+
+// Sprint-specific role requirements for capacity planning
+export interface SprintRoleRequirement {
+  id: string;
+  projectId: string;
+  year: number;
+  month: number;
+  sprint: number;
+  roleRequirements: Record<string, number>; // { "Product Manager": 50, "VP Product": 30 } - percentages
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SprintAllocation {

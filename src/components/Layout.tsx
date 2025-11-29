@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 import { APP_VERSION } from '../version';
+import Chatbot from './Chatbot';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,7 +11,7 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [showAllocationsDropdown, setShowAllocationsDropdown] = useState(false);
+  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -21,59 +22,63 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
+      <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center gap-8">
-              <Link to="/" className="text-xl font-bold text-blue-600">
-                Capacity Planning
+              <Link to="/" className="flex items-center gap-3">
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">🧩</span>
+                    <span className="text-xl font-bold text-gray-900">Puzzle</span>
+                  </div>
+                  <span className="text-[10px] text-gray-500 -mt-1">Solve Your Capacity Planning</span>
+                </div>
               </Link>
               <div className="hidden md:flex gap-4">
                 <Link to="/" className="text-gray-700 hover:text-blue-600 px-3 py-2">
                   Dashboard
                 </Link>
-                <Link to="/team" className="text-gray-700 hover:text-blue-600 px-3 py-2">
-                  Team
-                </Link>
-                <Link to="/projects" className="text-gray-700 hover:text-blue-600 px-3 py-2">
-                  Projects
+                <Link to="/capacity-planning" className="text-gray-700 hover:text-blue-600 px-3 py-2 font-semibold">
+                  Capacity Planning
                 </Link>
                 <div 
                   className="relative"
-                  onMouseEnter={() => setShowAllocationsDropdown(true)}
-                  onMouseLeave={() => setShowAllocationsDropdown(false)}
+                  onMouseEnter={() => setShowSettingsDropdown(true)}
+                  onMouseLeave={() => setShowSettingsDropdown(false)}
                 >
                   <button className="text-gray-700 hover:text-blue-600 px-3 py-2 flex items-center gap-1">
-                    Allocations
+                    Settings
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  {showAllocationsDropdown && (
+                  {showSettingsDropdown && (
                     <div className="absolute top-full left-0 mt-0 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-50">
                       <Link 
-                        to="/allocations/rawdata" 
+                        to="/team" 
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                        onClick={() => setShowAllocationsDropdown(false)}
+                        onClick={() => setShowSettingsDropdown(false)}
                       >
-                        Allocation Rawdata
+                        Members
                       </Link>
                       <Link 
-                        to="/allocations/canvas" 
+                        to="/projects" 
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                        onClick={() => setShowAllocationsDropdown(false)}
+                        onClick={() => setShowSettingsDropdown(false)}
                       >
-                        Allocation Board
+                        Projects
+                      </Link>
+                      <Link 
+                        to="/roles" 
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                        onClick={() => setShowSettingsDropdown(false)}
+                      >
+                        Resource Types
                       </Link>
                     </div>
                   )}
                 </div>
-                <Link to="/history" className="text-gray-700 hover:text-blue-600 px-3 py-2">
-                  History
-                </Link>
-                <Link to="/capacity-planning" className="text-gray-700 hover:text-blue-600 px-3 py-2 font-semibold">
-                  Capacity Planning
-                </Link>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -92,6 +97,7 @@ export default function Layout({ children }: LayoutProps) {
       <footer className="fixed bottom-0 right-0 p-2">
         <span className="text-xs text-gray-400">v{APP_VERSION}</span>
       </footer>
+      <Chatbot />
     </div>
   );
 }

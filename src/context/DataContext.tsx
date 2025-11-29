@@ -9,7 +9,7 @@ interface DataContextType {
   history: AllocationHistory[];
   addTeamMember: (member: Omit<TeamMember, 'id' | 'createdAt'>) => void;
   updateTeamMember: (id: string, updates: Partial<TeamMember>) => void;
-  addProject: (project: Omit<Project, 'id' | 'createdAt'>) => void;
+  addProject: (project: Omit<Project, 'id' | 'createdAt'>) => string;
   updateProject: (id: string, updates: Partial<Project>) => void;
   addAllocation: (allocation: Omit<SprintAllocation, 'id' | 'createdAt' | 'createdBy'>, createdBy: string) => void;
   updateAllocation: (id: string, updates: Partial<SprintAllocation>, changedBy: string) => void;
@@ -26,7 +26,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const saveTimeoutRef = useRef<number | null>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load data from server on mount
   useEffect(() => {
@@ -105,6 +105,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString(),
     };
     setProjects(prev => [...prev, newProject]);
+    return newProject.id;
   };
 
   const updateProject = (id: string, updates: Partial<Project>) => {

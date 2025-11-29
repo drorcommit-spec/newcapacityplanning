@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Migrate localStorage to Server</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .section {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .success {
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      border-color: #f5c6cb;
+      color: #721c24;
+    }
+    .info {
+      background-color: #d1ecf1;
+      border-color: #bee5eb;
+      color: #0c5460;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    button:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+    pre {
+      background-color: #f8f9fa;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔄 Migrate localStorage Data to Server</h1>
+  
+  <div class="section info">
+    <h3>ℹ️ What does this do?</h3>
+    <p>This tool migrates your existing localStorage data (sprint projects, role requirements, and resource roles) to the server database.</p>
+    <p><strong>Important:</strong> Make sure the backend server is running on http://localhost:3002</p>
+  </div>
+
+  <div class="section">
+    <h3>📊 Current localStorage Data</h3>
+    <div id="localStorageData"></div>
+  </div>
+
+  <div class="section">
+    <button id="migrateBtn" onclick="migrateData()">🚀 Migrate to Server</button>
+  </div>
+
+  <div id="result"></div>
+
+  <script>
+    const API_URL = 'http://localhost:3002/api';
+
+    // Display current localStorage data
+    function displayLocalStorageData() {
+      const container = document.getElementById('localStorageData');
+      
+      const sprintProjects = localStorage.getItem('sprintProjects');
+      const sprintRoleRequirements = localStorage.getItem('sprintRoleRequirements');
+      const resourceRoles = localStorage.getItem('resourceRoles');
+
+      let html = '';
+
+      if (sprintProjects) {
+        const data = JSON.parse(sprintProjects);
+        const count = Object.keys(data).length;
+        html += `<p>✅ <strong>Sprint Projects:</strong> ${count} sprint(s) with projects</p>`;
+      } else {
+        html += `<p>❌ <strong>Sprint Projects:</strong> No data found</p>`;
+      }
+
+      if (sprintRoleRequirements) {
+        const data = JSON.parse(sprintRoleRequirements);
+        const count = Object.keys(data).length;
+        html += `<p>✅ <strong>Sprint Role Requirements:</strong> ${count} sprint(s) with requirements</p>`;
+      } else {
+        html += `<p>❌ <strong>Sprint Role Requirements:</strong> No data found</p>`;
+      }
+
+      if (resourceRoles) {
+        const data = JSON.parse(resourceRoles);
+        html += `<p>✅ <strong>Resource Roles:</strong> ${data.length} role(s)</p>`;
+      } else {
+        html += `<p>❌ <strong>Resource Roles:</strong> No data found</p>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    async function migrateData() {
+      const resultDiv = document.getElementById('result');
+      const migrateBtn = document.getElementById('migrateBtn');
+      
+      migrateBtn.disabled = true;
+      resultDiv.innerHTML = '<div class="section info"><p>⏳ Migrating data...</p></div>';
+
+      try {
+        // Get localStorage data
+        const sprintProjects = localStorage.getItem('sprintProjects');
+        const sprintRoleRequirements = localStorage.getItem('sprintRoleRequirements');
+        const resourceRoles = localStorage.getItem('resourceRoles');
+
+        const results = [];
+
+        // Migrate sprint projects
+        if (sprintProjects) {
+          try {
+            const response = await fetch(`${API_URL}/sprintProjects`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: sprintProjects,
+            });
+            if (response.ok) {
+              results.push('✅ Sprint Projects migrated successfully');
+            } else {
+              results.push('❌ Failed to migrate Sprint Projects: ' + await response.text());
+            }
+          } catch (error) {
+            results.push('❌ Error migrating Sprint Projects: ' + error.message);
+          }
+        } else {
+          results.push('ℹ️ No Sprint Projects data to migrate');
+        }
+
+        // Migrate sprint role requirements
+        if (sprintRoleRequirements) {
+          try {
+            const response = await fetch(`${API_URL}/sprintRoleRequirements`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: sprintRoleRequirements,
+            });
+            if (response.ok) {
+              results.push('✅ Sprint Role Requirements migrated successfully');
+            } else {
+              results.push('❌ Failed to migrate Sprint Role Requirements: ' + await response.text());
+            }
+          } catch (error) {
+            results.push('❌ Error migrating Sprint Role Requirements: ' + error.message);
+          }
+        } else {
+          results.push('ℹ️ No Sprint Role Requirements data to migrate');
+        }
+
+        // Migrate resource roles
+        if (resourceRoles) {
+          try {
+            const response = await fetch(`${API_URL}/resourceRoles`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: resourceRoles,
+            });
+            if (response.ok) {
+              results.push('✅ Resource Roles migrated successfully');
+            } else {
+              results.push('❌ Failed to migrate Resource Roles: ' + await response.text());
+            }
+          } catch (error) {
+            results.push('❌ Error migrating Resource Roles: ' + error.message);
+          }
+        } else {
+          results.push('ℹ️ No Resource Roles data to migrate');
+        }
+
+        // Display results
+        const allSuccess = results.every(r => r.startsWith('✅') || r.startsWith('ℹ️'));
+        const className = allSuccess ? 'success' : 'error';
+        
+        resultDiv.innerHTML = `
+          <div class="section ${className}">
+            <h3>Migration Results</h3>
+            ${results.map(r => `<p>${r}</p>`).join('')}
+          </div>
+        `;
+
+        if (allSuccess) {
+          resultDiv.innerHTML += `
+            <div class="section info">
+              <h3>✨ Next Steps</h3>
+              <p>1. Verify the data in your application</p>
+              <p>2. Once confirmed, you can clear localStorage data (optional)</p>
+              <p>3. The application will now use the server database</p>
+            </div>
+          `;
+        }
+
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div class="section error">
+            <h3>❌ Migration Failed</h3>
+            <p>${error.message}</p>
+            <p>Make sure the backend server is running on http://localhost:3002</p>
+          </div>
+        `;
+      } finally {
+        migrateBtn.disabled = false;
+      }
+    }
+
+    // Initialize
+    displayLocalStorageData();
+  </script>
+</body>
+</html>
