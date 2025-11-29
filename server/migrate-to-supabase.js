@@ -104,10 +104,10 @@ async function migrateToSupabase() {
         project_name: p.projectName,
         project_type: p.projectType,
         status: p.status,
-        max_capacity_percentage: p.maxCapacityPercentage,
-        pmo_contact: p.pmoContact,
+        max_capacity_percentage: p.maxCapacityPercentage && p.maxCapacityPercentage !== '' ? parseInt(p.maxCapacityPercentage) : null,
+        pmo_contact: p.pmoContact || null,
         is_archived: p.isArchived,
-        comment: p.comment,
+        comment: p.comment || null,
         created_at: p.createdAt,
       }));
 
@@ -126,14 +126,14 @@ async function migrateToSupabase() {
         id: a.id,
         project_id: a.projectId,
         product_manager_id: a.productManagerId,
-        year: a.year,
-        month: a.month,
-        sprint: a.sprint,
-        allocation_percentage: a.allocationPercentage,
-        allocation_days: a.allocationDays,
-        comment: a.comment,
+        year: parseInt(a.year),
+        month: parseInt(a.month),
+        sprint: parseInt(a.sprint),
+        allocation_percentage: parseInt(a.allocationPercentage),
+        allocation_days: a.allocationDays ? parseFloat(a.allocationDays) : null,
+        comment: a.comment || null,
         created_at: a.createdAt,
-        created_by: a.createdBy,
+        created_by: a.createdBy || 'system',
       }));
 
       const { error } = await supabase
@@ -150,7 +150,7 @@ async function migrateToSupabase() {
       const history = localData.history.map(h => ({
         id: h.id,
         allocation_id: h.allocationId,
-        changed_by: h.changedBy,
+        changed_by: h.changedBy || 'system',
         changed_at: h.changedAt,
         change_type: h.changeType,
         old_value: h.oldValue,
