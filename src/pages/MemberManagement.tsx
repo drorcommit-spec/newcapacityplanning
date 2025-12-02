@@ -28,7 +28,7 @@ export default function TeamManagement() {
     fullName: '',
     email: '',
     role: 'Product Manager' as UserRole,
-    team: '',
+    teams: [] as string[],
     managerId: '',
     capacity: 100,
   });
@@ -72,7 +72,7 @@ export default function TeamManagement() {
   // Get all unique teams from existing team members
   const getExistingTeams = () => {
     const teams = teamMembers
-      .map(m => m.team)
+      .flatMap(m => m.teams || [])
       .filter(t => t && t.trim() !== '') as string[];
     return Array.from(new Set(teams)).sort();
   };
@@ -128,7 +128,7 @@ export default function TeamManagement() {
     }
 
     // If creating a new team, validate it
-    let finalTeam = formData.team;
+    let finalTeams = formData.teams;
     if (isCreatingNewTeam) {
       const trimmedTeam = newTeamName.trim();
       if (!trimmedTeam) {
@@ -147,19 +147,19 @@ export default function TeamManagement() {
         return;
       }
       
-      finalTeam = trimmedTeam;
+      finalTeams = [trimmedTeam];
     }
     
     if (editingId) {
-      updateTeamMember(editingId, { ...formData, role: finalRole, team: finalTeam });
+      updateTeamMember(editingId, { ...formData, role: finalRole, teams: finalTeams });
     } else {
-      addTeamMember({ ...formData, role: finalRole, team: finalTeam, isActive: true });
+      addTeamMember({ ...formData, role: finalRole, teams: finalTeams, isActive: true });
     }
     resetForm();
   };
 
   const resetForm = () => {
-    setFormData({ fullName: '', email: '', role: 'Product Manager', team: '', managerId: '', capacity: 100 });
+    setFormData({ fullName: '', email: '', role: 'Product Manager', teams: [], managerId: '', capacity: 100 });
     setEmailError('');
     setRoleError('');
     setTeamError('');
@@ -176,7 +176,7 @@ export default function TeamManagement() {
       fullName: member.fullName,
       email: member.email,
       role: member.role,
-      team: member.team || '',
+      teams: member.teams || [],
       managerId: member.managerId || '',
       capacity: member.capacity ?? 100,
     });
@@ -216,7 +216,7 @@ export default function TeamManagement() {
         const searchLower = searchTerm.toLowerCase();
         const matchesName = member.fullName.toLowerCase().includes(searchLower);
         const matchesEmail = member.email.toLowerCase().includes(searchLower);
-        const matchesTeam = member.team?.toLowerCase().includes(searchLower);
+        const matchesTeam = member.teams?.some(t => t.toLowerCase().includes(searchLower));
         if (!matchesName && !matchesEmail && !matchesTeam) return false;
       }
       

@@ -152,7 +152,7 @@ export default function CapacityOverview({
       if (customerCompare !== 0) return customerCompare;
       return a.projectName.localeCompare(b.projectName);
     });
-  const teams = Array.from(new Set(activeManagers.map(m => m.team).filter(Boolean))).sort((a, b) => (a as string).localeCompare(b as string));
+  const teams = Array.from(new Set(activeManagers.flatMap(m => m.teams || []).filter(Boolean))).sort((a, b) => (a as string).localeCompare(b as string));
   
   // Multi-select team filter - default to all teams selected except "No Team"
   const [selectedTeams, setSelectedTeams] = useState<string[]>(teams as string[]);
@@ -598,9 +598,9 @@ export default function CapacityOverview({
         if (selectedTeams.length > 0) {
           managers = managers.filter(m => {
             // Handle "No Team" option
-            if (selectedTeams.includes('No Team') && !m.team) return true;
-            // Handle regular teams
-            return m.team && selectedTeams.includes(m.team);
+            if (selectedTeams.includes('No Team') && (!m.teams || m.teams.length === 0)) return true;
+            // Handle regular teams - member matches if they're in any of the selected teams
+            return m.teams && m.teams.some(team => selectedTeams.includes(team));
           });
         }
 
@@ -634,11 +634,13 @@ export default function CapacityOverview({
 
         const teamGroups = new Map<string, typeof managers>();
         managers.forEach(pm => {
-          const teamName = pm.team || 'No Team';
-          if (!teamGroups.has(teamName)) {
-            teamGroups.set(teamName, []);
-          }
-          teamGroups.get(teamName)!.push(pm);
+          const pmTeams = pm.teams && pm.teams.length > 0 ? pm.teams : ['No Team'];
+          pmTeams.forEach(teamName => {
+            if (!teamGroups.has(teamName)) {
+              teamGroups.set(teamName, []);
+            }
+            teamGroups.get(teamName)!.push(pm);
+          });
         });
 
         const teams = Array.from(teamGroups.entries()).map(([teamName, teamMembers]) => {
