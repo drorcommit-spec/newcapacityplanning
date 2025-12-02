@@ -117,6 +117,10 @@ export default function TeamManagement() {
     updateTeamMember(id, { isActive: false });
   };
 
+  const handleActivate = (id: string) => {
+    updateTeamMember(id, { isActive: true });
+  };
+
   // Get active resource types for role options
   const roleOptions = [
     { value: '__create_new__', label: '+ Create New Resource Type' },
@@ -316,9 +320,13 @@ export default function TeamManagement() {
                         <button onClick={() => handleEdit(member)} className="text-blue-600 hover:text-blue-700 text-sm">
                           Edit
                         </button>
-                        {member.isActive && (
+                        {member.isActive ? (
                           <button onClick={() => handleDeactivate(member.id)} className="text-red-600 hover:text-red-700 text-sm">
                             Deactivate
+                          </button>
+                        ) : (
+                          <button onClick={() => handleActivate(member.id)} className="text-green-600 hover:text-green-700 text-sm">
+                            Activate
                           </button>
                         )}
                       </div>

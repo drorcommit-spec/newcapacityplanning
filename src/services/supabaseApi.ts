@@ -20,13 +20,16 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
     supabase.from('teams').select('*').order('created_at', { ascending: false }),
   ]);
 
-  // Check for errors
+  // Check for errors (teams table is optional for backward compatibility)
   if (teamMembersRes.error) throw teamMembersRes.error;
   if (projectsRes.error) throw projectsRes.error;
   if (allocationsRes.error) throw allocationsRes.error;
   if (historyRes.error) throw historyRes.error;
   if (resourceTypesRes.error) throw resourceTypesRes.error;
-  if (teamsRes.error) throw teamsRes.error;
+  // Teams table might not exist yet - log warning but don't fail
+  if (teamsRes.error) {
+    console.warn('⚠️ Teams table not found - using empty array. Run migration to create it.');
+  }
 
   // Transform Supabase data to match our format
   const data: DatabaseData = {
@@ -35,7 +38,7 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
     allocations: (allocationsRes.data || []).map(transformAllocation),
     history: (historyRes.data || []).map(transformHistory),
     resourceRoles: (resourceTypesRes.data || []).map(transformResourceType),
-    teams: (teamsRes.data || []).map(transformTeam),
+    teams: teamsRes.error ? [] : (teamsRes.data || []).map(transformTeam),
   };
 
   console.log('✅ Data loaded from Supabase:', {

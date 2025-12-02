@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 import { APP_VERSION } from '../version';
@@ -11,7 +11,11 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
+
+  const isActive = (path: string) => location.pathname === path;
+  const isSettingsActive = ['/members', '/projects', '/roles', '/teams'].includes(location.pathname);
 
   const handleLogout = () => {
     logout();
@@ -36,10 +40,24 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
               </Link>
               <div className="hidden md:flex gap-4">
-                <Link to="/" className="text-gray-700 hover:text-blue-600 px-3 py-2">
+                <Link 
+                  to="/" 
+                  className={`px-3 py-2 rounded-md transition-colors ${
+                    isActive('/') 
+                      ? 'bg-blue-100 text-blue-700 font-semibold' 
+                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
+                  }`}
+                >
                   Dashboard
                 </Link>
-                <Link to="/capacity-planning" className="text-gray-700 hover:text-blue-600 px-3 py-2 font-semibold">
+                <Link 
+                  to="/capacity-planning" 
+                  className={`px-3 py-2 rounded-md transition-colors ${
+                    isActive('/capacity-planning') 
+                      ? 'bg-blue-100 text-blue-700 font-semibold' 
+                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
+                  }`}
+                >
                   Capacity Planning
                 </Link>
                 <div 
@@ -47,7 +65,13 @@ export default function Layout({ children }: LayoutProps) {
                   onMouseEnter={() => setShowSettingsDropdown(true)}
                   onMouseLeave={() => setShowSettingsDropdown(false)}
                 >
-                  <button className="text-gray-700 hover:text-blue-600 px-3 py-2 flex items-center gap-1">
+                  <button 
+                    className={`px-3 py-2 rounded-md flex items-center gap-1 transition-colors ${
+                      isSettingsActive 
+                        ? 'bg-blue-100 text-blue-700 font-semibold' 
+                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
+                    }`}
+                  >
                     Settings
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -57,28 +81,44 @@ export default function Layout({ children }: LayoutProps) {
                     <div className="absolute top-full left-0 mt-0 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-50">
                       <Link 
                         to="/members" 
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                        className={`block px-4 py-2 text-sm ${
+                          isActive('/members')
+                            ? 'bg-blue-100 text-blue-700 font-semibold'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                        }`}
                         onClick={() => setShowSettingsDropdown(false)}
                       >
                         Members
                       </Link>
                       <Link 
                         to="/projects" 
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                        className={`block px-4 py-2 text-sm ${
+                          isActive('/projects')
+                            ? 'bg-blue-100 text-blue-700 font-semibold'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                        }`}
                         onClick={() => setShowSettingsDropdown(false)}
                       >
                         Projects
                       </Link>
                       <Link 
                         to="/roles" 
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                        className={`block px-4 py-2 text-sm ${
+                          isActive('/roles')
+                            ? 'bg-blue-100 text-blue-700 font-semibold'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                        }`}
                         onClick={() => setShowSettingsDropdown(false)}
                       >
                         Resource Types
                       </Link>
                       <Link 
                         to="/teams" 
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                        className={`block px-4 py-2 text-sm ${
+                          isActive('/teams')
+                            ? 'bg-blue-100 text-blue-700 font-semibold'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                        }`}
                         onClick={() => setShowSettingsDropdown(false)}
                       >
                         Teams
@@ -101,8 +141,12 @@ export default function Layout({ children }: LayoutProps) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
-      <footer className="fixed bottom-0 right-0 p-2">
-        <span className="text-xs text-gray-400">v{APP_VERSION}</span>
+      <footer className="fixed bottom-0 right-0 p-2 z-40">
+        <div className="text-xs text-gray-400 bg-white/90 px-2 py-1 rounded shadow-sm border border-gray-200">
+          <span className="font-semibold">v{APP_VERSION}</span>
+          <span className="ml-2 text-gray-300">|</span>
+          <span className="ml-2">{import.meta.env.DEV ? '🟢 Local' : '🔵 Production'}</span>
+        </div>
       </footer>
       <Chatbot />
     </div>

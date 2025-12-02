@@ -6,4 +6,8 @@ export default defineConfig({
   server: {
     port: 5174,
   },
+  define: {
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString().split('T')[0]),
+    __GIT_COMMIT__: JSON.stringify(process.env.VERCEL_GIT_COMMIT_SHA?.substring(0, 7) || 'local'),
+  },
 })

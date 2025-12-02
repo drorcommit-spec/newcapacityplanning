@@ -81,7 +81,9 @@ export default function Login() {
       
       {/* Version and Credit */}
       <div className="mt-8 text-center space-y-2">
-        <p className="text-xs text-gray-400">Version {APP_VERSION}</p>
+        <p className="text-xs text-gray-400">
+          Version {APP_VERSION} {import.meta.env.DEV ? '(Local Dev)' : '(Production)'}
+        </p>
         <p className="text-sm text-gray-500">by Dror Shem-Tov</p>
       </div>
     </div>
