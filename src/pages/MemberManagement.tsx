@@ -308,7 +308,19 @@ export default function TeamManagement() {
                     <td className="py-3 px-4">{member.email}</td>
                     <td className="py-3 px-4">{member.role}</td>
                     <td className="py-3 px-4">{manager ? manager.fullName : '-'}</td>
-                    <td className="py-3 px-4">{member.team || '-'}</td>
+                    <td className="py-3 px-4">
+                      {member.teams && member.teams.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {member.teams.map(team => (
+                            <span key={team} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+                              {team}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
                     <td className="py-3 px-4">
                       <span className="text-sm">{member.capacity ?? 100}%</span>
                     </td>
@@ -430,7 +442,7 @@ export default function TeamManagement() {
             <Select
               label="Team"
               options={teamOptions}
-              value={isCreatingNewTeam ? '__CREATE_NEW__' : formData.team}
+              value={isCreatingNewTeam ? '__CREATE_NEW__' : (formData.teams.length > 0 ? formData.teams[0] : '')}
               onChange={(e) => {
                 if (e.target.value === '__CREATE_NEW__') {
                   setIsCreatingNewTeam(true);
@@ -440,7 +452,7 @@ export default function TeamManagement() {
                   setIsCreatingNewTeam(false);
                   setNewTeamName('');
                   setTeamError('');
-                  setFormData({ ...formData, team: e.target.value });
+                  setFormData({ ...formData, teams: e.target.value ? [e.target.value] : [] });
                 }
               }}
             />
