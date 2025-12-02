@@ -249,6 +249,20 @@ app.post('/api/history', async (req, res) => {
   }
 });
 
+// Get teams
+app.get('/api/teams', async (req, res) => {
+  try {
+    const data = await readDB();
+    const teams = (data.teams || [])
+      .filter(t => !t.isArchived)
+      .map(t => t.name)
+      .sort();
+    res.json(teams);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Update teams
 app.post('/api/teams', async (req, res) => {
   try {

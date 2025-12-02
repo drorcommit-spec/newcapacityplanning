@@ -116,6 +116,24 @@ export async function saveResourceTypesToSupabase(resourceTypes: any[]): Promise
   console.log('✅ Resource types saved');
 }
 
+export async function getTeamsFromSupabase(): Promise<string[]> {
+  if (!isSupabaseEnabled() || !supabase) return [];
+
+  console.log('📥 Fetching teams from Supabase...');
+
+  const { data, error } = await supabase
+    .from('teams')
+    .select('name')
+    .eq('is_archived', false)
+    .order('name', { ascending: true });
+
+  if (error) throw error;
+  
+  const teamNames = (data || []).map(t => t.name);
+  console.log('✅ Teams loaded:', teamNames.length);
+  return teamNames;
+}
+
 export async function saveTeamsToSupabase(teams: any[]): Promise<void> {
   if (!isSupabaseEnabled() || !supabase) return;
 

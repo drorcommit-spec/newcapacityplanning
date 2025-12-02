@@ -183,6 +183,23 @@ export async function saveResourceRoles(resourceRoles: any[]): Promise<void> {
   if (!response.ok) throw new Error('Failed to save resource roles');
 }
 
+// Get teams
+export async function getTeams(): Promise<string[]> {
+  // Use Supabase if enabled (production)
+  if (isSupabaseEnabled()) {
+    const { getTeamsFromSupabase } = await import('./supabaseApi');
+    return getTeamsFromSupabase();
+  }
+
+  // Local development: use JSON file via backend
+  if (!API_URL) return [];
+  
+  const response = await fetch(`${API_URL}/teams`);
+  if (!response.ok) throw new Error('Failed to fetch teams');
+  const data = await response.json();
+  return data || [];
+}
+
 // Save teams
 export async function saveTeams(teams: any[]): Promise<void> {
   // Use Supabase if enabled (production)

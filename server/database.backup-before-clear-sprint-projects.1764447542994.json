@@ -1,0 +1,718 @@
+{
+  "teamMembers": [
+    {
+      "id": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "fullName": "Dror Shem-Tov",
+      "email": "drors@comm-it.com",
+      "role": "Product Director",
+      "isActive": true,
+      "createdAt": "2025-11-22T10:41:17.956Z",
+      "managerId": "",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "id": "185c5a77-bd31-43e3-be33-1871533d3b3e",
+      "fullName": "Nogah Hendler",
+      "email": "Nogah.Hendler@comm-it.com",
+      "role": "VP Product",
+      "isActive": true,
+      "createdAt": "2025-11-22T10:43:54.895Z",
+      "managerId": "cec8368c-a8f2-4413-9ef5-68def6981520",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "id": "c83d8acc-e3ce-468b-a60b-a06f82d976d8",
+      "fullName": "Miri Izhaki",
+      "email": "miri.izhaki@comm-it.com",
+      "role": "Product Manager",
+      "isActive": true,
+      "createdAt": "2025-11-22T10:44:37.464Z",
+      "managerId": "",
+      "capacity": 85,
+      "teams": []
+    },
+    {
+      "id": "afa3ce93-669c-48a3-b9f8-3674bf88b71e",
+      "fullName": "Stav Fuerstain",
+      "email": "Stav.Fuerstain@comm-it.com",
+      "role": "Product Manager",
+      "isActive": true,
+      "createdAt": "2025-11-22T12:06:51.381Z",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "id": "pmo-eran-preiskel",
+      "fullName": "Eran Preiskel",
+      "email": "eran.preiskel@pmo.com",
+      "role": "PMO",
+      "team": "",
+      "isActive": true,
+      "createdAt": "2025-11-22T12:30:00.000Z",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "id": "pmo-yonatan-likverman",
+      "fullName": "Yonatan Likverman",
+      "email": "yonatan.likverman@pmo.com",
+      "role": "PMO",
+      "team": "",
+      "isActive": true,
+      "createdAt": "2025-11-22T12:30:00.000Z",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "id": "pmo-david-shiprut",
+      "fullName": "David Shiprut",
+      "email": "david.shiprut@pmo.com",
+      "role": "PMO",
+      "isActive": true,
+      "createdAt": "2025-11-22T12:30:00.000Z",
+      "managerId": "",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "id": "pmo-itamar-gardus",
+      "fullName": "Itamar Gardus",
+      "email": "itamar.gardus@pmo.com",
+      "role": "PMO",
+      "team": "",
+      "isActive": true,
+      "createdAt": "2025-11-22T12:30:00.000Z",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "id": "pmo-niv-spector",
+      "fullName": "Niv Spector",
+      "email": "niv.spector@pmo.com",
+      "role": "PMO",
+      "team": "",
+      "isActive": true,
+      "createdAt": "2025-11-22T12:30:00.000Z",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "id": "090f521c-dc56-4a55-85b4-736f53f89f76",
+      "fullName": "Maor Avital",
+      "email": "Maor.Avital@comm-it.com",
+      "role": "Product Manager",
+      "isActive": true,
+      "createdAt": "2025-11-22T15:08:24.731Z",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "id": "35dbc359-2a82-41d7-9f81-d8e0a0c6d9c1",
+      "fullName": "Shachar Furman",
+      "email": "Shachar.Furman@comm-it.com",
+      "role": "Product Manager",
+      "isActive": true,
+      "createdAt": "2025-11-22T19:44:46.087Z",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "id": "76cd5e8d-9f36-4079-829b-375733fea906",
+      "fullName": "Yitzchak Shamia",
+      "email": "Yitzchak.Shamia@comm-it.com",
+      "role": "Product Director",
+      "team": "",
+      "isActive": true,
+      "createdAt": "2025-11-22T19:45:09.110Z",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "id": "b00845ba-00d5-4c5c-919c-97e17e2eed08",
+      "fullName": "Don Leshem",
+      "email": "Don.Leshem@comm-it.com",
+      "role": "Product Manager",
+      "isActive": true,
+      "createdAt": "2025-11-22T19:47:04.171Z",
+      "managerId": "",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "id": "22deb47f-eaf3-4a9f-b6ee-e30dce0b56a7",
+      "fullName": "Ariel Ratner",
+      "email": "Ariel.Ratner@comm-it.com",
+      "role": "Product Manager",
+      "isActive": true,
+      "createdAt": "2025-11-22T19:47:51.316Z",
+      "managerId": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "id": "a9f8fe7d-4e1e-4dfa-9469-535cb0717670",
+      "fullName": "Tzur Barak",
+      "email": "Tzur.Barak@comm-it.com",
+      "role": "Product Manager",
+      "isActive": false,
+      "createdAt": "2025-11-22T19:48:12.893Z",
+      "managerId": "",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "id": "56f51732-ba6a-486b-b9d9-e5ee3cd4446b",
+      "fullName": "Nir Sharon",
+      "email": "Nir.Sharon@comm-it.com",
+      "role": "Product Manager",
+      "isActive": true,
+      "createdAt": "2025-11-23T07:53:45.557Z",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "id": "af3d2f20-45a5-4713-8068-f9570fcc4a92",
+      "fullName": "Sarah Ben Shalom",
+      "email": "Sarah.BenShalom@comm-it.com",
+      "role": "UIX",
+      "isActive": true,
+      "createdAt": "2025-11-23T14:13:08.878Z",
+      "managerId": "c767bbe1-36d4-49c5-b292-ca775450d8f6",
+      "capacity": 80,
+      "teams": []
+    },
+    {
+      "fullName": "Dudik Amira",
+      "email": "Dudika@comm-it.com",
+      "role": "Frontend",
+      "managerId": "",
+      "isActive": true,
+      "id": "801a3d8b-15fa-4e38-8ebb-303874b54dc8",
+      "createdAt": "2025-11-27T22:54:38.912Z",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "fullName": "Nikita Komliev ",
+      "email": "Nikita.Komliev@comm-it.com",
+      "role": "Frontend",
+      "managerId": "801a3d8b-15fa-4e38-8ebb-303874b54dc8",
+      "isActive": true,
+      "id": "7b4db598-ac5a-44d1-ae91-ae32102953ea",
+      "createdAt": "2025-11-27T23:06:21.287Z",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "fullName": "Shlomit Zevin ",
+      "email": "Shlomit.Zevin@comm-it.com",
+      "role": "QA Team Lead",
+      "managerId": "",
+      "isActive": true,
+      "id": "b10831a5-6e03-4344-a64a-27cfa55eb95a",
+      "createdAt": "2025-11-27T23:07:41.087Z",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "fullName": "Moran Ben Ghiat ",
+      "email": "Moran.BenGhiat@comm-it.com",
+      "role": "QA",
+      "managerId": "b10831a5-6e03-4344-a64a-27cfa55eb95a",
+      "isActive": true,
+      "id": "6000ee4e-ee20-4539-a0b2-0a9ab2acdee8",
+      "createdAt": "2025-11-27T23:08:11.406Z",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "fullName": "Slava horesh",
+      "email": "slavah@comm-it.com",
+      "role": "VP RnD",
+      "managerId": "cec8368c-a8f2-4413-9ef5-68def6981520",
+      "isActive": true,
+      "id": "6d22c7b5-4a86-44f1-8ee8-fe52b9d0b5a8",
+      "createdAt": "2025-11-28T12:22:31.756Z",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "fullName": "Alex Snitkovsky",
+      "email": "Alexs@comm-it.com",
+      "role": "SW Division CEO",
+      "managerId": "",
+      "isActive": true,
+      "id": "cec8368c-a8f2-4413-9ef5-68def6981520",
+      "createdAt": "2025-11-28T12:23:27.508Z",
+      "capacity": 100,
+      "teams": [
+        "Management"
+      ]
+    },
+    {
+      "fullName": "Michael Korman",
+      "email": "michaelk@comm-it.com",
+      "role": "Backend",
+      "team": "",
+      "managerId": "6d22c7b5-4a86-44f1-8ee8-fe52b9d0b5a8",
+      "isActive": true,
+      "id": "5168e182-9af1-47fb-aac9-16ebcc4bbb1b",
+      "createdAt": "2025-11-28T12:25:02.851Z",
+      "capacity": 100,
+      "teams": []
+    },
+    {
+      "fullName": "Ofer Lahan",
+      "email": "oferl@comm-it.com",
+      "role": "UIX",
+      "managerId": "",
+      "isActive": true,
+      "id": "d3543658-542c-40ed-a160-b2a1a078483e",
+      "createdAt": "2025-11-28T12:44:23.683Z",
+      "capacity": 100,
+      "teams": []
+    }
+  ],
+  "projects": [
+    {
+      "id": "9b6c9fa4-b4f3-4023-b087-7d83968e5cc4",
+      "projectName": "Tadiran 2025 Delivery",
+      "status": "Active",
+      "createdAt": "2025-11-22T10:45:23.542Z",
+      "customerName": "Tadiran",
+      "pmoContact": "pmo-eran-preiskel",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 30,
+      "customerId": "e48db2c7-ac87-4d73-9ba5-539e3234e5b5"
+    },
+    {
+      "id": "9900b811-7241-4fc4-a3ce-6de1d6387403",
+      "projectName": "JarTracking Phase 1",
+      "status": "Active",
+      "createdAt": "2025-11-22T10:47:14.032Z",
+      "customerName": "JarTracking",
+      "pmoContact": "pmo-yonatan-likverman",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 40,
+      "customerId": "97e5871a-0179-4bdc-844d-df1abce85bf4"
+    },
+    {
+      "id": "cb9c7fd8-afa6-4e14-86d9-a7d8dca77813",
+      "projectName": "Ambient Intelligence - Scoping",
+      "status": "Active",
+      "createdAt": "2025-11-22T10:47:51.225Z",
+      "customerName": "Ambient Intelligence",
+      "pmoContact": "",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 20,
+      "customerId": "982dd371-fce7-4485-b39b-3c9f768d23c4"
+    },
+    {
+      "id": "590a2f6a-583d-4186-8000-e9dca0d2ed4b",
+      "projectName": "RoadRadar - Delivery",
+      "status": "Active",
+      "createdAt": "2025-11-22T10:48:47.217Z",
+      "customerName": "RoadRadar",
+      "pmoContact": "pmo-david-shiprut",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 20,
+      "customerId": "7714d0f1-652f-4404-80af-d4806365cb85"
+    },
+    {
+      "id": "36a052bb-0dd9-462e-8f8a-620b6c948a33",
+      "projectName": "HRS - On Going",
+      "status": "Active",
+      "createdAt": "2025-11-22T10:52:02.802Z",
+      "customerName": "HRS",
+      "pmoContact": "pmo-itamar-gardus",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 10,
+      "customerId": "dec24194-6c29-4f6e-993f-3f1d5f40a443"
+    },
+    {
+      "id": "e9fad9a0-34c0-4ad3-93bd-c952cdad640b",
+      "projectName": "DCG - MVP",
+      "status": "Active",
+      "createdAt": "2025-11-22T12:07:33.705Z",
+      "customerName": "DCG",
+      "pmoContact": "pmo-niv-spector",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 40,
+      "customerId": "f132ff3b-c208-452e-ac8f-3419f5561b9d"
+    },
+    {
+      "id": "db8af93d-fca6-4c08-8e8c-7663998d4136",
+      "projectName": "Superpharm - SPRIT",
+      "status": "Active",
+      "createdAt": "2025-11-22T15:17:14.813Z",
+      "customerName": "Super-Pharm",
+      "pmoContact": "pmo-itamar-gardus",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 50,
+      "customerId": "d0c9532f-a55d-4de4-95e2-b0fc06728f0c"
+    },
+    {
+      "id": "9b41ab70-bed4-4945-bbd3-91254cf2d4b8",
+      "projectName": "Hyp Pre-Discovery",
+      "status": "Active",
+      "createdAt": "2025-11-22T15:18:08.703Z",
+      "customerName": "Hyp",
+      "pmoContact": "",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 50,
+      "customerId": "cc913840-ee0b-4b9e-a2f3-372080fbf0c8"
+    },
+    {
+      "id": "01b75b94-b439-4137-b1b9-2303b7c36d7b",
+      "projectName": "Suddenly spaces - Phase 1",
+      "status": "Active",
+      "createdAt": "2025-11-22T15:18:57.582Z",
+      "customerName": "Suddenly spaces",
+      "pmoContact": "pmo-yonatan-likverman",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 50,
+      "customerId": "53248b50-3292-4ef8-970d-83593e475432"
+    },
+    {
+      "id": "59ab299a-fa07-4a93-9ffa-d9c14aae536e",
+      "projectName": "Operations",
+      "status": "Active",
+      "createdAt": "2025-11-22T15:50:10.012Z",
+      "customerName": "Product",
+      "pmoContact": "",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 30,
+      "customerId": "9d35fd7d-17fb-4be1-addc-db2834029c18"
+    },
+    {
+      "id": "7870d0a6-2935-4bfc-ac97-cd19471316be",
+      "projectName": "Arie Delivery",
+      "status": "Pending",
+      "createdAt": "2025-11-22T19:13:57.897Z",
+      "customerName": "Aria",
+      "pmoContact": "pmo-david-shiprut",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 20,
+      "customerId": "eb4ccf90-3943-4c29-baa9-61214ecf6f07"
+    },
+    {
+      "id": "3186c9c1-5589-4528-9c6e-714138c830c9",
+      "projectName": "Cargo Scoping",
+      "status": "Active",
+      "createdAt": "2025-11-22T19:14:26.161Z",
+      "customerName": "Cargo",
+      "pmoContact": "pmo-yonatan-likverman",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 30,
+      "customerId": "d44d1a21-3353-4124-9055-093993658e5a",
+      "comment": "ירד ממליון וחצי למליון ו200K\nאלכס רוצה לרדת למליון\nמאור מנסה להוריד את  ספק של דינאמיקס"
+    },
+    {
+      "id": "3710af03-f82d-4e61-8c64-45fdc7375796",
+      "projectName": "Goomi MVP Delivery",
+      "status": "Active",
+      "createdAt": "2025-11-22T19:38:17.522Z",
+      "customerName": "Goomi",
+      "pmoContact": "",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 20,
+      "customerId": "afa74d8c-2560-4a5b-81ee-76f94145c892"
+    },
+    {
+      "id": "e6198ceb-52eb-46ab-9f7f-f04776db42bc",
+      "projectName": "Superpharm SPARK",
+      "status": "Active",
+      "createdAt": "2025-11-22T20:40:29.186Z",
+      "customerName": "Super-Pharm",
+      "pmoContact": "pmo-itamar-gardus",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 300,
+      "customerId": "8e4778ee-92b8-48be-a3cf-ce3927601d45"
+    },
+    {
+      "id": "5dd5e4e4-e054-42be-8394-f8c2dff73c30",
+      "projectName": "GRIP MVP",
+      "status": "Active",
+      "createdAt": "2025-11-23T07:55:37.050Z",
+      "customerName": "GRIP",
+      "pmoContact": "pmo-eran-preiskel",
+      "isArchived": false,
+      "projectType": "Hybrid",
+      "maxCapacityPercentage": 30,
+      "customerId": "d4cca83b-d45a-4aaf-9e18-6ba58875dcdc"
+    },
+    {
+      "id": "0d403d4f-f437-4ba9-b7e7-c5742547db03",
+      "projectName": "Hedros Biotechnology - IoT Assessment - OCT 25",
+      "status": "Active",
+      "createdAt": "2025-11-23T08:26:58.047Z",
+      "customerName": "Hedros Biotechnology",
+      "pmoContact": "",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 30,
+      "customerId": "37e127af-f14b-4013-8272-23e57e0c2625"
+    },
+    {
+      "id": "bdc89968-5707-4a61-9160-1c645d0a11c5",
+      "projectName": "Rafael (Micky)",
+      "status": "Active",
+      "createdAt": "2025-11-23T14:15:14.071Z",
+      "customerName": "Rafael (Micky)",
+      "pmoContact": "",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 10,
+      "customerId": "7716f8b0-ab45-43ca-a523-5e3ff29fc29f"
+    },
+    {
+      "id": "b4c6f3ed-3217-41ed-95dc-5e149b045501",
+      "projectName": "Rachel - COMEX",
+      "status": "Active",
+      "createdAt": "2025-11-23T14:15:32.095Z",
+      "customerName": "Rachel - COMEX",
+      "pmoContact": "",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": "",
+      "customerId": "a2e8024a-95f8-4ee2-afad-e53fe95c78f7"
+    },
+    {
+      "id": "205b9c21-3075-43d3-8453-3be80a8e3797",
+      "projectName": "LinkMe - MVP",
+      "status": "Pending",
+      "createdAt": "2025-11-23T16:31:27.375Z",
+      "customerName": "LinkMe",
+      "pmoContact": "pmo-itamar-gardus",
+      "isArchived": false,
+      "projectType": "Software",
+      "maxCapacityPercentage": 40,
+      "customerId": "cb42b270-247d-4f9f-bd8d-acffdb449e7f"
+    },
+    {
+      "customerId": "3d99416e-bb28-427f-a5aa-80b0bc13cfc9",
+      "customerName": "DanciFire",
+      "projectName": "MVP",
+      "projectType": "Software",
+      "status": "Active",
+      "maxCapacityPercentage": 30,
+      "isArchived": false,
+      "id": "702da501-ad49-42aa-9b8b-434f1d6aeeb9",
+      "createdAt": "2025-11-27T22:38:39.550Z",
+      "requiredRoles": {}
+    },
+    {
+      "customerId": "833409bb-2374-47c3-a710-3be9ddf8241b",
+      "customerName": "Auribus",
+      "projectName": "Assessment ",
+      "projectType": "AI",
+      "status": "Active",
+      "isArchived": false,
+      "id": "db94b434-8279-4172-a284-37b0ee67c385",
+      "createdAt": "2025-11-28T12:13:47.300Z",
+      "pmoContact": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+    },
+    {
+      "customerId": "52f0b113-05cf-42a0-9be1-384d6fd495fe",
+      "customerName": "Autonomy",
+      "projectName": "MVP",
+      "projectType": "AI",
+      "status": "Active",
+      "isArchived": false,
+      "id": "d8996a64-f685-4cc3-9ff2-37d51a98e280",
+      "createdAt": "2025-11-28T12:18:56.476Z",
+      "pmoContact": "c767bbe1-36d4-49c5-b292-ca775450d8f6"
+    },
+    {
+      "customerId": "01c7082b-9ed8-4aca-a1d0-6d2fe0ad2a3a",
+      "customerName": "Axian ",
+      "projectName": "POC international ",
+      "projectType": "AI",
+      "status": "Active",
+      "isArchived": false,
+      "id": "5fc7d05e-85e8-4959-bd0c-a7c173e01a6f",
+      "createdAt": "2025-11-28T12:25:51.437Z"
+    },
+    {
+      "customerId": "5cc6350e-606e-4256-be75-d1c60fd6067e",
+      "customerName": "Benchmark Labs ",
+      "projectName": "Assess international",
+      "projectType": "AI",
+      "status": "Active",
+      "isArchived": false,
+      "id": "ac2f4c75-4584-429c-ab1a-73914490dc9c",
+      "createdAt": "2025-11-28T12:30:33.951Z"
+    },
+    {
+      "customerId": "7f8c5982-d3c7-4da9-b5c9-76cc3e83978b",
+      "customerName": "Bloomfilter",
+      "projectName": "Bloomfilter",
+      "projectType": "Software",
+      "status": "Pending",
+      "isArchived": false,
+      "id": "de4d83da-b5b1-44f1-85f2-9b3722f33ac3",
+      "createdAt": "2025-11-28T12:34:25.660Z"
+    },
+    {
+      "customerId": "9f52a185-6145-4818-9116-c6162e5f6638",
+      "customerName": "Bloomfilter",
+      "projectName": "POC",
+      "projectType": "AI",
+      "status": "Active",
+      "isArchived": false,
+      "id": "f74c3aa6-9b5e-425b-b375-0883b2dafc7d",
+      "createdAt": "2025-11-28T12:34:46.704Z"
+    },
+    {
+      "customerId": "28a5dcd1-b869-4884-aa11-53406b70c34f",
+      "customerName": "Bonamark",
+      "projectName": "Bonamark POC",
+      "projectType": "AI",
+      "status": "Active",
+      "isArchived": false,
+      "id": "5ee6ca71-80da-441c-9788-0d681ef4549d",
+      "createdAt": "2025-11-28T12:38:14.455Z"
+    },
+    {
+      "customerId": "66f1c40c-299e-4b62-9c3f-0eeaa3e4a1db",
+      "customerName": "DI Global ",
+      "projectName": "(AI Assess)",
+      "projectType": "AI",
+      "status": "Pending",
+      "isArchived": false,
+      "id": "3175fab8-116e-49f2-a317-05cb86a2aa04",
+      "createdAt": "2025-11-28T20:35:37.953Z"
+    },
+    {
+      "customerId": "73b8e9cd-0d1b-47ae-aa67-1a84dcd942f8",
+      "customerName": "DI Global",
+      "projectName": " (AI Assess)",
+      "projectType": "AI",
+      "status": "Active",
+      "isArchived": false,
+      "id": "71b511a0-ba86-480b-bb7b-adcb0707fadf",
+      "createdAt": "2025-11-28T20:36:23.725Z"
+    }
+  ],
+  "allocations": [],
+  "history": [],
+  "sprintProjects": {
+    "2025-11-2": [
+      "5dd5e4e4-e054-42be-8394-f8c2dff73c30",
+      "36a052bb-0dd9-462e-8f8a-620b6c948a33",
+      "205b9c21-3075-43d3-8453-3be80a8e3797",
+      "9b6c9fa4-b4f3-4023-b087-7d83968e5cc4"
+    ]
+  },
+  "sprintRoleRequirements": {
+    "e9fad9a0-34c0-4ad3-93bd-c952cdad640b-2025-11-2": {
+      "PMO": 30,
+      "Product Manager": 50,
+      "UIX": 50
+    }
+  },
+  "resourceRoles": [
+    {
+      "id": "1",
+      "name": "VP Product",
+      "isArchived": false,
+      "createdAt": "2025-11-28T22:20:55.113Z"
+    },
+    {
+      "id": "2",
+      "name": "Product Director",
+      "isArchived": false,
+      "createdAt": "2025-11-28T22:20:55.114Z"
+    },
+    {
+      "id": "3",
+      "name": "Product Manager",
+      "isArchived": false,
+      "createdAt": "2025-11-28T22:20:55.114Z"
+    },
+    {
+      "id": "4",
+      "name": "Product Operations Manager",
+      "isArchived": true,
+      "createdAt": "2025-11-28T22:20:55.114Z"
+    },
+    {
+      "id": "5",
+      "name": "PMO",
+      "isArchived": false,
+      "createdAt": "2025-11-28T22:20:55.114Z"
+    },
+    {
+      "id": "7b755e80-c5aa-4a7d-bf2e-e88c1ef7acdb",
+      "name": "Backend",
+      "isArchived": false,
+      "createdAt": "2025-11-29T12:19:59.446Z"
+    },
+    {
+      "id": "67582f3f-5c3c-4cdd-b04e-2c678470b4e6",
+      "name": "Frontend",
+      "isArchived": false,
+      "createdAt": "2025-11-29T12:20:08.432Z"
+    },
+    {
+      "id": "551d5169-4a9e-4161-920e-c4f81ee5f51c",
+      "name": "DevOps",
+      "isArchived": false,
+      "createdAt": "2025-11-29T12:20:16.752Z"
+    },
+    {
+      "id": "8f9a88e5-cc09-400a-8645-7263cebb0640",
+      "name": "Architecture",
+      "isArchived": false,
+      "createdAt": "2025-11-29T12:20:36.002Z"
+    },
+    {
+      "id": "857f6af5-e65d-4712-95fa-a06901d50ca8",
+      "name": "UIX",
+      "isArchived": false,
+      "createdAt": "2025-11-29T12:21:26.157Z"
+    },
+    {
+      "id": "f7e5138d-362f-40d8-8f6a-1b87e3d4de92",
+      "name": "AI Data Science",
+      "isArchived": false,
+      "createdAt": "2025-11-29T12:25:35.419Z"
+    }
+  ],
+  "teams": [
+    {
+      "id": "cf16fa93-36ac-4f13-8eab-0a4d036defb5",
+      "name": "Admin",
+      "isArchived": false,
+      "createdAt": "2025-11-29T19:36:49.056Z"
+    },
+    {
+      "id": "94920291-092c-4f1a-abc4-946a38abe99d",
+      "name": "Management",
+      "isArchived": false,
+      "createdAt": "2025-11-29T19:47:11.046Z"
+    },
+    {
+      "id": "7022bc8c-6f32-458b-9f73-1f1f775e4c57",
+      "name": "Member",
+      "isArchived": false,
+      "createdAt": "2025-11-29T19:47:26.064Z"
+    }
+  ]
+}

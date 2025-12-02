@@ -26,6 +26,7 @@ export default function CapacityPlanning() {
   const [viewMode, setViewMode] = useState<ViewMode>('projects');
   const [showFilters, setShowFilters] = useState(true);
   const [sprintCount, setSprintCount] = useState(3);
+  const [expandedSprint, setExpandedSprint] = useState<string | null>(null);
 
   // Filter state
   const [searchText, setSearchText] = useState('');
@@ -35,7 +36,8 @@ export default function CapacityPlanning() {
   const [teamRoleFilter, setTeamRoleFilter] = useState<string[]>([]);
   const [showTeamRoleSelector, setShowTeamRoleSelector] = useState(false);
   const [kpiFilter, setKpiFilter] = useState<string | null>(null);
-  const [showMyManagedProjects, setShowMyManagedProjects] = useState(false);
+  const [pmoContactFilter, setPmoContactFilter] = useState<string>('all');
+  const [managerFilter, setManagerFilter] = useState<string>('all');
 
   // Capacity thresholds - editable
   const [underCapacityThreshold, setUnderCapacityThreshold] = useState(() => {
@@ -66,12 +68,26 @@ export default function CapacityPlanning() {
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
   const [showRoleRequirementsModal, setShowRoleRequirementsModal] = useState(false);
   const [roleRequirements, setRoleRequirements] = useState<Record<string, number>>({});
-  const [newRoleForRequirements, setNewRoleForRequirements] = useState('');
   const [selectedSprint, setSelectedSprint] = useState<SprintInfo | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [selectedAllocation, setSelectedAllocation] = useState<SprintAllocation | null>(null);
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<string | null>(null);
+  const [projectSearchText, setProjectSearchText] = useState('');
+  const [showRemoveMemberModal, setShowRemoveMemberModal] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<{
+    member: TeamMember;
+    sprint: SprintInfo;
+  } | null>(null);
+  const [removeFutureSprintsOption, setRemoveFutureSprintsOption] = useState<'current' | 'future'>('current');
+  
+  // Track members explicitly removed from sprints
+  // Key format: "memberId-year-month-sprint"
+  const [removedMembers, setRemovedMembers] = useState<Set<string>>(new Set());
+  
+  // Track members explicitly added to sprints (even if they have no allocations)
+  // Key format: "memberId-year-month-sprint"
+  const [explicitlyAddedMembers, setExplicitlyAddedMembers] = useState<Set<string>>(new Set());
   
   // Track projects explicitly added to sprints (even if they have no allocations)
   const [sprintProjects, setSprintProjects] = useState<Map<string, Set<string>>>(new Map());
@@ -326,6 +342,40 @@ export default function CapacityPlanning() {
     return false;
   };
 
+  // Get all members who are managers (have at least one team member reporting to them)
+  const getManagerMembers = useMemo(() => {
+    const managerIds = new Set<string>();
+    teamMembers.forEach(member => {
+      if (member.isActive && member.managerId) {
+        managerIds.add(member.managerId);
+      }
+    });
+    return teamMembers
+      .filter(m => m.isActive && managerIds.has(m.id))
+      .sort((a, b) => a.fullName.localeCompare(b.fullName));
+  }, [teamMembers]);
+
+  // Get all descendants (direct and indirect reports) of a manager
+  const getManagerDescendants = useMemo(() => {
+    return (managerId: string): Set<string> => {
+      const descendants = new Set<string>();
+      
+      // Helper function to recursively find all reports
+      const findReports = (currentManagerId: string) => {
+        teamMembers.forEach(member => {
+          if (member.isActive && member.managerId === currentManagerId && !descendants.has(member.id)) {
+            descendants.add(member.id);
+            // Recursively find this member's reports
+            findReports(member.id);
+          }
+        });
+      };
+      
+      findReports(managerId);
+      return descendants;
+    };
+  }, [teamMembers]);
+
   // Get projects with allocations for a sprint
   const getProjectsForSprint = (sprint: SprintInfo) => {
     const sprintAllocs = getSprintAllocations(sprint);
@@ -376,10 +426,27 @@ export default function CapacityPlanning() {
       );
     }
 
-    // Apply PMO managed projects filter
-    if (showMyManagedProjects) {
+    // Apply PMO Contact filter
+    if (pmoContactFilter !== 'all') {
       result = result.filter(({ project }) => {
-        return project.pmoContact && project.pmoContact === currentUser.id;
+        return project.pmoContact === pmoContactFilter;
+      });
+    }
+
+    // Apply Manager filter (hierarchical - includes all descendants)
+    if (managerFilter !== 'all') {
+      const descendants = getManagerDescendants(managerFilter);
+      result = result.filter(({ members }) => {
+        // Include projects with no allocations (empty members array)
+        if (members.length === 0) return true;
+        
+        // Include projects where ALL members are either descendants of the selected manager
+        // OR have no manager assigned
+        return members.every(member => {
+          const teamMember = teamMembers.find(tm => tm.id === member.id);
+          // Include if member is a descendant OR if member has no manager
+          return descendants.has(member.id) || !teamMember?.managerId;
+        });
       });
     }
 
@@ -491,19 +558,15 @@ export default function CapacityPlanning() {
     const sprintAllocs = getSprintAllocations(sprint);
     const memberMap = new Map<string, { member: TeamMember; projects: any[]; total: number }>();
 
-    // First, add all active members (even those with no allocations)
-    teamMembers.forEach(member => {
-      if (member.isActive) {
-        memberMap.set(member.id, { member, projects: [], total: 0 });
-      }
-    });
-
-    // Then, add allocations to members
+    // Add members who have allocations in this sprint
     sprintAllocs.forEach(alloc => {
       const member = teamMembers.find(m => m.id === alloc.productManagerId);
       const project = projects.find(p => p.id === alloc.projectId);
       
-      if (member && project && member.isActive && memberMap.has(member.id)) {
+      if (member && project && member.isActive) {
+        if (!memberMap.has(member.id)) {
+          memberMap.set(member.id, { member, projects: [], total: 0 });
+        }
         const memberData = memberMap.get(member.id)!;
         memberData.projects.push({
           ...project,
@@ -515,7 +578,21 @@ export default function CapacityPlanning() {
       }
     });
 
+    // Also add members explicitly added to this sprint (even without allocations)
+    teamMembers.forEach(member => {
+      const memberKey = `${member.id}-${sprint.year}-${sprint.month}-${sprint.sprint}`;
+      if (member.isActive && explicitlyAddedMembers.has(memberKey) && !memberMap.has(member.id)) {
+        memberMap.set(member.id, { member, projects: [], total: 0 });
+      }
+    });
+
     let result = Array.from(memberMap.values());
+
+    // Filter out members explicitly removed from this sprint
+    result = result.filter(({ member }) => {
+      const removedKey = `${member.id}-${sprint.year}-${sprint.month}-${sprint.sprint}`;
+      return !removedMembers.has(removedKey);
+    });
 
     // Apply search filter
     if (searchText) {
@@ -544,6 +621,16 @@ export default function CapacityPlanning() {
       result = result.filter(({ member }) => 
         member.role && teamRoleFilter.includes(member.role)
       );
+    }
+
+    // Apply Manager filter (hierarchical - includes all descendants)
+    if (managerFilter !== 'all') {
+      const descendants = getManagerDescendants(managerFilter);
+      result = result.filter(({ member }) => {
+        // Include members who are descendants of the selected manager
+        // OR members who have no manager assigned
+        return descendants.has(member.id) || !member.managerId;
+      });
     }
 
     // Apply KPI-specific filters for members
@@ -578,6 +665,12 @@ export default function CapacityPlanning() {
     return months[month - 1];
   };
 
+  const getSprintDatePeriod = (sprint: SprintInfo) => {
+    const startDay = sprint.sprint === 1 ? 1 : 16;
+    const endDay = sprint.sprint === 1 ? 15 : new Date(sprint.year, sprint.month, 0).getDate();
+    return `${startDay}-${endDay}`;
+  };
+
   const handleAddMemberToProject = (project: Project, sprint: SprintInfo, filterRole?: string) => {
     setSelectedProject(project);
     setSelectedSprint(sprint);
@@ -588,6 +681,14 @@ export default function CapacityPlanning() {
   const handleAddProjectToSprint = (sprint: SprintInfo) => {
     setSelectedSprint(sprint);
     setShowAddProjectModal(true);
+  };
+
+  const handleAddMemberToSprint = (sprint: SprintInfo) => {
+    setSelectedSprint(sprint);
+    setSelectedMember(null);
+    setSelectedProject(null);
+    setAllocationPercentage('');
+    setShowAddMemberModal(true);
   };
 
   const handleSelectProject = (project: Project) => {
@@ -648,7 +749,34 @@ export default function CapacityPlanning() {
   };
 
   const handleAddMember = () => {
-    if (!selectedMember || !selectedProject || !selectedSprint || !allocationPercentage) return;
+    if (!selectedMember || !selectedSprint) return;
+    
+    // If no project selected, just add member to sprint explicitly
+    if (!selectedProject) {
+      const memberKey = `${selectedMember.id}-${selectedSprint.year}-${selectedSprint.month}-${selectedSprint.sprint}`;
+      const newExplicitlyAddedMembers = new Set(explicitlyAddedMembers);
+      newExplicitlyAddedMembers.add(memberKey);
+      setExplicitlyAddedMembers(newExplicitlyAddedMembers);
+      
+      // If member was previously removed from this sprint, restore them
+      const removedKey = `${selectedMember.id}-${selectedSprint.year}-${selectedSprint.month}-${selectedSprint.sprint}`;
+      if (removedMembers.has(removedKey)) {
+        const newRemovedMembers = new Set(removedMembers);
+        newRemovedMembers.delete(removedKey);
+        setRemovedMembers(newRemovedMembers);
+      }
+      
+      setShowAddMemberModal(false);
+      setSelectedMember(null);
+      setAllocationPercentage('');
+      return;
+    }
+    
+    // If project is selected, allocation percentage is required
+    if (!allocationPercentage) {
+      alert('Please enter an allocation percentage when a project is selected');
+      return;
+    }
     
     const percentage = parseInt(allocationPercentage);
     if (isNaN(percentage) || percentage < 0 || percentage > 100) {
@@ -683,6 +811,20 @@ export default function CapacityPlanning() {
       },
       currentUser.email
     );
+
+    // Mark member as explicitly added to this sprint
+    const memberKey = `${selectedMember.id}-${selectedSprint.year}-${selectedSprint.month}-${selectedSprint.sprint}`;
+    const newExplicitlyAddedMembers = new Set(explicitlyAddedMembers);
+    newExplicitlyAddedMembers.add(memberKey);
+    setExplicitlyAddedMembers(newExplicitlyAddedMembers);
+
+    // If member was previously removed from this sprint, restore them
+    const removedKey = `${selectedMember.id}-${selectedSprint.year}-${selectedSprint.month}-${selectedSprint.sprint}`;
+    if (removedMembers.has(removedKey)) {
+      const newRemovedMembers = new Set(removedMembers);
+      newRemovedMembers.delete(removedKey);
+      setRemovedMembers(newRemovedMembers);
+    }
 
     setShowAddMemberModal(false);
     setSelectedMember(null);
@@ -763,6 +905,107 @@ export default function CapacityPlanning() {
     });
 
     alert('Project copied to next sprint (including allocations and capacity planning)!');
+  };
+
+  const handleCopyMemberToNextSprint = (member: TeamMember, currentSprint: SprintInfo) => {
+    const currentIndex = sprints.findIndex(
+      s => s.year === currentSprint.year && s.month === currentSprint.month && s.sprint === currentSprint.sprint
+    );
+    
+    if (currentIndex >= sprints.length - 1) {
+      alert('No next sprint available');
+      return;
+    }
+
+    const nextSprint = sprints[currentIndex + 1];
+    const currentAllocs = getSprintAllocations(currentSprint).filter(a => a.productManagerId === member.id);
+
+    if (currentAllocs.length === 0) {
+      alert('No allocations to copy for this member');
+      return;
+    }
+
+    // Copy all member allocations to next sprint
+    currentAllocs.forEach(alloc => {
+      addAllocation(
+        {
+          projectId: alloc.projectId,
+          productManagerId: alloc.productManagerId,
+          year: nextSprint.year,
+          month: nextSprint.month,
+          sprint: nextSprint.sprint,
+          allocationPercentage: alloc.allocationPercentage,
+          allocationDays: alloc.allocationDays,
+          isPlanned: true
+        },
+        currentUser.email
+      );
+    });
+
+    // Mark member as explicitly added to next sprint
+    const memberKey = `${member.id}-${nextSprint.year}-${nextSprint.month}-${nextSprint.sprint}`;
+    const newExplicitlyAddedMembers = new Set(explicitlyAddedMembers);
+    newExplicitlyAddedMembers.add(memberKey);
+    setExplicitlyAddedMembers(newExplicitlyAddedMembers);
+
+    alert(`${member.fullName}'s allocations copied to next sprint!`);
+  };
+
+  // Remove member from sprint handlers
+  const handleOpenRemoveMemberModal = (member: TeamMember, sprint: SprintInfo) => {
+    setMemberToRemove({ member, sprint });
+    setRemoveFutureSprintsOption('current');
+    setShowRemoveMemberModal(true);
+  };
+
+  const handleRemoveMemberFromSprint = async () => {
+    if (!memberToRemove) return;
+    
+    const { member, sprint } = memberToRemove;
+    
+    // Get sprints to remove from
+    const sprintsToRemove = removeFutureSprintsOption === 'future'
+      ? sprints.filter(s => {
+          const sprintDate = new Date(s.year, s.month - 1, s.sprint === 1 ? 1 : 16);
+          const currentSprintDate = new Date(sprint.year, sprint.month - 1, sprint.sprint === 1 ? 1 : 16);
+          return sprintDate >= currentSprintDate;
+        })
+      : [sprint];
+    
+    let totalRemoved = 0;
+    
+    // Remove allocations from selected sprints
+    for (const s of sprintsToRemove) {
+      const allocsToRemove = allocations.filter(
+        a => a.productManagerId === member.id &&
+             a.year === s.year &&
+             a.month === s.month &&
+             a.sprint === s.sprint
+      );
+      
+      for (const alloc of allocsToRemove) {
+        await deleteAllocation(alloc.id, currentUser.fullName);
+        totalRemoved++;
+      }
+    }
+    
+    // Mark member as removed from these sprints
+    const newRemovedMembers = new Set(removedMembers);
+    sprintsToRemove.forEach(s => {
+      const removedKey = `${member.id}-${s.year}-${s.month}-${s.sprint}`;
+      newRemovedMembers.add(removedKey);
+    });
+    setRemovedMembers(newRemovedMembers);
+    
+    // Close modal
+    setShowRemoveMemberModal(false);
+    setMemberToRemove(null);
+    
+    // Show confirmation
+    const sprintText = removeFutureSprintsOption === 'future' 
+      ? `${sprintsToRemove.length} sprint(s)` 
+      : 'this sprint';
+    alert(`Removed ${member.fullName} from ${sprintText}`);
   };
 
   // Inline editing handlers
@@ -1403,19 +1646,44 @@ export default function CapacityPlanning() {
               
               {viewMode === 'projects' && (
                 <>
-                  {/* PMO Filter */}
-                  <label 
-                    className="flex items-center gap-1 px-2 py-1 border border-gray-300 rounded text-xs bg-white hover:bg-gray-50 cursor-pointer whitespace-nowrap"
-                    title="Show only projects where you are the PMO Contact"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={showMyManagedProjects}
-                      onChange={(e) => setShowMyManagedProjects(e.target.checked)}
-                      className="rounded"
-                    />
-                    <span>My Managed</span>
-                  </label>
+                  {/* PMO Contact Filter */}
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-xs font-medium text-gray-600 whitespace-nowrap">PMO Contact:</label>
+                    <select
+                      value={pmoContactFilter}
+                      onChange={(e) => setPmoContactFilter(e.target.value)}
+                      className="w-40 px-2 py-1 border border-gray-300 rounded text-xs"
+                      title="Filter projects by PMO Contact"
+                    >
+                      <option value="all">All Members</option>
+                      {teamMembers
+                        .filter(m => m.isActive)
+                        .sort((a, b) => a.fullName.localeCompare(b.fullName))
+                        .map(member => (
+                          <option key={member.id} value={member.id}>
+                            {member.fullName}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  {/* Manager Filter */}
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-xs font-medium text-gray-600 whitespace-nowrap">Manager:</label>
+                    <select
+                      value={managerFilter}
+                      onChange={(e) => setManagerFilter(e.target.value)}
+                      className="w-40 px-2 py-1 border border-gray-300 rounded text-xs"
+                      title="Filter projects by team member's manager"
+                    >
+                      <option value="all">All Managers</option>
+                      {getManagerMembers.map(manager => (
+                        <option key={manager.id} value={manager.id}>
+                          {manager.fullName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </>
               )}
               
@@ -1434,6 +1702,24 @@ export default function CapacityPlanning() {
                       <option value="under">Under ({`<${underCapacityThreshold}%`})</option>
                       <option value="good">Good ({underCapacityThreshold}-{overCapacityThreshold}%)</option>
                       <option value="over">Over ({`>${overCapacityThreshold}%`})</option>
+                    </select>
+                  </div>
+                  
+                  {/* Manager Filter */}
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-xs font-medium text-gray-600 whitespace-nowrap">Manager:</label>
+                    <select
+                      value={managerFilter}
+                      onChange={(e) => setManagerFilter(e.target.value)}
+                      className="w-40 px-2 py-1 border border-gray-300 rounded text-xs"
+                      title="Filter members by their manager"
+                    >
+                      <option value="all">All Managers</option>
+                      {getManagerMembers.map(manager => (
+                        <option key={manager.id} value={manager.id}>
+                          {manager.fullName}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   
@@ -1617,45 +1903,80 @@ export default function CapacityPlanning() {
 
       {/* Sprint Columns */}
       <div className="flex-1">
-        <div className="flex gap-6 p-6 max-w-[1920px] mx-auto">
+        <div className={expandedSprint ? "p-6" : "flex gap-6 p-6 max-w-[1920px] mx-auto"}>
           {sprints.map((sprint) => {
+            const sprintKey = `${sprint.year}-${sprint.month}-${sprint.sprint}`;
+            const isExpanded = expandedSprint === sprintKey;
+            const isHidden = expandedSprint && !isExpanded;
+            
+            if (isHidden) return null;
+            
             const projectsData = viewMode === 'projects' ? getProjectsForSprint(sprint) : [];
             const membersData = viewMode === 'team' ? getMembersForSprint(sprint) : [];
 
             return (
               <div
-                key={`${sprint.year}-${sprint.month}-${sprint.sprint}`}
-                className="flex-shrink-0 w-[450px] min-w-[400px] bg-white rounded-lg border-2 border-gray-300"
-                style={{ flexBasis: `${100 / Math.min(sprintCount, 4)}%` }}
+                key={sprintKey}
+                className={`bg-white rounded-lg border-2 border-gray-300 ${
+                  isExpanded 
+                    ? 'w-full' 
+                    : 'flex-shrink-0 w-[450px] min-w-[400px]'
+                }`}
+                style={!isExpanded ? { flexBasis: `${100 / Math.min(sprintCount, 4)}%` } : undefined}
               >
                 {/* Sprint Header */}
                 <div className="px-4 py-3 border-b-2 border-gray-300 bg-gradient-to-r from-blue-50 to-blue-100">
                   <div className="flex justify-between items-center">
-                    <div>
+                    <div className="flex-1">
                       <h3 className="font-bold text-gray-900">
                         {getMonthName(sprint.month)} {sprint.year}
                       </h3>
-                      <p className="text-sm text-gray-600">Sprint #{sprint.sprint}</p>
+                      <p className="text-sm text-gray-600">
+                        Sprint #{sprint.sprint} ({getSprintDatePeriod(sprint)})
+                      </p>
+                      <p className="text-xs text-blue-600 font-medium mt-0.5">
+                        {viewMode === 'projects' 
+                          ? `${projectsData.length} Project${projectsData.length !== 1 ? 's' : ''}`
+                          : `${membersData.length} Member${membersData.length !== 1 ? 's' : ''}`
+                        }
+                      </p>
                     </div>
-                    {canWrite && viewMode === 'projects' && (
+                    <div className="flex gap-1">
                       <button 
                         className="p-1.5 rounded hover:bg-white/50" 
-                        title="Add project to sprint"
-                        onClick={() => handleAddProjectToSprint(sprint)}
+                        title={isExpanded ? "Restore to normal view" : "Expand sprint view"}
+                        onClick={() => setExpandedSprint(isExpanded ? null : sprintKey)}
                       >
-                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
+                        {isExpanded ? (
+                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                          </svg>
+                        )}
                       </button>
-                    )}
+                      {canWrite && (
+                        <button 
+                          className="p-1.5 rounded hover:bg-white/50" 
+                          title={viewMode === 'projects' ? "Add project to sprint" : "Add member to sprint"}
+                          onClick={() => viewMode === 'projects' ? handleAddProjectToSprint(sprint) : handleAddMemberToSprint(sprint)}
+                        >
+                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Sprint Content - Projects View */}
                 {viewMode === 'projects' && (
-                  <div className="p-3 space-y-3">
+                  <div className={isExpanded ? "p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" : "p-3 space-y-3"}>
                     {projectsData.length === 0 ? (
-                      <div className="text-center text-gray-400 py-8 text-sm">
+                      <div className="text-center text-gray-400 py-8 text-sm col-span-full">
                         No projects planned
                       </div>
                     ) : (
@@ -1682,7 +2003,7 @@ export default function CapacityPlanning() {
                               </button>
                               <button
                                 onClick={() => openEditProjectModal(project)}
-                                className="text-sm text-gray-700 hover:text-blue-600 hover:underline block text-left"
+                                className="text-sm text-gray-900 font-bold hover:text-blue-600 hover:underline block text-left"
                               >
                                 {project.projectName}
                               </button>
@@ -1909,9 +2230,9 @@ export default function CapacityPlanning() {
 
                 {/* Sprint Content - Team View */}
                 {viewMode === 'team' && (
-                  <div className="p-3 space-y-3">
+                  <div className={isExpanded ? "p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" : "p-3 space-y-3"}>
                     {membersData.length === 0 ? (
-                      <div className="text-center text-gray-400 py-8 text-sm">
+                      <div className="text-center text-gray-400 py-8 text-sm col-span-full">
                         No team members allocated
                       </div>
                     ) : (
@@ -1919,7 +2240,7 @@ export default function CapacityPlanning() {
                         <div key={member.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50 hover:shadow-md transition-shadow">
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex-1">
-                              <div className="font-semibold text-sm text-gray-900">{member.fullName}</div>
+                              <div className="font-bold text-sm text-gray-900">{member.fullName}</div>
                               {member.role && (
                                 <div className="text-xs text-gray-600">{member.role}</div>
                               )}
@@ -1929,19 +2250,39 @@ export default function CapacityPlanning() {
                               </div>
                             </div>
                             {canWrite && (
-                              <button
-                                onClick={() => {
-                                  setSelectedMember(member);
-                                  setSelectedSprint(sprint);
-                                  setShowAddProjectModal(true);
-                                }}
-                                className="p-1 rounded hover:bg-green-100 text-green-600"
-                                title="Add project to member"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                </svg>
-                              </button>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => {
+                                    setSelectedMember(member);
+                                    setSelectedSprint(sprint);
+                                    setShowAddProjectModal(true);
+                                  }}
+                                  className="p-1 rounded hover:bg-green-100 text-green-600"
+                                  title="Add project to member"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => handleCopyMemberToNextSprint(member, sprint)}
+                                  className="p-1 rounded hover:bg-blue-100 text-blue-600"
+                                  title="Copy member allocations to next sprint"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => handleOpenRemoveMemberModal(member, sprint)}
+                                  className="p-1 rounded hover:bg-red-100 text-red-600"
+                                  title="Remove member from sprint"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
                             )}
                           </div>
                           <div className="space-y-1 mt-2 border-t pt-2">
@@ -2128,30 +2469,35 @@ export default function CapacityPlanning() {
             <div className="bg-blue-50 p-3 rounded-md">
               <div className="text-sm font-medium text-gray-700">Member:</div>
               <div className="text-sm text-gray-900">{selectedMember.fullName} {selectedMember.role ? `(${selectedMember.role})` : ''}</div>
+              <div className="text-xs text-gray-600 mt-1">This member will be added to the sprint without project allocation</div>
             </div>
           )}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Allocation %
-              {selectedRoleFilter && selectedProject && selectedSprint && (() => {
-                const requirementKey = `${selectedProject.id}-${selectedSprint.year}-${selectedSprint.month}-${selectedSprint.sprint}`;
-                const requirements = sprintRoleRequirements[requirementKey];
-                const plannedCapacity = requirements?.[selectedRoleFilter];
-                return plannedCapacity ? <span className="text-purple-600 ml-1">(Planned: {plannedCapacity}%)</span> : null;
-              })()}
-            </label>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={allocationPercentage}
-              onChange={(e) => setAllocationPercentage(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              placeholder="Enter percentage (0-100)"
-            />
-          </div>
+          {selectedProject && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Allocation %
+                {selectedRoleFilter && selectedProject && selectedSprint && (() => {
+                  const requirementKey = `${selectedProject.id}-${selectedSprint.year}-${selectedSprint.month}-${selectedSprint.sprint}`;
+                  const requirements = sprintRoleRequirements[requirementKey];
+                  const plannedCapacity = requirements?.[selectedRoleFilter];
+                  return plannedCapacity ? <span className="text-purple-600 ml-1">(Planned: {plannedCapacity}%)</span> : null;
+                })()}
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={allocationPercentage}
+                onChange={(e) => setAllocationPercentage(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="Enter percentage (0-100)"
+              />
+            </div>
+          )}
           <div className="flex justify-between gap-2">
-            <p className="text-xs text-gray-500 self-center">You can add members later</p>
+            <p className="text-xs text-gray-500 self-center">
+              {!selectedProject ? 'Select a member to add to sprint' : 'Allocation percentage is required when project is selected'}
+            </p>
             <div className="flex gap-2">
               <button
                 onClick={() => {
@@ -2162,11 +2508,11 @@ export default function CapacityPlanning() {
                 }}
                 className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
               >
-                Skip for Now
+                Cancel
               </button>
               <button
                 onClick={handleAddMember}
-                disabled={!selectedMember || !allocationPercentage}
+                disabled={!selectedMember || (!!selectedProject && !allocationPercentage)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Add Member
@@ -2183,6 +2529,7 @@ export default function CapacityPlanning() {
           setShowAddProjectModal(false);
           setSelectedProject(null);
           setSelectedMember(null);
+          setProjectSearchText('');
         }}
         title={selectedMember 
           ? `Add Project to ${selectedMember.fullName}`
@@ -2208,11 +2555,36 @@ export default function CapacityPlanning() {
               Create New
             </button>
           </div>
+          
+          {/* Search Field */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by customer or project name..."
+              value={projectSearchText}
+              onChange={(e) => setProjectSearchText(e.target.value)}
+              className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <svg 
+              className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+
           <div className="max-h-96 overflow-y-auto space-y-2">
             {selectedSprint && (selectedMember 
               ? getAvailableProjectsForMember(selectedSprint, selectedMember.id)
               : getAvailableProjects(selectedSprint)
-            ).map((project: Project) => (
+            ).filter((project: Project) => {
+              if (!projectSearchText) return true;
+              const searchLower = projectSearchText.toLowerCase();
+              return project.customerName.toLowerCase().includes(searchLower) ||
+                     project.projectName.toLowerCase().includes(searchLower);
+            }).map((project: Project) => (
               <button
                 key={project.id}
                 onClick={() => handleSelectProject(project)}
@@ -2226,11 +2598,28 @@ export default function CapacityPlanning() {
             {selectedSprint && (selectedMember 
               ? getAvailableProjectsForMember(selectedSprint, selectedMember.id)
               : getAvailableProjects(selectedSprint)
-            ).length === 0 && (
+            ).filter((project: Project) => {
+              if (!projectSearchText) return true;
+              const searchLower = projectSearchText.toLowerCase();
+              return project.customerName.toLowerCase().includes(searchLower) ||
+                     project.projectName.toLowerCase().includes(searchLower);
+            }).length === 0 && (
               <div className="text-center text-gray-400 py-8">
-                {selectedMember 
-                  ? `${selectedMember.fullName} is already assigned to all active projects in this sprint.`
-                  : 'No available projects. Click "Create New" to add one.'}
+                {projectSearchText ? (
+                  <>
+                    No projects found matching "{projectSearchText}"
+                    <button
+                      onClick={() => setProjectSearchText('')}
+                      className="block mx-auto mt-2 text-blue-600 hover:text-blue-700 text-sm"
+                    >
+                      Clear search
+                    </button>
+                  </>
+                ) : (
+                  selectedMember 
+                    ? `${selectedMember.fullName} is already assigned to all active projects in this sprint.`
+                    : 'No available projects. Click "Create New" to add one.'
+                )}
               </div>
             )}
           </div>
@@ -2348,7 +2737,6 @@ export default function CapacityPlanning() {
           setShowRoleRequirementsModal(false);
           setSelectedProject(null);
           setRoleRequirements({});
-          setNewRoleForRequirements('');
         }}
         title={`Required Capacity Planning - ${selectedProject?.projectName || ''} (${selectedSprint ? `${getMonthName(selectedSprint.month)} ${selectedSprint.year} Sprint #${selectedSprint.sprint}` : ''})`}
       >
@@ -2356,96 +2744,83 @@ export default function CapacityPlanning() {
           <p className="text-sm text-gray-600">
             Define the required capacity percentage for each role in this sprint. Only roles with values will be tracked.
           </p>
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {/* Show only roles that have values set */}
-            {Object.keys(roleRequirements).map(role => (
-              <div key={role} className="flex items-center gap-3">
-                <label className="w-40 text-sm font-medium text-gray-700">{role}</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={roleRequirements[role] || ''}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value) || 0;
-                    if (value === 0 || e.target.value === '') {
-                      const { [role]: _, ...rest } = roleRequirements;
-                      setRoleRequirements(rest);
-                    } else {
-                      setRoleRequirements({ ...roleRequirements, [role]: value });
-                    }
-                  }}
-                  className="w-20 px-3 py-2 border border-gray-300 rounded-md"
-                  placeholder="0"
-                />
-                <span className="text-sm text-gray-500">%</span>
-                <button
-                  onClick={() => {
-                    const { [role]: _, ...rest } = roleRequirements;
-                    setRoleRequirements(rest);
-                  }}
-                  className="p-1 text-red-600 hover:text-red-800"
-                  title="Remove"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            ))}
-            {Object.keys(roleRequirements).length === 0 && (
+          
+          {/* Add role from existing roles only - SHOWN FIRST */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Add Role Requirement</label>
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value && !roleRequirements[e.target.value]) {
+                  setRoleRequirements({ ...roleRequirements, [e.target.value]: 50 });
+                }
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            >
+              <option value="">Select a role to add...</option>
+              {(() => {
+                const roles = new Set<string>();
+                teamMembers.forEach(m => {
+                  if (m.role) roles.add(m.role);
+                });
+                const availableRoles = Array.from(roles).sort().filter(r => !roleRequirements[r]);
+                if (availableRoles.length === 0) {
+                  return <option value="" disabled>All roles have been added</option>;
+                }
+                return availableRoles.map(role => (
+                  <option key={role} value={role}>{role}</option>
+                ));
+              })()}
+            </select>
+          </div>
+
+          {/* List of added roles with capacity inputs */}
+          <div className="space-y-3 max-h-96 overflow-y-auto pt-3 border-t">
+            {Object.keys(roleRequirements).length > 0 ? (
+              <>
+                <label className="block text-sm font-medium text-gray-700">Role Requirements</label>
+                {Object.keys(roleRequirements).map(role => (
+                  <div key={role} className="flex items-center gap-3">
+                    <label className="w-40 text-sm font-medium text-gray-700">{role}</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="5"
+                      value={roleRequirements[role] || ''}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 0;
+                        if (value === 0 || e.target.value === '') {
+                          const { [role]: _, ...rest } = roleRequirements;
+                          setRoleRequirements(rest);
+                        } else {
+                          setRoleRequirements({ ...roleRequirements, [role]: value });
+                        }
+                      }}
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-md"
+                      placeholder="0"
+                    />
+                    <span className="text-sm text-gray-500">%</span>
+                    <button
+                      onClick={() => {
+                        const { [role]: _, ...rest } = roleRequirements;
+                        setRoleRequirements(rest);
+                      }}
+                      className="p-1 text-red-600 hover:text-red-800"
+                      title="Remove"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </>
+            ) : (
               <div className="text-center text-gray-400 py-4 text-sm">
-                No role requirements set. Add roles below.
+                No role requirements set. Select a role above to add.
               </div>
             )}
-          </div>
-          {/* Add role from existing or create new */}
-          <div className="pt-3 border-t">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Add Role Requirement</label>
-            <div className="flex gap-2">
-              <select
-                value=""
-                onChange={(e) => {
-                  if (e.target.value && !roleRequirements[e.target.value]) {
-                    setRoleRequirements({ ...roleRequirements, [e.target.value]: 50 });
-                  }
-                }}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-              >
-                <option value="">Select existing role...</option>
-                {(() => {
-                  const roles = new Set<string>();
-                  teamMembers.forEach(m => {
-                    if (m.role) roles.add(m.role);
-                  });
-                  return Array.from(roles).sort().filter(r => !roleRequirements[r]).map(role => (
-                    <option key={role} value={role}>{role}</option>
-                  ));
-                })()}
-              </select>
-              <span className="text-sm text-gray-500 self-center">or</span>
-              <input
-                type="text"
-                value={newRoleForRequirements}
-                onChange={(e) => setNewRoleForRequirements(e.target.value)}
-                placeholder="New role name..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-              />
-              <button
-                onClick={() => {
-                  const trimmed = newRoleForRequirements.trim();
-                  if (trimmed && !roleRequirements[trimmed]) {
-                    setRoleRequirements({ ...roleRequirements, [trimmed]: 50 });
-                    setNewRoleForRequirements('');
-                  }
-                }}
-                disabled={!newRoleForRequirements.trim()}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                Add
-              </button>
-            </div>
           </div>
           <div className="flex justify-end gap-2 pt-4 border-t">
             <button
@@ -2466,6 +2841,98 @@ export default function CapacityPlanning() {
             </button>
           </div>
         </div>
+      </Modal>
+
+      {/* Remove Member Modal */}
+      <Modal
+        isOpen={showRemoveMemberModal}
+        onClose={() => {
+          setShowRemoveMemberModal(false);
+          setMemberToRemove(null);
+        }}
+        title="Remove Member from Sprint"
+      >
+        {memberToRemove && (
+          <div className="space-y-4">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <svg className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Are you sure?</h4>
+                  <p className="text-sm text-gray-700">
+                    You are about to remove <span className="font-semibold">{memberToRemove.member.fullName}</span> from{' '}
+                    <span className="font-semibold">
+                      {getMonthName(memberToRemove.sprint.month)} {memberToRemove.sprint.year} Sprint #{memberToRemove.sprint.sprint}
+                    </span>.
+                  </p>
+                  <p className="text-sm text-gray-600 mt-2">
+                    This will delete all project allocations for this member in the selected sprint(s).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Remove from:
+              </label>
+              <div className="space-y-2">
+                <label className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    name="removeOption"
+                    value="current"
+                    checked={removeFutureSprintsOption === 'current'}
+                    onChange={(e) => setRemoveFutureSprintsOption(e.target.value as 'current' | 'future')}
+                    className="mt-0.5"
+                  />
+                  <div>
+                    <div className="font-medium text-sm text-gray-900">This sprint only</div>
+                    <div className="text-xs text-gray-600">
+                      Remove member only from {getMonthName(memberToRemove.sprint.month)} {memberToRemove.sprint.year} Sprint #{memberToRemove.sprint.sprint}
+                    </div>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    name="removeOption"
+                    value="future"
+                    checked={removeFutureSprintsOption === 'future'}
+                    onChange={(e) => setRemoveFutureSprintsOption(e.target.value as 'current' | 'future')}
+                    className="mt-0.5"
+                  />
+                  <div>
+                    <div className="font-medium text-sm text-gray-900">This sprint and all future sprints</div>
+                    <div className="text-xs text-gray-600">
+                      Remove member from this sprint and all sprints that come after it
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <button
+                onClick={() => {
+                  setShowRemoveMemberModal(false);
+                  setMemberToRemove(null);
+                }}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRemoveMemberFromSprint}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Remove Member
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* View Project Modal */}

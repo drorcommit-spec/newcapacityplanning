@@ -11,11 +11,14 @@ interface SprintInfo {
 }
 
 export default function Dashboard() {
-  const { teamMembers, projects, allocations } = useData();
+  const { teamMembers, projects, allocations, sprintProjects, sprintRoleRequirements, refreshData } = useData();
   const navigate = useNavigate();
   const currentSprint = getCurrentSprint();
   const [sprintCount] = useState(3);
   const [expandedSprints, setExpandedSprints] = useState<Record<string, { projects: boolean; members: boolean }>>({});
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showUnallocatedProjectsPanel, setShowUnallocatedProjectsPanel] = useState(false);
+  const [showUnallocatedMembersPanel, setShowUnallocatedMembersPanel] = useState(false);
 
   // Capacity thresholds - editable and synced with localStorage
   const [underCapacityThreshold, setUnderCapacityThreshold] = useState(() => {
@@ -72,12 +75,43 @@ export default function Dashboard() {
     const totalCapacity = currentSprintAllocs.reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
     const avgUtilization = activeMembers.length > 0 ? Math.round(totalCapacity / activeMembers.length) : 0;
     
+    // Calculate projects without sprint allocation (not in current or future sprints)
+    const projectsInAnySprint = new Set<string>();
+    sprints.forEach(sprint => {
+      const sprintAllocs = allocations.filter(
+        a => a.year === sprint.year && a.month === sprint.month && a.sprint === sprint.sprint
+      );
+      sprintAllocs.forEach(a => projectsInAnySprint.add(a.projectId));
+      
+      // Also check sprintProjects
+      const sprintKey = `${sprint.year}-${sprint.month}-${sprint.sprint}`;
+      const sprintProjectIds = sprintProjects[sprintKey] || [];
+      sprintProjectIds.forEach(id => projectsInAnySprint.add(id));
+    });
+    
+    const projectsWithoutSprint = activeProjects.filter(p => !projectsInAnySprint.has(p.id));
+    
+    // Calculate members without sprint allocation (not in current or future sprints)
+    const membersInAnySprint = new Set<string>();
+    sprints.forEach(sprint => {
+      const sprintAllocs = allocations.filter(
+        a => a.year === sprint.year && a.month === sprint.month && a.sprint === sprint.sprint
+      );
+      sprintAllocs.forEach(a => membersInAnySprint.add(a.productManagerId));
+    });
+    
+    const membersWithoutSprint = activeMembers.filter(m => !membersInAnySprint.has(m.id));
+    
     return {
       totalProjects: activeProjects.length,
       totalMembers: activeMembers.length,
       avgUtilization,
+      projectsWithoutSprint: projectsWithoutSprint.length,
+      unallocatedProjects: projectsWithoutSprint,
+      membersWithoutSprint: membersWithoutSprint.length,
+      unallocatedMembers: membersWithoutSprint,
     };
-  }, [projects, teamMembers, allocations, currentSprint]);
+  }, [projects, teamMembers, allocations, currentSprint, sprints, sprintProjects]);
 
   // Calculate KPIs for each sprint
   const sprintKPIs = useMemo(() => {
@@ -92,15 +126,56 @@ export default function Dashboard() {
       );
 
       const allocatedProjectIds = new Set(sprintAllocations.map(a => a.projectId));
-      const projectsWithAllocations = activeProjects.filter(p => allocatedProjectIds.has(p.id));
+      
+      // Get projects assigned to this sprint (either via allocations or sprintProjects)
+      const sprintKey = `${sprint.year}-${sprint.month}-${sprint.sprint}`;
+      const sprintProjectIds = sprintProjects[sprintKey] || [];
+      const allSprintProjectIds = new Set([...allocatedProjectIds, ...sprintProjectIds]);
+      const projectsInSprint = activeProjects.filter(p => allSprintProjectIds.has(p.id));
 
       // PROJECT KPIs
-      const projectsMissingCapacity = activeProjects.filter(p => !allocatedProjectIds.has(p.id)).length;
+      // Missing Resources: Projects that are in this sprint but have insufficient capacity
+      // A project is "missing resources" if:
+      // 1. It's assigned to this sprint (via allocations OR sprintProjects)
+      // 2. Total allocation is < 20% (including 0% - projects with no member allocations)
+      // 3. OR it has role requirements but at least one role has insufficient allocation
+      const projectsMissingCapacity = projectsInSprint.filter(project => {
+        const projectAllocs = sprintAllocations.filter(a => a.projectId === project.id);
+        const totalAllocation = projectAllocs.reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
+        
+        // Check if total allocation < 20%
+        if (totalAllocation < 20) return true;
+        
+        // Check role requirements if they exist
+        const requirementKey = `${project.id}-${sprint.year}-${sprint.month}-${sprint.sprint}`;
+        const roleReqs = sprintRoleRequirements[requirementKey];
+        
+        if (roleReqs && Object.keys(roleReqs).length > 0) {
+          // Calculate allocation by role
+          const allocationByRole: Record<string, number> = {};
+          projectAllocs.forEach(alloc => {
+            const member = teamMembers.find(m => m.id === alloc.productManagerId);
+            if (member && member.role) {
+              allocationByRole[member.role] = (allocationByRole[member.role] || 0) + (alloc.allocationPercentage || 0);
+            }
+          });
+          
+          // Check if any required role has insufficient allocation
+          for (const [role, required] of Object.entries(roleReqs)) {
+            const allocated = allocationByRole[role] || 0;
+            if (allocated < required) {
+              return true; // Missing resources for this role
+            }
+          }
+        }
+        
+        return false;
+      }).length;
       
       const sixMonthsAgo = new Date();
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
       
-      const newOrStaleProjects = projectsWithAllocations.filter(project => {
+      const newOrStaleProjects = projectsInSprint.filter(project => {
         const previousAllocations = allocations.filter(a => {
           if (a.projectId !== project.id) return false;
           const allocDate = new Date(a.year, a.month - 1);
@@ -150,28 +225,31 @@ export default function Dashboard() {
       const pendingProjects = pendingProjectIds.size;
 
       // MEMBER KPIs
-      const memberAllocations = activeMembers.map(member => {
-        const memberAllocs = sprintAllocations.filter(a => a.productManagerId === member.id);
-        const total = memberAllocs.reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
-        const projectCount = new Set(memberAllocs.map(a => a.projectId)).size;
-        
-        const memberCapacity = member.capacity ?? 100;
-        const underThreshold = (memberCapacity * underCapacityThreshold) / 100;
-        const overThreshold = (memberCapacity * overCapacityThreshold) / 100;
-        
-        return {
-          total,
-          projectCount,
-          isUnder: total < underThreshold,
-          isOver: total > overThreshold,
-          isGood: total >= underThreshold && total <= overThreshold,
-          isUnallocated: total === 0,
-        };
-      });
+      // Only consider members who have allocations in this sprint
+      const memberAllocations = activeMembers
+        .map(member => {
+          const memberAllocs = sprintAllocations.filter(a => a.productManagerId === member.id);
+          const total = memberAllocs.reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
+          const projectCount = new Set(memberAllocs.map(a => a.projectId)).size;
+          
+          const memberCapacity = member.capacity ?? 100;
+          const underThreshold = (memberCapacity * underCapacityThreshold) / 100;
+          const overThreshold = (memberCapacity * overCapacityThreshold) / 100;
+          
+          return {
+            member,
+            total,
+            projectCount,
+            isUnder: total > 0 && total < underThreshold, // Only count if allocated but under
+            isOver: total > overThreshold,
+            isGood: total >= underThreshold && total <= overThreshold,
+            hasAllocation: total > 0,
+          };
+        })
+        .filter(m => m.hasAllocation); // Only include members with allocations for sprint KPIs
       
       const membersUnderCapacity = memberAllocations.filter(m => m.isUnder).length;
       const membersOverCapacity = memberAllocations.filter(m => m.isOver).length;
-      const unallocatedMembers = memberAllocations.filter(m => m.isUnallocated).length;
       const membersGoodCapacity = memberAllocations.filter(m => m.isGood).length;
       const membersSingleProject = memberAllocations.filter(m => m.projectCount === 1).length;
       const membersMultipleProjects = memberAllocations.filter(m => m.projectCount >= 3).length;
@@ -189,7 +267,6 @@ export default function Dashboard() {
         pendingProjects,
         membersUnderCapacity,
         membersOverCapacity,
-        unallocatedMembers,
         membersSingleProject,
         membersMultipleProjects,
         totalSprintCapacity,
@@ -210,13 +287,42 @@ export default function Dashboard() {
     }));
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshData();
+    } catch (error) {
+      alert('Failed to refresh data. Please try again.');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <div className="flex items-center gap-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                title="Refresh data from server"
+              >
+                <svg 
+                  className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              </button>
+            </div>
             <p className="text-gray-600 mt-1">
               Current Sprint: {currentSprint.year} {getMonthName(currentSprint.month)} Sprint {currentSprint.sprint}
             </p>
@@ -322,7 +428,7 @@ export default function Dashboard() {
       {/* Overall Summary */}
       <Card>
         <h2 className="text-xl font-semibold mb-4">📊 Overall Summary</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="p-4 rounded-lg border-2 border-blue-200 bg-blue-50">
             <div className="text-sm font-semibold text-gray-700 mb-1">📁 Total Active Projects</div>
             <div className="text-3xl font-bold text-blue-600">{overallSummary.totalProjects}</div>
@@ -340,6 +446,40 @@ export default function Dashboard() {
             <div className="text-3xl font-bold text-purple-600">{overallSummary.avgUtilization}%</div>
             <div className="text-xs text-gray-600 mt-1">Current sprint average</div>
           </div>
+
+          <button
+            onClick={() => setShowUnallocatedProjectsPanel(true)}
+            className={`p-4 rounded-lg border-2 text-left transition-all ${
+              overallSummary.projectsWithoutSprint > 0
+                ? 'border-orange-400 bg-orange-50 hover:bg-orange-100'
+                : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+            }`}
+          >
+            <div className="text-sm font-semibold text-gray-700 mb-1">⚠️ Projects Without Sprint</div>
+            <div className={`text-3xl font-bold ${
+              overallSummary.projectsWithoutSprint > 0 ? 'text-orange-600' : 'text-gray-400'
+            }`}>
+              {overallSummary.projectsWithoutSprint}
+            </div>
+            <div className="text-xs text-gray-600 mt-1">Not allocated to any sprint</div>
+          </button>
+
+          <button
+            onClick={() => setShowUnallocatedMembersPanel(true)}
+            className={`p-4 rounded-lg border-2 text-left transition-all ${
+              overallSummary.membersWithoutSprint > 0
+                ? 'border-red-400 bg-red-50 hover:bg-red-100'
+                : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+            }`}
+          >
+            <div className="text-sm font-semibold text-gray-700 mb-1">👤 Unallocated Members</div>
+            <div className={`text-3xl font-bold ${
+              overallSummary.membersWithoutSprint > 0 ? 'text-red-600' : 'text-gray-400'
+            }`}>
+              {overallSummary.membersWithoutSprint}
+            </div>
+            <div className="text-xs text-gray-600 mt-1">Not allocated to any sprint</div>
+          </button>
 
           <button
             onClick={() => navigate('/capacity-planning')}
@@ -525,23 +665,6 @@ export default function Dashboard() {
                   {membersExpanded && (
                     <div className="space-y-2 pt-2 border-t">
                       <button
-                        onClick={() => navigate(`/capacity-planning?view=team&kpi=unallocated&sprint=${index}`)}
-                        className={`w-full p-2 rounded border text-left hover:shadow ${
-                          kpi.unallocatedMembers > 0 ? 'border-gray-300 bg-gray-50' : 'border-gray-200 bg-white'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="text-xs font-semibold">👤 Unallocated</div>
-                            <div className="text-[10px] text-gray-600">Members with 0% allocation</div>
-                          </div>
-                          <span className={`text-lg font-bold ${kpi.unallocatedMembers > 0 ? 'text-gray-600' : 'text-gray-400'}`}>
-                            {kpi.unallocatedMembers}
-                          </span>
-                        </div>
-                      </button>
-
-                      <button
                         onClick={() => navigate(`/capacity-planning?view=team&kpi=single-project&sprint=${index}`)}
                         className="w-full p-2 rounded border border-gray-200 bg-white text-left hover:shadow"
                       >
@@ -627,6 +750,241 @@ export default function Dashboard() {
           </button>
         </div>
       </Card>
+
+      {/* Unallocated Members Floating Panel */}
+      {showUnallocatedMembersPanel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Panel Header */}
+            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-red-50 to-red-100">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">👤 Unallocated Team Members</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {overallSummary.membersWithoutSprint} member{overallSummary.membersWithoutSprint !== 1 ? 's' : ''} not allocated to any sprint
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowUnallocatedMembersPanel(false)}
+                  className="p-2 rounded-lg hover:bg-white/50 transition-colors"
+                  title="Close"
+                >
+                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Panel Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {overallSummary.unallocatedMembers.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">✅</div>
+                  <div className="text-xl font-semibold text-gray-700">All members are allocated!</div>
+                  <div className="text-sm text-gray-500 mt-2">Every active team member has been assigned to a sprint.</div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {overallSummary.unallocatedMembers.map(member => (
+                    <div key={member.id} className="border-2 border-red-200 rounded-lg p-4 bg-red-50 hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-bold text-lg text-gray-900">{member.fullName}</h3>
+                          <div className="flex gap-3 mt-2 text-sm">
+                            <span className="text-gray-600">
+                              <span className="font-medium">Email:</span> {member.email}
+                            </span>
+                            {member.role && (
+                              <span className="text-gray-600">
+                                <span className="font-medium">Role:</span> {member.role}
+                              </span>
+                            )}
+                            {member.capacity && (
+                              <span className="text-gray-600">
+                                <span className="font-medium">Capacity:</span> {member.capacity}%
+                              </span>
+                            )}
+                          </div>
+                          {member.teams && member.teams.length > 0 && (
+                            <div className="mt-2 flex gap-1 flex-wrap">
+                              {member.teams.map(team => (
+                                <span key={team} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+                                  {team}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Sprint Allocation Buttons */}
+                      <div className="flex gap-2 mt-3 pt-3 border-t border-red-200">
+                        <div className="text-sm font-medium text-gray-700 mr-2">Add to:</div>
+                        {sprints.slice(0, 3).map((sprint, index) => {
+                          const sprintLabel = index === 0 ? 'Current Sprint' : index === 1 ? 'Next Sprint' : '2 Sprints Ahead';
+                          return (
+                            <button
+                              key={`${sprint.year}-${sprint.month}-${sprint.sprint}`}
+                              onClick={() => {
+                                // Navigate to capacity planning with sprint and view mode
+                                navigate(`/capacity-planning?view=team&sprint=${index}`);
+                                setShowUnallocatedMembersPanel(false);
+                              }}
+                              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                                index === 0
+                                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                  : index === 1
+                                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                                  : 'bg-purple-600 hover:bg-purple-700 text-white'
+                              }`}
+                            >
+                              {sprintLabel}
+                              <div className="text-xs opacity-90">
+                                {getMonthName(sprint.month)} {sprint.year} S{sprint.sprint}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Panel Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-gray-600">
+                  Click on a sprint button to add the member to that sprint
+                </div>
+                <button
+                  onClick={() => setShowUnallocatedMembersPanel(false)}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unallocated Projects Floating Panel */}
+      {showUnallocatedProjectsPanel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Panel Header */}
+            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-orange-100">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">⚠️ Projects Without Sprint Allocation</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {overallSummary.projectsWithoutSprint} project{overallSummary.projectsWithoutSprint !== 1 ? 's' : ''} not allocated to any sprint
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowUnallocatedProjectsPanel(false)}
+                  className="p-2 rounded-lg hover:bg-white/50 transition-colors"
+                  title="Close"
+                >
+                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Panel Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {overallSummary.unallocatedProjects.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">✅</div>
+                  <div className="text-xl font-semibold text-gray-700">All projects are allocated!</div>
+                  <div className="text-sm text-gray-500 mt-2">Every active project has been assigned to a sprint.</div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {overallSummary.unallocatedProjects.map(project => (
+                    <div key={project.id} className="border-2 border-orange-200 rounded-lg p-4 bg-orange-50 hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-bold text-lg text-gray-900">{project.customerName}</h3>
+                          <p className="text-gray-700 font-semibold">{project.projectName}</p>
+                          <div className="flex gap-3 mt-2 text-sm">
+                            <span className="text-gray-600">
+                              <span className="font-medium">Type:</span> {project.projectType}
+                            </span>
+                            <span className="text-gray-600">
+                              <span className="font-medium">Status:</span> {project.status}
+                            </span>
+                            {project.pmoContact && (
+                              <span className="text-gray-600">
+                                <span className="font-medium">PMO:</span> {teamMembers.find(m => m.id === project.pmoContact)?.fullName || 'Unknown'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Sprint Allocation Buttons */}
+                      <div className="flex gap-2 mt-3 pt-3 border-t border-orange-200">
+                        <div className="text-sm font-medium text-gray-700 mr-2">Allocate to:</div>
+                        {sprints.slice(0, 3).map((sprint, index) => {
+                          const sprintLabel = index === 0 ? 'Current Sprint' : index === 1 ? 'Next Sprint' : '2 Sprints Ahead';
+                          return (
+                            <button
+                              key={`${sprint.year}-${sprint.month}-${sprint.sprint}`}
+                              onClick={() => {
+                                const sprintKey = `${sprint.year}-${sprint.month}-${sprint.sprint}`;
+                                const currentProjects = sprintProjects[sprintKey] || [];
+                                if (!currentProjects.includes(project.id)) {
+                                  // This would need to call an API to update sprintProjects
+                                  // For now, we'll navigate to capacity planning
+                                  navigate(`/capacity-planning?sprint=${index}`);
+                                  setShowUnallocatedProjectsPanel(false);
+                                }
+                              }}
+                              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                                index === 0
+                                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                  : index === 1
+                                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                                  : 'bg-purple-600 hover:bg-purple-700 text-white'
+                              }`}
+                            >
+                              {sprintLabel}
+                              <div className="text-xs opacity-90">
+                                {getMonthName(sprint.month)} {sprint.year} S{sprint.sprint}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Panel Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-gray-600">
+                  Click on a sprint button to allocate the project to that sprint
+                </div>
+                <button
+                  onClick={() => setShowUnallocatedProjectsPanel(false)}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

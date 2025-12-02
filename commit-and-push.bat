@@ -1,25 +1,15 @@
 @echo off
+echo === Checking Git Status ===
+git status
 echo.
-echo ========================================
-echo Committing and Pushing Changes
-echo ========================================
+echo === Adding all changes ===
+git add .
 echo.
-
-"C:\Program Files\Git\bin\git.exe" add .
-echo Files staged...
-
-"C:\Program Files\Git\bin\git.exe" commit -m "Add capacity warnings and allocation sorting features"
-echo Committed...
-
-"C:\Program Files\Git\bin\git.exe" push vercel-repo main
-echo Pushed to vercel-repo...
-
-"C:\Program Files\Git\bin\git.exe" push origin main
-echo Pushed to origin...
-
+echo === Creating commit ===
+git commit -m "Add manager filter to members page - shows only actual managers"
 echo.
-echo ========================================
-echo Done! Changes pushed to GitHub
-echo ========================================
+echo === Pushing to GitHub ===
+git push origin main
 echo.
+echo Done!
 pause

@@ -15,7 +15,7 @@ export interface TeamMember {
   isActive: boolean;
   createdAt: string;
   employeeNumber?: string;
-  managerId?: string; // ID of the manager (another team member)
+  managerId?: string | null; // ID of the manager (another team member), null if no manager
   capacity?: number; // Member capacity percentage (0-100), default 100
 }
 

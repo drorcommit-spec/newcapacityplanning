@@ -10,7 +10,7 @@ import Select from '../components/Select';
 import { ProjectType, ProjectStatus, ProjectRegion } from '../types';
 
 export default function ProjectManagement() {
-  const { projects, addProject, updateProject, allocations, teamMembers, addTeamMember } = useData();
+  const { projects, addProject, updateProject, allocations, teamMembers, addTeamMember, sprintProjects } = useData();
   const { canWrite } = usePermissions();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -38,18 +38,43 @@ export default function ProjectManagement() {
   };
 
   const isProjectUnallocated = (projectId: string) => {
-    // Check only the CURRENT sprint
+    // Check if project is NOT assigned to any current or future sprints
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth() + 1;
     const currentSprint = now.getDate() <= 15 ? 1 : 2;
+    const currentDate = new Date(currentYear, currentMonth - 1, currentSprint === 1 ? 1 : 16);
     
-    return !allocations.some(
-      a => a.projectId === projectId && 
-           a.year === currentYear && 
-           a.month === currentMonth && 
-           a.sprint === currentSprint
-    );
+    // Check if project has any allocations in current or future sprints
+    const hasCurrentOrFutureAllocations = allocations.some(a => {
+      if (a.projectId !== projectId) return false;
+      
+      // Compare sprint dates
+      const allocDate = new Date(a.year, a.month - 1, a.sprint === 1 ? 1 : 16);
+      
+      // Return true if allocation is in current or future sprint
+      return allocDate >= currentDate;
+    });
+    
+    if (hasCurrentOrFutureAllocations) return false;
+    
+    // Also check sprintProjects (projects explicitly assigned to sprints)
+    if (sprintProjects) {
+      for (const [sprintKey, projectIds] of Object.entries(sprintProjects)) {
+        if (projectIds.includes(projectId)) {
+          // Parse sprint key format: "year-month-sprint"
+          const [year, month, sprint] = sprintKey.split('-').map(Number);
+          const sprintDate = new Date(year, month - 1, sprint === 1 ? 1 : 16);
+          
+          // If project is in current or future sprint, it's assigned
+          if (sprintDate >= currentDate) {
+            return false;
+          }
+        }
+      }
+    }
+    
+    return true;
   };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -355,7 +380,7 @@ export default function ProjectManagement() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Customers & Projects</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
         {canWrite && (
           <div className="flex gap-2">
             <label className="cursor-pointer">
@@ -420,12 +445,11 @@ export default function ProjectManagement() {
             <thead>
               <tr className="border-b">
                 <th className="text-left py-3 px-4">Alert</th>
-                <th className="text-left py-3 px-4">Customer</th>
                 <th className="text-left py-3 px-4">Project</th>
+                <th className="text-left py-3 px-4">Customer</th>
                 <th className="text-left py-3 px-4">Type</th>
                 <th className="text-left py-3 px-4">Status</th>
                 <th className="text-left py-3 px-4">Region</th>
-                <th className="text-left py-3 px-4">Max Capacity</th>
                 <th className="text-left py-3 px-4">Close Date</th>
                 <th className="text-left py-3 px-4">PMO Contact</th>
                 <th className="text-left py-3 px-4">Actions</th>
@@ -436,19 +460,15 @@ export default function ProjectManagement() {
                 <tr key={project.id} className="border-b hover:bg-gray-50">
                   <td className="py-3 px-4 text-center">
                     {project.status === 'Active' && isProjectUnallocated(project.id) && (
-                      <span className="text-red-600 text-xl" title="No allocations for current sprint">
+                      <span className="text-red-600 text-xl" title="Not assigned to any current or future sprint">
                         ❗
                       </span>
                     )}
                   </td>
-                  <td className="py-3 px-4">{project.customerName}</td>
-                  <td 
-                    className="py-3 px-4 cursor-pointer text-blue-600 hover:text-blue-800 hover:underline"
-                    onClick={() => handleProjectClick(project.id)}
-                    title="Click to view allocations"
-                  >
+                  <td className="py-3 px-4">
                     {project.projectName}
                   </td>
+                  <td className="py-3 px-4">{project.customerName}</td>
                   <td className="py-3 px-4">
                     <span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
                       {project.projectType}
@@ -465,7 +485,6 @@ export default function ProjectManagement() {
                     </span>
                   </td>
                   <td className="py-3 px-4">{project.region || '-'}</td>
-                  <td className="py-3 px-4">{project.maxCapacityPercentage ? `${project.maxCapacityPercentage}%` : '-'}</td>
                   <td className="py-3 px-4">{project.activityCloseDate || '-'}</td>
                   <td className="py-3 px-4">{project.pmoContact ? getPMOName(project.pmoContact) : '-'}</td>
                   <td className="py-3 px-4">
@@ -494,6 +513,21 @@ export default function ProjectManagement() {
 
       <Modal isOpen={isModalOpen} onClose={resetForm} title={editingId ? 'Edit Project' : 'Add Project'}>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Input
+              label="Project Name"
+              value={formData.projectName}
+              onChange={(e) => {
+                setFormData({ ...formData, projectName: e.target.value });
+                setProjectError('');
+              }}
+              required
+            />
+            {projectError && (
+              <p className="text-red-600 text-sm mt-1">{projectError}</p>
+            )}
+          </div>
+
           {existingCustomers.length > 0 && !editingId && (
             <div className="flex gap-2">
               <button
@@ -548,21 +582,6 @@ export default function ProjectManagement() {
               )}
             </div>
           )}
-          
-          <div>
-            <Input
-              label="Project Name"
-              value={formData.projectName}
-              onChange={(e) => {
-                setFormData({ ...formData, projectName: e.target.value });
-                setProjectError('');
-              }}
-              required
-            />
-            {projectError && (
-              <p className="text-red-600 text-sm mt-1">{projectError}</p>
-            )}
-          </div>
           <Select
             label="Project Type"
             options={typeOptions}
