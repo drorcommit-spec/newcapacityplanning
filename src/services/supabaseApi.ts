@@ -174,6 +174,7 @@ function transformTeamMember(data: any): any {
     email: data.email,
     role: data.role,
     teams: data.teams || [],
+    managerId: data.manager_id || null,
     isActive: data.is_active,
     createdAt: data.created_at,
   };
@@ -186,6 +187,7 @@ function transformTeamMemberToSupabase(data: any): any {
     email: data.email,
     role: data.role,
     teams: data.teams || [],
+    manager_id: data.managerId || null,
     is_active: data.isActive,
     created_at: data.createdAt,
   };
