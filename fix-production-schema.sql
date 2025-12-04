@@ -87,7 +87,10 @@ DROP POLICY IF EXISTS "Allow all for authenticated users" ON teams;
 CREATE POLICY "Allow all for authenticated users" ON teams
     FOR ALL USING (true);
 
-RAISE NOTICE '✓ Teams table created with correct schema';
+DO $$ 
+BEGIN
+    RAISE NOTICE '✓ Teams table created with correct schema';
+END $$;
 
 -- ============================================
 -- STEP 3: Verify all tables have correct columns
