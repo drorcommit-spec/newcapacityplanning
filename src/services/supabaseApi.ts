@@ -173,9 +173,9 @@ function transformTeamMember(data: any): any {
     fullName: data.full_name,
     email: data.email,
     role: data.role,
-    teams: data.teams || [],
+    teams: Array.isArray(data.teams) ? data.teams : (data.teams || []),
     managerId: data.manager_id || null,
-    isActive: data.is_active,
+    isActive: data.is_active ?? true,
     createdAt: data.created_at,
   };
 }
@@ -186,10 +186,10 @@ function transformTeamMemberToSupabase(data: any): any {
     full_name: data.fullName,
     email: data.email,
     role: data.role,
-    teams: data.teams || [],
+    teams: Array.isArray(data.teams) ? data.teams : (data.teams || []),
     manager_id: data.managerId || null,
-    is_active: data.isActive,
-    created_at: data.createdAt,
+    is_active: data.isActive ?? true,
+    created_at: data.createdAt || new Date().toISOString(),
   };
 }
 

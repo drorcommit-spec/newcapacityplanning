@@ -5,6 +5,18 @@ All notable changes to the Product Capacity Platform will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2024-12-03
+
+### Fixed
+- **Manager Field Persistence**: Fixed manager field not saving in production
+  - Added missing `manager_id` column to Supabase schema
+  - Updated transform functions to properly handle manager_id field
+  - Added proper null handling for empty manager selections
+- **Resource Type Display**: Fixed resource types not showing in member form dropdown
+  - Updated transform functions to ensure proper data type handling
+  - Added array validation for teams field
+- Database schema migration script for production deployment
+
 ## [1.1.0] - 2024-12-02
 
 ### Added
@@ -14,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - "All Managers" option to show everyone
 - Version display in footer showing current version and environment (Local/Production)
 - Changelog file for tracking version history
+- Active menu highlighting with blue background for current page
 
 ### Changed
 - Updated TeamMember schema to use `teams` array instead of single `team` string
@@ -23,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TypeScript compilation errors related to team/teams property migration
 - CapacityOverview component to handle teams as arrays
 - MemberManagement component to support multiple teams per member
+- User activation feature - ability to reactivate deactivated users
 
 ## [1.0.1] - 2024-11-29
 
