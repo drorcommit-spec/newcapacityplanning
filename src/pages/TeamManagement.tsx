@@ -153,7 +153,7 @@ export default function TeamManagement() {
 
     try {
       const newResourceType: ResourceType = {
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         name: newResourceTypeName.trim(),
         isArchived: false,
         createdAt: new Date().toISOString()
@@ -162,15 +162,9 @@ export default function TeamManagement() {
       const updatedResourceTypes = [...resourceTypes, newResourceType];
       setResourceTypes(updatedResourceTypes);
 
-      // Save to server
-      await fetchAllData().then(data => {
-        const allData = { ...data, resourceRoles: updatedResourceTypes };
-        return fetch('http://localhost:3002/api/data', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(allData)
-        });
-      });
+      // Save to server using proper API
+      const { saveResourceRoles } = await import('../services/api');
+      await saveResourceRoles(updatedResourceTypes);
 
       // Set the new resource type as selected
       setFormData({ ...formData, role: newResourceType.name as UserRole });

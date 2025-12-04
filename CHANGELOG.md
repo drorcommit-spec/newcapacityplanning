@@ -5,6 +5,18 @@ All notable changes to the Product Capacity Platform will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2024-12-03
+
+### Fixed
+- **Resource Types Not Loading**: Fixed resource types not appearing in member form dropdown
+  - Added fallback to extract resource types from existing members if resource_types table is empty
+  - Fixed create new resource type to use proper API instead of hardcoded localhost URL
+  - Now works correctly in both local and production environments
+- **Teams Not Loading**: Fixed teams not appearing in member form
+  - Added fallback to extract teams from existing members if teams table doesn't exist
+  - Teams now load correctly in production
+- **Create New Resource Type**: Fixed functionality to properly save to Supabase in production
+
 ## [1.1.1] - 2024-12-03
 
 ### Fixed

@@ -32,12 +32,32 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
   }
 
   // Transform Supabase data to match our format
+  let resourceRoles = (resourceTypesRes.data || []).map(transformResourceType);
+  
+  // If no resource types exist, extract unique roles from team members
+  if (resourceRoles.length === 0 && teamMembersRes.data && teamMembersRes.data.length > 0) {
+    console.warn('⚠️ No resource types found - extracting from team members');
+    const uniqueRoles = new Set<string>();
+    teamMembersRes.data.forEach((member: any) => {
+      if (member.role) uniqueRoles.add(member.role);
+    });
+    
+    resourceRoles = Array.from(uniqueRoles).map(roleName => ({
+      id: crypto.randomUUID(),
+      name: roleName,
+      isArchived: false,
+      createdAt: new Date().toISOString(),
+    }));
+    
+    console.log('✅ Extracted resource types from members:', resourceRoles.length);
+  }
+  
   const data: DatabaseData = {
     teamMembers: (teamMembersRes.data || []).map(transformTeamMember),
     projects: (projectsRes.data || []).map(transformProject),
     allocations: (allocationsRes.data || []).map(transformAllocation),
     history: (historyRes.data || []).map(transformHistory),
-    resourceRoles: (resourceTypesRes.data || []).map(transformResourceType),
+    resourceRoles: resourceRoles,
     teams: teamsRes.error ? [] : (teamsRes.data || []).map(transformTeam),
   };
 
@@ -130,7 +150,32 @@ export async function getTeamsFromSupabase(): Promise<string[]> {
     .eq('is_archived', false)
     .order('name', { ascending: true });
 
-  if (error) throw error;
+  if (error) {
+    console.warn('⚠️ Teams table not found or error loading teams:', error.message);
+    // Fallback: extract unique teams from team_members
+    const { data: members, error: membersError } = await supabase
+      .from('team_members')
+      .select('teams');
+    
+    if (membersError) {
+      console.error('Failed to load teams from members:', membersError);
+      return [];
+    }
+    
+    // Extract unique team names from all members
+    const uniqueTeams = new Set<string>();
+    (members || []).forEach((member: any) => {
+      if (Array.isArray(member.teams)) {
+        member.teams.forEach((team: string) => {
+          if (team) uniqueTeams.add(team);
+        });
+      }
+    });
+    
+    const teamNames = Array.from(uniqueTeams).sort();
+    console.log('✅ Teams loaded from members:', teamNames.length);
+    return teamNames;
+  }
   
   const teamNames = (data || []).map(t => t.name);
   console.log('✅ Teams loaded:', teamNames.length);
