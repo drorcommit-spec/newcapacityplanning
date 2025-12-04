@@ -3,15 +3,18 @@
 -- 1. Creates the official teams from DEV environment
 -- 2. Removes any unknown team assignments from members
 -- Run this in your Supabase SQL Editor
+-- NOTE: Run fix-production-schema.sql FIRST if you haven't already!
 
--- Step 1: Create teams table if it doesn't exist
-CREATE TABLE IF NOT EXISTS teams (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE,
-    is_archived BOOLEAN DEFAULT false,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Step 1: Verify teams table exists with correct schema
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'teams' AND column_name = 'is_archived'
+    ) THEN
+        RAISE EXCEPTION 'Teams table missing is_archived column! Run fix-production-schema.sql first.';
+    END IF;
+END $$;
 
 -- Step 2: Clear existing teams (optional - remove this if you want to keep existing teams)
 TRUNCATE TABLE teams;
