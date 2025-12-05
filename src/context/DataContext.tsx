@@ -127,12 +127,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addAllocation = (allocation: Omit<SprintAllocation, 'id' | 'createdAt' | 'createdBy'>, createdBy: string) => {
+    console.log('🎯 addAllocation CALLED with:', allocation, 'by:', createdBy);
+    
     const newAllocation: SprintAllocation = {
       ...allocation,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
       createdBy,
     };
+    
+    console.log('🎯 Created new allocation:', newAllocation);
     
     const historyEntry: AllocationHistory = {
       id: crypto.randomUUID(),
