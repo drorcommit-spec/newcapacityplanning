@@ -127,6 +127,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addAllocation = (allocation: Omit<SprintAllocation, 'id' | 'createdAt' | 'createdBy'>, createdBy: string) => {
+    alert('🎯 addAllocation CALLED!');
     console.log('🎯 addAllocation CALLED with:', allocation, 'by:', createdBy);
     
     const newAllocation: SprintAllocation = {
