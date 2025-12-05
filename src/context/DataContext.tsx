@@ -9,6 +9,7 @@ interface DataContextType {
   history: AllocationHistory[];
   sprintProjects: Record<string, string[]>;
   sprintRoleRequirements: Record<string, Record<string, number>>;
+  isSaving: boolean;
   addTeamMember: (member: Omit<TeamMember, 'id' | 'createdAt'>) => void;
   updateTeamMember: (id: string, updates: Partial<TeamMember>) => void;
   addProject: (project: Omit<Project, 'id' | 'createdAt'>) => string;
@@ -132,7 +133,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString(),
       createdBy,
     };
-    setAllocations(prev => [...prev, newAllocation]);
     
     const historyEntry: AllocationHistory = {
       id: crypto.randomUUID(),
@@ -142,6 +142,28 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       changeType: 'created',
       newValue: newAllocation,
     };
+    
+    // Update state
+    setAllocations(prev => {
+      const updated = [...prev, newAllocation];
+      
+      // IMMEDIATE SAVE for additions (don't wait for debounce)
+      console.log('💾 Saving new allocation immediately...');
+      setIsSaving(true);
+      saveAllocations(updated)
+        .then(() => {
+          console.log('✅ New allocation saved successfully');
+          setIsSaving(false);
+        })
+        .catch(err => {
+          console.error('❌ Failed to save new allocation:', err);
+          alert(`Failed to save allocation: ${err.message}`);
+          setIsSaving(false);
+        });
+      
+      return updated;
+    });
+    
     setHistory(prev => [...prev, historyEntry]);
   };
 
@@ -188,11 +210,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       
       // IMMEDIATE SAVE for deletions (don't wait for debounce)
       console.log('💾 Saving deletion immediately...');
+      setIsSaving(true);
       saveAllocations(filtered)
-        .then(() => console.log('✅ Deletion saved successfully'))
+        .then(() => {
+          console.log('✅ Deletion saved successfully');
+          setIsSaving(false);
+        })
         .catch(err => {
           console.error('❌ Failed to save deletion:', err);
           alert(`Failed to save deletion: ${err.message}`);
+          setIsSaving(false);
         });
       
       return filtered;
@@ -237,6 +264,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       history,
       sprintProjects,
       sprintRoleRequirements,
+      isSaving,
       addTeamMember,
       updateTeamMember,
       addProject,
