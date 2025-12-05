@@ -68,7 +68,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     // Reduced debounce to 200ms for faster saves
     setIsSaving(true);
     saveTimeoutRef.current = setTimeout(() => {
-      console.log('💾 Saving all data to server...');
+      console.log('💾 Saving all data to server...', {
+        teamMembers: teamMembers.length,
+        projects: projects.length,
+        allocations: allocations.length,
+        history: history.length,
+      });
       Promise.all([
         saveTeamMembers(teamMembers),
         saveProjects(projects),
@@ -81,6 +86,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         })
         .catch(err => {
           console.error('❌ Error saving data:', err);
+          alert(`Failed to save data: ${err.message}. Your changes may not be persisted.`);
           setIsSaving(false);
         });
     }, 200);
@@ -159,19 +165,27 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const deleteAllocation = (id: string, deletedBy: string) => {
     const oldAllocation = allocations.find(a => a.id === id);
-    setAllocations(prev => prev.filter(a => a.id !== id));
-    
-    if (oldAllocation) {
-      const historyEntry: AllocationHistory = {
-        id: crypto.randomUUID(),
-        allocationId: id,
-        changedBy: deletedBy,
-        changedAt: new Date().toISOString(),
-        changeType: 'deleted',
-        oldValue: oldAllocation,
-      };
-      setHistory(prev => [...prev, historyEntry]);
+    if (!oldAllocation) {
+      console.warn(`⚠️ Allocation ${id} not found for deletion`);
+      return;
     }
+    
+    console.log(`🗑️ Deleting allocation ${id}:`, oldAllocation);
+    setAllocations(prev => {
+      const filtered = prev.filter(a => a.id !== id);
+      console.log(`📊 Allocations after delete: ${filtered.length} (was ${prev.length})`);
+      return filtered;
+    });
+    
+    const historyEntry: AllocationHistory = {
+      id: crypto.randomUUID(),
+      allocationId: id,
+      changedBy: deletedBy,
+      changedAt: new Date().toISOString(),
+      changeType: 'deleted',
+      oldValue: oldAllocation,
+    };
+    setHistory(prev => [...prev, historyEntry]);
   };
 
   const refreshData = async () => {
