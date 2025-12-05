@@ -171,11 +171,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
     
     console.log(`🗑️ Deleting allocation ${id}:`, oldAllocation);
-    setAllocations(prev => {
-      const filtered = prev.filter(a => a.id !== id);
-      console.log(`📊 Allocations after delete: ${filtered.length} (was ${prev.length})`);
-      return filtered;
-    });
     
     const historyEntry: AllocationHistory = {
       id: crypto.randomUUID(),
@@ -185,6 +180,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       changeType: 'deleted',
       oldValue: oldAllocation,
     };
+    
+    // Update state
+    setAllocations(prev => {
+      const filtered = prev.filter(a => a.id !== id);
+      console.log(`📊 Allocations after delete: ${filtered.length} (was ${prev.length})`);
+      
+      // IMMEDIATE SAVE for deletions (don't wait for debounce)
+      console.log('💾 Saving deletion immediately...');
+      saveAllocations(filtered)
+        .then(() => console.log('✅ Deletion saved successfully'))
+        .catch(err => {
+          console.error('❌ Failed to save deletion:', err);
+          alert(`Failed to save deletion: ${err.message}`);
+        });
+      
+      return filtered;
+    });
+    
     setHistory(prev => [...prev, historyEntry]);
   };
 
