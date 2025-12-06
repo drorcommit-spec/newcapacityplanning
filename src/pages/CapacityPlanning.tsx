@@ -2467,10 +2467,31 @@ export default function CapacityPlanning() {
             </div>
           ) : null}
           {selectedMember && !selectedProject && (
-            <div className="bg-blue-50 p-3 rounded-md">
-              <div className="text-sm font-medium text-gray-700">Member:</div>
-              <div className="text-sm text-gray-900">{selectedMember.fullName} {selectedMember.role ? `(${selectedMember.role})` : ''}</div>
-              <div className="text-xs text-gray-600 mt-1">This member will be added to the sprint without project allocation</div>
+            <div>
+              <div className="bg-blue-50 p-3 rounded-md mb-3">
+                <div className="text-sm font-medium text-gray-700">Member:</div>
+                <div className="text-sm text-gray-900">{selectedMember.fullName} {selectedMember.role ? `(${selectedMember.role})` : ''}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Project *
+                </label>
+                <select
+                  value={''}
+                  onChange={(e) => {
+                    const project = projects.find(p => p.id === e.target.value);
+                    setSelectedProject(project || null);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">Select a project...</option>
+                  {selectedSprint && getAvailableProjectsForMember(selectedSprint, selectedMember.id).map(project => (
+                    <option key={project.id} value={project.id}>
+                      {project.customerName} - {project.projectName}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           )}
           {selectedProject && (
