@@ -152,6 +152,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setAllocations(prev => {
       const updated = [...prev, newAllocation];
       
+      // Cancel any pending debounced save to prevent race condition
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        console.log('🚫 Cancelled pending debounced save');
+      }
+      
       // IMMEDIATE SAVE for additions (don't wait for debounce)
       console.log('💾 Saving new allocation immediately...');
       setIsSaving(true);
@@ -212,6 +218,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setAllocations(prev => {
       const filtered = prev.filter(a => a.id !== id);
       console.log(`📊 Allocations after delete: ${filtered.length} (was ${prev.length})`);
+      
+      // Cancel any pending debounced save to prevent race condition
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        console.log('🚫 Cancelled pending debounced save');
+      }
       
       // IMMEDIATE SAVE for deletions (don't wait for debounce)
       console.log('💾 Saving deletion immediately...');
