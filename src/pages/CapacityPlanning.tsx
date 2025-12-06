@@ -167,6 +167,10 @@ export default function CapacityPlanning() {
   // Ref for role selector dropdown
   const roleSelectorRef = useRef<HTMLDivElement>(null);
   const teamRoleSelectorRef = useRef<HTMLDivElement>(null);
+  
+  // Refs for Add Member modal focus management
+  const projectSelectRef = useRef<HTMLSelectElement>(null);
+  const percentageInputRef = useRef<HTMLInputElement>(null);
 
   // Close role selector when clicking outside
   useEffect(() => {
@@ -2418,6 +2422,7 @@ export default function CapacityPlanning() {
                 }
                 return (
                   <select
+                    autoFocus
                     value={''}
                     onChange={(e) => {
                       const member = teamMembers.find(m => m.id === e.target.value);
@@ -2431,6 +2436,8 @@ export default function CapacityPlanning() {
                         }
                       }
                       setSelectedMember(member || null);
+                      // Focus project dropdown after member is selected
+                      setTimeout(() => projectSelectRef.current?.focus(), 100);
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   >
@@ -2456,10 +2463,13 @@ export default function CapacityPlanning() {
                   Project *
                 </label>
                 <select
+                  ref={projectSelectRef}
                   value={''}
                   onChange={(e) => {
                     const project = projects.find(p => p.id === e.target.value);
                     setSelectedProject(project || null);
+                    // Focus percentage input after project is selected
+                    setTimeout(() => percentageInputRef.current?.focus(), 100);
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 >
@@ -2485,11 +2495,18 @@ export default function CapacityPlanning() {
                 })()}
               </label>
               <input
+                ref={percentageInputRef}
                 type="number"
                 min="0"
                 max="100"
                 value={allocationPercentage}
                 onChange={(e) => setAllocationPercentage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && selectedMember && selectedProject && allocationPercentage) {
+                    e.preventDefault();
+                    handleAddMember();
+                  }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 placeholder="Enter percentage (0-100)"
               />
