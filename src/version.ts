@@ -2,9 +2,10 @@
 // MAJOR: Breaking changes
 // MINOR: New features (backward compatible)
 // PATCH: Bug fixes
-export const APP_VERSION = '1.1.3';
+export const APP_VERSION = '1.1.4';
 
 // Version History:
+// 1.1.4 - Debug: Investigating save issues with allocation additions
 // 1.1.3 - Critical fix: Immediate saves for add/delete allocations to prevent data loss
 // 1.1.2 - Bug fixes: Resource types and teams loading/saving in production
 // 1.1.1 - Bug fixes: Manager field persistence and resource type display in production
