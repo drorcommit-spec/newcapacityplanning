@@ -4,6 +4,7 @@ import {
   saveTeamMembersToSupabase,
   saveProjectsToSupabase,
   saveAllocationsToSupabase,
+  deleteAllocationFromSupabase,
   saveHistoryToSupabase,
   createSupabaseBackup,
 } from './supabaseApi';
@@ -99,6 +100,18 @@ export async function saveAllocations(allocations: any[]): Promise<void> {
     body: JSON.stringify(allocations),
   });
   if (!response.ok) throw new Error('Failed to save allocations');
+}
+
+export async function deleteAllocationById(allocationId: string): Promise<void> {
+  // Use Supabase if enabled (production)
+  if (isSupabaseEnabled()) {
+    await deleteAllocationFromSupabase(allocationId);
+    return;
+  }
+
+  // Local development: deletion is handled by saving the filtered array
+  // No separate delete endpoint needed for JSON file storage
+  console.log('Local dev: Allocation deletion handled by saveAllocations');
 }
 
 export async function saveHistory(history: any[]): Promise<void> {

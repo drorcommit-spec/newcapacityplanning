@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { TeamMember, Project, SprintAllocation, AllocationHistory } from '../types';
-import { fetchAllData, saveTeamMembers, saveProjects, saveAllocations, saveHistory } from '../services/api';
+import { fetchAllData, saveTeamMembers, saveProjects, saveAllocations, deleteAllocationById, saveHistory } from '../services/api';
 
 interface DataContextType {
   teamMembers: TeamMember[];
@@ -328,14 +328,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       console.log('🚫 Cancelled pending debounced save');
     }
     
-    // IMMEDIATE SAVE for deletions (save allocations first, then history)
-    console.log('💾 Saving deletion immediately...');
+    // IMMEDIATE SAVE for deletions
+    console.log('💾 Deleting allocation from database immediately...');
     setIsSaving(true);
     
-    // Save allocations first (critical)
-    saveAllocations(filtered)
+    // Delete from database first (critical)
+    deleteAllocationById(id)
       .then(() => {
-        console.log('✅ Allocations saved successfully');
+        console.log('✅ Allocation deleted from database');
         // Then try to save history (non-critical)
         return saveHistory(updatedHistory);
       })
@@ -344,13 +344,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setIsSaving(false);
       })
       .catch(err => {
-        console.error('❌ Failed to save:', err);
-        // Show error but don't block the deletion
-        alert(`Warning: Deletion saved but history may not be recorded: ${err.message}`);
+        console.error('❌ Failed to delete:', err);
+        // Show error and revert state
+        alert(`Failed to delete allocation: ${err.message}`);
         setIsSaving(false);
+        // Revert the deletion in state
+        setAllocations(allocations);
+        setHistory(history);
       });
     
-    // Update state after initiating save
+    // Update state optimistically
     setAllocations(filtered);
     setHistory(updatedHistory);
   };

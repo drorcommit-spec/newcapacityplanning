@@ -113,6 +113,23 @@ export async function saveAllocationsToSupabase(allocations: any[]): Promise<voi
   console.log('✅ Allocations saved');
 }
 
+export async function deleteAllocationFromSupabase(allocationId: string): Promise<void> {
+  if (!isSupabaseEnabled() || !supabase) return;
+
+  console.log('🗑️ Deleting allocation from Supabase:', allocationId);
+
+  const { error } = await supabase
+    .from('allocations')
+    .delete()
+    .eq('id', allocationId);
+
+  if (error) {
+    console.error('❌ Failed to delete allocation:', error);
+    throw new Error(`Failed to delete allocation: ${error.message}`);
+  }
+  console.log('✅ Allocation deleted from Supabase');
+}
+
 export async function saveHistoryToSupabase(history: any[]): Promise<void> {
   if (!isSupabaseEnabled() || !supabase) return;
 
