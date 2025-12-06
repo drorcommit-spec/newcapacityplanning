@@ -798,6 +798,16 @@ export default function CapacityPlanning() {
       return;
     }
 
+    alert('🔥 ABOUT TO CALL addAllocation!');
+    console.log('🔥 Calling addAllocation with:', {
+      projectId: selectedProject.id,
+      productManagerId: selectedMember.id,
+      year: selectedSprint.year,
+      month: selectedSprint.month,
+      sprint: selectedSprint.sprint,
+      allocationPercentage: percentage,
+    });
+    
     addAllocation(
       {
         projectId: selectedProject.id,
@@ -811,6 +821,8 @@ export default function CapacityPlanning() {
       },
       currentUser.email
     );
+    
+    alert('🔥 addAllocation CALLED!');
 
     // Mark member as explicitly added to this sprint
     const memberKey = `${selectedMember.id}-${selectedSprint.year}-${selectedSprint.month}-${selectedSprint.sprint}`;
