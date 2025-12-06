@@ -755,24 +755,9 @@ export default function CapacityPlanning() {
       return;
     }
     
-    // If no project selected, just add member to sprint explicitly
+    // If no project selected, member must select a project first
     if (!selectedProject) {
-      const memberKey = `${selectedMember.id}-${selectedSprint.year}-${selectedSprint.month}-${selectedSprint.sprint}`;
-      const newExplicitlyAddedMembers = new Set(explicitlyAddedMembers);
-      newExplicitlyAddedMembers.add(memberKey);
-      setExplicitlyAddedMembers(newExplicitlyAddedMembers);
-      
-      // If member was previously removed from this sprint, restore them
-      const removedKey = `${selectedMember.id}-${selectedSprint.year}-${selectedSprint.month}-${selectedSprint.sprint}`;
-      if (removedMembers.has(removedKey)) {
-        const newRemovedMembers = new Set(removedMembers);
-        newRemovedMembers.delete(removedKey);
-        setRemovedMembers(newRemovedMembers);
-      }
-      
-      setShowAddMemberModal(false);
-      setSelectedMember(null);
-      setAllocationPercentage('');
+      alert('Please select a project for this member. Adding a member without a project is not supported.');
       return;
     }
     
@@ -2512,7 +2497,7 @@ export default function CapacityPlanning() {
           )}
           <div className="flex justify-between gap-2">
             <p className="text-xs text-gray-500 self-center">
-              {!selectedProject ? 'Select a member to add to sprint' : 'Allocation percentage is required when project is selected'}
+              {!selectedProject ? 'Project and allocation percentage are required' : 'Allocation percentage is required'}
             </p>
             <div className="flex gap-2">
               <button
@@ -2528,7 +2513,7 @@ export default function CapacityPlanning() {
               </button>
               <button
                 onClick={handleAddMember}
-                disabled={!selectedMember || (!!selectedProject && !allocationPercentage)}
+                disabled={!selectedMember || !selectedProject || !allocationPercentage}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Add Member
