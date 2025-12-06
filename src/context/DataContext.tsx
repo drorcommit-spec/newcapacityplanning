@@ -149,6 +149,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     };
     
     // Update state
+    const updatedHistory = [...history, historyEntry];
+    
     setAllocations(prev => {
       const updated = [...prev, newAllocation];
       
@@ -158,12 +160,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         console.log('🚫 Cancelled pending debounced save');
       }
       
-      // IMMEDIATE SAVE for additions (don't wait for debounce)
+      // IMMEDIATE SAVE for additions (save both allocations AND history)
       console.log('💾 Saving new allocation immediately...');
       setIsSaving(true);
-      saveAllocations(updated)
+      Promise.all([
+        saveAllocations(updated),
+        saveHistory(updatedHistory)
+      ])
         .then(() => {
-          console.log('✅ New allocation saved successfully');
+          console.log('✅ New allocation and history saved successfully');
           setIsSaving(false);
         })
         .catch(err => {
@@ -175,7 +180,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
     
-    setHistory(prev => [...prev, historyEntry]);
+    setHistory(updatedHistory);
   };
 
   const updateAllocation = (id: string, updates: Partial<SprintAllocation>, changedBy: string) => {
@@ -215,6 +220,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     };
     
     // Update state
+    const updatedHistory = [...history, historyEntry];
+    
     setAllocations(prev => {
       const filtered = prev.filter(a => a.id !== id);
       console.log(`📊 Allocations after delete: ${filtered.length} (was ${prev.length})`);
@@ -225,12 +232,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         console.log('🚫 Cancelled pending debounced save');
       }
       
-      // IMMEDIATE SAVE for deletions (don't wait for debounce)
+      // IMMEDIATE SAVE for deletions (save both allocations AND history)
       console.log('💾 Saving deletion immediately...');
       setIsSaving(true);
-      saveAllocations(filtered)
+      Promise.all([
+        saveAllocations(filtered),
+        saveHistory(updatedHistory)
+      ])
         .then(() => {
-          console.log('✅ Deletion saved successfully');
+          console.log('✅ Deletion and history saved successfully');
           setIsSaving(false);
         })
         .catch(err => {
@@ -242,7 +252,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       return filtered;
     });
     
-    setHistory(prev => [...prev, historyEntry]);
+    setHistory(updatedHistory);
   };
 
   const refreshData = async () => {
