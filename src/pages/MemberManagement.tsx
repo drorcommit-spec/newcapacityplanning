@@ -17,7 +17,7 @@ interface Role {
 
 export default function TeamManagement() {
   const { teamMembers, addTeamMember, updateTeamMember } = useData();
-  const { canWrite } = usePermissions();
+  const { canManageMembers } = usePermissions();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<string>('all');
@@ -250,7 +250,7 @@ export default function TeamManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Members</h1>
-        {canWrite && <Button onClick={() => setIsModalOpen(true)}>Add Member</Button>}
+        {canManageMembers && <Button onClick={() => setIsModalOpen(true)}>Add Member</Button>}
       </div>
 
       <Card>
@@ -330,7 +330,7 @@ export default function TeamManagement() {
                     </span>
                     </td>
                     <td className="py-3 px-4">
-                      {canWrite ? (
+                      {canManageMembers ? (
                         <div className="flex gap-2">
                           <button onClick={() => handleEdit(member)} className="text-blue-600 hover:text-blue-700 text-sm">
                             Edit

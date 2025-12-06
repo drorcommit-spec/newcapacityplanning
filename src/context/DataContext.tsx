@@ -105,11 +105,59 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     };
-    setTeamMembers(prev => [...prev, newMember]);
+    const updated = [...teamMembers, newMember];
+    
+    // Cancel any pending debounced save to prevent race condition
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      console.log('🚫 Cancelled pending debounced save for team member addition');
+    }
+    
+    // IMMEDIATE SAVE for team member additions
+    console.log('💾 Saving new team member immediately...');
+    setIsSaving(true);
+    
+    saveTeamMembers(updated)
+      .then(() => {
+        console.log('✅ Team members saved successfully');
+        setIsSaving(false);
+      })
+      .catch(err => {
+        console.error('❌ Failed to save team members:', err);
+        alert(`Failed to save new team member: ${err.message}`);
+        setIsSaving(false);
+      });
+    
+    // Update state after initiating save
+    setTeamMembers(updated);
   };
 
   const updateTeamMember = (id: string, updates: Partial<TeamMember>) => {
-    setTeamMembers(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
+    const updated = teamMembers.map(m => m.id === id ? { ...m, ...updates } : m);
+    
+    // Cancel any pending debounced save to prevent race condition
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      console.log('🚫 Cancelled pending debounced save for team member update');
+    }
+    
+    // IMMEDIATE SAVE for team member updates
+    console.log('💾 Saving team member update immediately...');
+    setIsSaving(true);
+    
+    saveTeamMembers(updated)
+      .then(() => {
+        console.log('✅ Team members saved successfully');
+        setIsSaving(false);
+      })
+      .catch(err => {
+        console.error('❌ Failed to save team members:', err);
+        alert(`Failed to save team member update: ${err.message}`);
+        setIsSaving(false);
+      });
+    
+    // Update state after initiating save
+    setTeamMembers(updated);
   };
 
   const addProject = (project: Omit<Project, 'id' | 'createdAt'>) => {
@@ -118,12 +166,60 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     };
-    setProjects(prev => [...prev, newProject]);
+    const updated = [...projects, newProject];
+    
+    // Cancel any pending debounced save to prevent race condition
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      console.log('🚫 Cancelled pending debounced save for project addition');
+    }
+    
+    // IMMEDIATE SAVE for project additions
+    console.log('💾 Saving new project immediately...');
+    setIsSaving(true);
+    
+    saveProjects(updated)
+      .then(() => {
+        console.log('✅ Projects saved successfully');
+        setIsSaving(false);
+      })
+      .catch(err => {
+        console.error('❌ Failed to save projects:', err);
+        alert(`Failed to save new project: ${err.message}`);
+        setIsSaving(false);
+      });
+    
+    // Update state after initiating save
+    setProjects(updated);
     return newProject.id;
   };
 
   const updateProject = (id: string, updates: Partial<Project>) => {
-    setProjects(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+    const updated = projects.map(p => p.id === id ? { ...p, ...updates } : p);
+    
+    // Cancel any pending debounced save to prevent race condition
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      console.log('🚫 Cancelled pending debounced save for project update');
+    }
+    
+    // IMMEDIATE SAVE for project updates
+    console.log('💾 Saving project update immediately...');
+    setIsSaving(true);
+    
+    saveProjects(updated)
+      .then(() => {
+        console.log('✅ Projects saved successfully');
+        setIsSaving(false);
+      })
+      .catch(err => {
+        console.error('❌ Failed to save projects:', err);
+        alert(`Failed to save project update: ${err.message}`);
+        setIsSaving(false);
+      });
+    
+    // Update state after initiating save
+    setProjects(updated);
   };
 
   const addAllocation = (allocation: Omit<SprintAllocation, 'id' | 'createdAt' | 'createdBy'>, createdBy: string) => {

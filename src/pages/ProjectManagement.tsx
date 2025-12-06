@@ -11,7 +11,7 @@ import { ProjectType, ProjectStatus, ProjectRegion } from '../types';
 
 export default function ProjectManagement() {
   const { projects, addProject, updateProject, allocations, teamMembers, addTeamMember, sprintProjects } = useData();
-  const { canWrite } = usePermissions();
+  const { canManageProjects } = usePermissions();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -94,11 +94,6 @@ export default function ProjectManagement() {
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [showPMOModal, setShowPMOModal] = useState(false);
   const [newPMOData, setNewPMOData] = useState({ fullName: '', email: '' });
-  const [importResults, setImportResults] = useState<{ success: number; errors: string[] } | null>(null);
-  const [showEmailImportModal, setShowEmailImportModal] = useState(false);
-  const [emailContent, setEmailContent] = useState('');
-  const [emailImportLoading, setEmailImportLoading] = useState(false);
-  const [emailImportResult, setEmailImportResult] = useState<any>(null);
   const [customerError, setCustomerError] = useState('');
   const [projectError, setProjectError] = useState('');
 
@@ -113,10 +108,10 @@ export default function ProjectManagement() {
       setFilterStatus(status);
     }
     
-    if (addNew === 'true' && canWrite) {
+    if (addNew === 'true' && canManageProjects) {
       setIsModalOpen(true);
     }
-  }, [searchParams, canWrite]);
+  }, [searchParams, canManageProjects]);
   // Separate PMO and non-PMO members, both sorted alphabetically
   const pmoMembers = teamMembers
     .filter(m => m.role === 'PMO' && m.isActive)
@@ -234,114 +229,6 @@ export default function ProjectManagement() {
     navigate(`/allocations/canvas?view=capacity&mode=project&projects=${projectId}`);
   };
 
-  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      const errors: string[] = [];
-      let successCount = 0;
-
-      try {
-        // Parse CSV
-        const lines = text.split('\n').map(line => line.trim()).filter(line => line);
-        
-        // Skip header row
-        const dataLines = lines.slice(1);
-
-        dataLines.forEach((line, index) => {
-          try {
-            // Parse CSV line (handle quoted values)
-            const values = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g)?.map(v => v.replace(/^"|"$/g, '').trim()) || [];
-            
-            if (values.length < 2) {
-              errors.push(`Row ${index + 2}: Insufficient data (need at least customer and project)`);
-              return;
-            }
-
-            const [customer, project, type, status, maxCapacity] = values;
-
-            if (!customer || !project) {
-              errors.push(`Row ${index + 2}: Customer and Project are required`);
-              return;
-            }
-
-            // Validate type
-            const projectType = (type && ['AI', 'Software', 'Hybrid'].includes(type)) ? type as ProjectType : 'Software';
-            
-            // Validate status
-            const projectStatus = (status && ['Pending', 'Active', 'Inactive', 'Completed'].includes(status)) ? status as ProjectStatus : 'Pending';
-
-            // Parse max capacity
-            const maxCapacityNum = maxCapacity ? parseInt(maxCapacity) : undefined;
-
-            // Add project
-            addProject({
-              customerId: crypto.randomUUID(),
-              customerName: customer,
-              projectName: project,
-              projectType: projectType,
-              status: projectStatus,
-              maxCapacityPercentage: maxCapacityNum,
-              isArchived: false,
-            });
-
-            successCount++;
-          } catch (err) {
-            errors.push(`Row ${index + 2}: ${err instanceof Error ? err.message : 'Unknown error'}`);
-          }
-        });
-
-        setImportResults({ success: successCount, errors });
-        
-        // Clear file input
-        e.target.value = '';
-      } catch (err) {
-        alert('Error reading file: ' + (err instanceof Error ? err.message : 'Unknown error'));
-      }
-    };
-
-    reader.readAsText(file);
-  };
-
-  const handleEmailImport = async () => {
-    if (!emailContent.trim()) {
-      alert('Please paste email content');
-      return;
-    }
-
-    setEmailImportLoading(true);
-    setEmailImportResult(null);
-
-    try {
-      const response = await fetch('http://localhost:3002/api/import/hubspot-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ emailContent }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to import email');
-      }
-
-      setEmailImportResult(result);
-      setEmailContent('');
-      
-      // Refresh data
-      window.location.reload();
-    } catch (error) {
-      alert('Error importing email: ' + (error instanceof Error ? error.message : 'Unknown error'));
-    } finally {
-      setEmailImportLoading(false);
-    }
-  };
-
   const filteredProjects = projects
     .filter(p => {
       if (p.isArchived) return false;
@@ -381,30 +268,8 @@ export default function ProjectManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-        {canWrite && (
-          <div className="flex gap-2">
-            <label className="cursor-pointer">
-              <input
-                type="file"
-                accept=".csv,.xlsx,.xls"
-                onChange={handleFileImport}
-                className="hidden"
-              />
-              <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                Import CSV/Excel
-              </span>
-            </label>
-            <Button onClick={() => setShowEmailImportModal(true)} variant="secondary">
-              <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              Import from Email
-            </Button>
-            <Button onClick={() => setIsModalOpen(true)}>Add Project</Button>
-          </div>
+        {canManageProjects && (
+          <Button onClick={() => setIsModalOpen(true)}>Add Project</Button>
         )}
       </div>
 
@@ -488,7 +353,7 @@ export default function ProjectManagement() {
                   <td className="py-3 px-4">{project.activityCloseDate || '-'}</td>
                   <td className="py-3 px-4">{project.pmoContact ? getPMOName(project.pmoContact) : '-'}</td>
                   <td className="py-3 px-4">
-                    {canWrite ? (
+                    {canManageProjects ? (
                       <div className="flex gap-2">
                         <button onClick={() => handleEdit(project)} className="text-blue-600 hover:text-blue-700 text-sm">
                           Edit
@@ -691,103 +556,6 @@ export default function ProjectManagement() {
             </Button>
             <Button type="button" onClick={handleCreatePMO}>
               Create PMO
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      <Modal isOpen={importResults !== null} onClose={() => setImportResults(null)} title="Import Results">
-        <div className="space-y-4">
-          <div className="bg-green-50 p-4 rounded">
-            <p className="text-green-800 font-medium">
-              Successfully imported {importResults?.success || 0} project(s)
-            </p>
-          </div>
-          
-          {importResults && importResults.errors.length > 0 && (
-            <div className="bg-red-50 p-4 rounded max-h-60 overflow-y-auto">
-              <p className="text-red-800 font-medium mb-2">Errors ({importResults.errors.length}):</p>
-              <ul className="text-sm text-red-700 space-y-1">
-                {importResults.errors.map((error, index) => (
-                  <li key={index}>• {error}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          
-          <div className="bg-blue-50 p-4 rounded text-sm text-blue-800">
-            <p className="font-medium mb-2">Expected CSV Format:</p>
-            <code className="block bg-white p-2 rounded">
-              customer,project,Type,status,Max Capacity<br/>
-              Acme Corp,Project Alpha,Software,Active,300<br/>
-              TechCo,Platform,AI,Pending,200
-            </code>
-          </div>
-          
-          <div className="flex justify-end">
-            <Button type="button" onClick={() => setImportResults(null)}>
-              Close
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      <Modal isOpen={showEmailImportModal} onClose={() => setShowEmailImportModal(false)} title="Import from HubSpot Email">
-        <div className="space-y-4">
-          <div className="bg-blue-50 p-4 rounded text-sm text-blue-800">
-            <p className="font-medium mb-2">How to use:</p>
-            <ol className="list-decimal list-inside space-y-1">
-              <li>Forward or copy the HubSpot deal notification email</li>
-              <li>Paste the entire email content below</li>
-              <li>Click "Import" to automatically create the project</li>
-            </ol>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Content
-            </label>
-            <textarea
-              value={emailContent}
-              onChange={(e) => setEmailContent(e.target.value)}
-              placeholder="Paste HubSpot email content here..."
-              className="w-full h-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-            />
-          </div>
-
-          {emailImportResult && (
-            <div className="bg-green-50 p-4 rounded">
-              <p className="text-green-800 font-medium mb-2">✅ Project Created Successfully!</p>
-              <div className="text-sm text-green-700 space-y-1">
-                <p><strong>Customer:</strong> {emailImportResult.project?.customerName}</p>
-                <p><strong>Project:</strong> {emailImportResult.project?.projectName}</p>
-                <p><strong>Type:</strong> {emailImportResult.project?.projectType}</p>
-                <p><strong>Region:</strong> {emailImportResult.project?.region || 'Not specified'}</p>
-                {emailImportResult.project?.activityCloseDate && (
-                  <p><strong>Close Date:</strong> {new Date(emailImportResult.project.activityCloseDate).toLocaleDateString()}</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-2 justify-end">
-            <Button 
-              type="button" 
-              variant="secondary" 
-              onClick={() => {
-                setShowEmailImportModal(false);
-                setEmailContent('');
-                setEmailImportResult(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="button" 
-              onClick={handleEmailImport}
-              disabled={emailImportLoading || !emailContent.trim()}
-            >
-              {emailImportLoading ? 'Importing...' : 'Import'}
             </Button>
           </div>
         </div>

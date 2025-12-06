@@ -1,5 +1,7 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
+import { usePermissions } from '../hooks/usePermissions';
 import { useState } from 'react';
 import { APP_VERSION } from '../version';
 import Chatbot from './Chatbot';
@@ -10,9 +12,14 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
+  const { teamMembers } = useData();
+  const { isReadOnly } = usePermissions();
   const navigate = useNavigate();
   const location = useLocation();
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
+
+  // Get current user's full data including teams
+  const currentMember = teamMembers.find(m => m.id === user?.id);
 
   const isActive = (path: string) => location.pathname === path;
   const isSettingsActive = ['/members', '/projects', '/roles', '/teams'].includes(location.pathname);
@@ -60,78 +67,96 @@ export default function Layout({ children }: LayoutProps) {
                 >
                   Capacity Planning
                 </Link>
-                <div 
-                  className="relative"
-                  onMouseEnter={() => setShowSettingsDropdown(true)}
-                  onMouseLeave={() => setShowSettingsDropdown(false)}
-                >
-                  <button 
-                    className={`px-3 py-2 rounded-md flex items-center gap-1 transition-colors ${
-                      isSettingsActive 
-                        ? 'bg-blue-100 text-blue-700 font-semibold' 
-                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
-                    }`}
+                {!isReadOnly && (
+                  <div 
+                    className="relative"
+                    onMouseEnter={() => setShowSettingsDropdown(true)}
+                    onMouseLeave={() => setShowSettingsDropdown(false)}
                   >
-                    Settings
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {showSettingsDropdown && (
-                    <div className="absolute top-full left-0 mt-0 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                      <Link 
-                        to="/members" 
-                        className={`block px-4 py-2 text-sm ${
-                          isActive('/members')
-                            ? 'bg-blue-100 text-blue-700 font-semibold'
-                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                        }`}
-                        onClick={() => setShowSettingsDropdown(false)}
-                      >
-                        Members
-                      </Link>
-                      <Link 
-                        to="/projects" 
-                        className={`block px-4 py-2 text-sm ${
-                          isActive('/projects')
-                            ? 'bg-blue-100 text-blue-700 font-semibold'
-                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                        }`}
-                        onClick={() => setShowSettingsDropdown(false)}
-                      >
-                        Projects
-                      </Link>
-                      <Link 
-                        to="/roles" 
-                        className={`block px-4 py-2 text-sm ${
-                          isActive('/roles')
-                            ? 'bg-blue-100 text-blue-700 font-semibold'
-                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                        }`}
-                        onClick={() => setShowSettingsDropdown(false)}
-                      >
-                        Resource Types
-                      </Link>
-                      <Link 
-                        to="/teams" 
-                        className={`block px-4 py-2 text-sm ${
-                          isActive('/teams')
-                            ? 'bg-blue-100 text-blue-700 font-semibold'
-                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                        }`}
-                        onClick={() => setShowSettingsDropdown(false)}
-                      >
-                        Teams
-                      </Link>
-                    </div>
-                  )}
-                </div>
+                    <button 
+                      className={`px-3 py-2 rounded-md flex items-center gap-1 transition-colors ${
+                        isSettingsActive 
+                          ? 'bg-blue-100 text-blue-700 font-semibold' 
+                          : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      Settings
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {showSettingsDropdown && (
+                      <div className="absolute top-full left-0 mt-0 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                        <Link 
+                          to="/members" 
+                          className={`block px-4 py-2 text-sm ${
+                            isActive('/members')
+                              ? 'bg-blue-100 text-blue-700 font-semibold'
+                              : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                          }`}
+                          onClick={() => setShowSettingsDropdown(false)}
+                        >
+                          Members
+                        </Link>
+                        <Link 
+                          to="/projects" 
+                          className={`block px-4 py-2 text-sm ${
+                            isActive('/projects')
+                              ? 'bg-blue-100 text-blue-700 font-semibold'
+                              : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                          }`}
+                          onClick={() => setShowSettingsDropdown(false)}
+                        >
+                          Projects
+                        </Link>
+                        <Link 
+                          to="/roles" 
+                          className={`block px-4 py-2 text-sm ${
+                            isActive('/roles')
+                              ? 'bg-blue-100 text-blue-700 font-semibold'
+                              : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                          }`}
+                          onClick={() => setShowSettingsDropdown(false)}
+                        >
+                          Resource Types
+                        </Link>
+                        <Link 
+                          to="/teams" 
+                          className={`block px-4 py-2 text-sm ${
+                            isActive('/teams')
+                              ? 'bg-blue-100 text-blue-700 font-semibold'
+                              : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                          }`}
+                          onClick={() => setShowSettingsDropdown(false)}
+                        >
+                          Teams
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">{user.fullName}</span>
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{user.role}</span>
-              <button onClick={handleLogout} className="text-sm text-red-600 hover:text-red-700">
+              <div className="flex flex-col items-end">
+                <span className="text-sm font-medium text-gray-700">{user.fullName}</span>
+                <span className="text-xs text-gray-500">{user.email}</span>
+                {currentMember?.teams && currentMember.teams.length > 0 && (
+                  <div className="flex gap-1 mt-1">
+                    {currentMember.teams.map(team => (
+                      <span key={team} className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                        {team}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {(!currentMember?.teams || currentMember.teams.length === 0) && (
+                  <span className="text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded mt-1">
+                    No Team (Read-Only)
+                  </span>
+                )}
+              </div>
+              <button onClick={handleLogout} className="text-sm text-red-600 hover:text-red-700 font-medium">
                 Logout
               </button>
             </div>

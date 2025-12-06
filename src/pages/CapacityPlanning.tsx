@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useData } from '../context/DataContext';
-import { getUserPermissions, Project, TeamMember, SprintAllocation } from '../types';
+import { usePermissions } from '../hooks/usePermissions';
+import { Project, TeamMember, SprintAllocation } from '../types';
 import Modal from '../components/Modal';
 import ProjectForm from '../components/ProjectForm';
 import { fetchAllData, saveSprintProjects, saveSprintRoleRequirements } from '../services/api';
@@ -18,9 +19,7 @@ interface SprintInfo {
 export default function CapacityPlanning() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { teamMembers, projects, allocations, addAllocation, updateAllocation, deleteAllocation, updateProject } = useData();
-  const currentUser = JSON.parse(localStorage.getItem('authUser') || '{}');
-  const permissions = getUserPermissions(currentUser.role);
-  const canWrite = permissions.includes('write');
+  const { canWrite } = usePermissions();
 
   // View state
   const [viewMode, setViewMode] = useState<ViewMode>('projects');
