@@ -749,7 +749,11 @@ export default function CapacityPlanning() {
   };
 
   const handleAddMember = () => {
-    if (!selectedMember || !selectedSprint) return;
+    alert('🚨 handleAddMember STARTED!');
+    if (!selectedMember || !selectedSprint) {
+      alert('🚨 EARLY RETURN: No member or sprint selected');
+      return;
+    }
     
     // If no project selected, just add member to sprint explicitly
     if (!selectedProject) {
