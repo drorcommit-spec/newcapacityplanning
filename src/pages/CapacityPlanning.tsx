@@ -970,8 +970,12 @@ export default function CapacityPlanning() {
       );
       
       for (const alloc of allocsToRemove) {
-        await deleteAllocation(alloc.id, currentUser.fullName);
-        totalRemoved++;
+        try {
+          await deleteAllocation(alloc.id, currentUser.email);
+          totalRemoved++;
+        } catch (error) {
+          console.error('Failed to delete allocation:', alloc.id, error);
+        }
       }
     }
     
