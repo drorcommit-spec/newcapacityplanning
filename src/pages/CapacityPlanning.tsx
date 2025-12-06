@@ -578,14 +578,7 @@ export default function CapacityPlanning() {
       }
     });
 
-    // Also add members explicitly added to this sprint (even without allocations)
-    teamMembers.forEach(member => {
-      const memberKey = `${member.id}-${sprint.year}-${sprint.month}-${sprint.sprint}`;
-      if (member.isActive && explicitlyAddedMembers.has(memberKey) && !memberMap.has(member.id)) {
-        memberMap.set(member.id, { member, projects: [], total: 0 });
-      }
-    });
-
+    // Members only show if they have allocations
     let result = Array.from(memberMap.values());
 
     // Filter out members explicitly removed from this sprint
@@ -812,20 +805,6 @@ export default function CapacityPlanning() {
     );
     
     alert('🔥 addAllocation CALLED!');
-
-    // Mark member as explicitly added to this sprint
-    const memberKey = `${selectedMember.id}-${selectedSprint.year}-${selectedSprint.month}-${selectedSprint.sprint}`;
-    const newExplicitlyAddedMembers = new Set(explicitlyAddedMembers);
-    newExplicitlyAddedMembers.add(memberKey);
-    setExplicitlyAddedMembers(newExplicitlyAddedMembers);
-
-    // If member was previously removed from this sprint, restore them
-    const removedKey = `${selectedMember.id}-${selectedSprint.year}-${selectedSprint.month}-${selectedSprint.sprint}`;
-    if (removedMembers.has(removedKey)) {
-      const newRemovedMembers = new Set(removedMembers);
-      newRemovedMembers.delete(removedKey);
-      setRemovedMembers(newRemovedMembers);
-    }
 
     setShowAddMemberModal(false);
     setSelectedMember(null);
