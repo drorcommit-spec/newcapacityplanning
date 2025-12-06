@@ -111,12 +111,26 @@ export async function saveHistory(history: any[]): Promise<void> {
   // Local development: use JSON file via backend
   if (!API_URL) return;
   
-  const response = await fetch(`${API_URL}/history`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(history),
-  });
-  if (!response.ok) throw new Error('Failed to save history');
+  console.log('💾 Saving history to backend...', history.length, 'entries');
+  
+  try {
+    const response = await fetch(`${API_URL}/history`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(history),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Backend error:', errorText);
+      throw new Error(`Failed to save history: ${response.status} ${errorText}`);
+    }
+    
+    console.log('✅ History saved to backend');
+  } catch (error: any) {
+    console.error('❌ Network error saving history:', error);
+    throw new Error(`Failed to save history: ${error.message}`);
+  }
 }
 
 // Create backup (works for both Supabase and JSON)

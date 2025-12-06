@@ -116,13 +116,19 @@ export async function saveAllocationsToSupabase(allocations: any[]): Promise<voi
 export async function saveHistoryToSupabase(history: any[]): Promise<void> {
   if (!isSupabaseEnabled() || !supabase) return;
 
-  console.log('💾 Saving history to Supabase...');
+  console.log('💾 Saving history to Supabase...', history.length, 'entries');
+
+  const transformedHistory = history.map(transformHistoryToSupabase);
+  console.log('📝 Transformed history sample:', transformedHistory[transformedHistory.length - 1]);
 
   const { error } = await supabase
     .from('allocation_history')
-    .upsert(history.map(transformHistoryToSupabase), { onConflict: 'id' });
+    .upsert(transformedHistory, { onConflict: 'id' });
 
-  if (error) throw error;
+  if (error) {
+    console.error('❌ History save error:', error);
+    throw new Error(`Failed to save history: ${error.message}`);
+  }
   console.log('✅ History saved');
 }
 
@@ -319,8 +325,8 @@ function transformHistoryToSupabase(data: any): any {
     changed_by: data.changedBy,
     changed_at: data.changedAt,
     change_type: data.changeType,
-    old_value: data.oldValue,
-    new_value: data.newValue,
+    old_value: data.oldValue || null,
+    new_value: data.newValue || null,
   };
 }
 

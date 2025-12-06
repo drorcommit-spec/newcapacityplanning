@@ -127,7 +127,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addAllocation = (allocation: Omit<SprintAllocation, 'id' | 'createdAt' | 'createdBy'>, createdBy: string) => {
-    alert('🎯 addAllocation CALLED!');
     console.log('🎯 addAllocation CALLED with:', allocation, 'by:', createdBy);
     
     const newAllocation: SprintAllocation = {
@@ -150,36 +149,38 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     
     // Update state
     const updatedHistory = [...history, historyEntry];
+    const updated = [...allocations, newAllocation];
     
-    setAllocations(prev => {
-      const updated = [...prev, newAllocation];
-      
-      // Cancel any pending debounced save to prevent race condition
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-        console.log('🚫 Cancelled pending debounced save');
-      }
-      
-      // IMMEDIATE SAVE for additions (save both allocations AND history)
-      console.log('💾 Saving new allocation immediately...');
-      setIsSaving(true);
-      Promise.all([
-        saveAllocations(updated),
-        saveHistory(updatedHistory)
-      ])
-        .then(() => {
-          console.log('✅ New allocation and history saved successfully');
-          setIsSaving(false);
-        })
-        .catch(err => {
-          console.error('❌ Failed to save new allocation:', err);
-          alert(`Failed to save allocation: ${err.message}`);
-          setIsSaving(false);
-        });
-      
-      return updated;
-    });
+    // Cancel any pending debounced save to prevent race condition
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      console.log('🚫 Cancelled pending debounced save');
+    }
     
+    // IMMEDIATE SAVE for additions (save allocations first, then history)
+    console.log('💾 Saving new allocation immediately...');
+    setIsSaving(true);
+    
+    // Save allocations first (critical)
+    saveAllocations(updated)
+      .then(() => {
+        console.log('✅ Allocations saved successfully');
+        // Then try to save history (non-critical)
+        return saveHistory(updatedHistory);
+      })
+      .then(() => {
+        console.log('✅ History saved successfully');
+        setIsSaving(false);
+      })
+      .catch(err => {
+        console.error('❌ Failed to save:', err);
+        // Show error but don't block the addition
+        alert(`Warning: Allocation saved but history may not be recorded: ${err.message}`);
+        setIsSaving(false);
+      });
+    
+    // Update state after initiating save
+    setAllocations(updated);
     setHistory(updatedHistory);
   };
 
@@ -221,37 +222,40 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     
     // Update state
     const updatedHistory = [...history, historyEntry];
+    const filtered = allocations.filter(a => a.id !== id);
     
-    setAllocations(prev => {
-      const filtered = prev.filter(a => a.id !== id);
-      console.log(`📊 Allocations after delete: ${filtered.length} (was ${prev.length})`);
-      
-      // Cancel any pending debounced save to prevent race condition
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-        console.log('🚫 Cancelled pending debounced save');
-      }
-      
-      // IMMEDIATE SAVE for deletions (save both allocations AND history)
-      console.log('💾 Saving deletion immediately...');
-      setIsSaving(true);
-      Promise.all([
-        saveAllocations(filtered),
-        saveHistory(updatedHistory)
-      ])
-        .then(() => {
-          console.log('✅ Deletion and history saved successfully');
-          setIsSaving(false);
-        })
-        .catch(err => {
-          console.error('❌ Failed to save deletion:', err);
-          alert(`Failed to save deletion: ${err.message}`);
-          setIsSaving(false);
-        });
-      
-      return filtered;
-    });
+    console.log(`📊 Allocations after delete: ${filtered.length} (was ${allocations.length})`);
     
+    // Cancel any pending debounced save to prevent race condition
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      console.log('🚫 Cancelled pending debounced save');
+    }
+    
+    // IMMEDIATE SAVE for deletions (save allocations first, then history)
+    console.log('💾 Saving deletion immediately...');
+    setIsSaving(true);
+    
+    // Save allocations first (critical)
+    saveAllocations(filtered)
+      .then(() => {
+        console.log('✅ Allocations saved successfully');
+        // Then try to save history (non-critical)
+        return saveHistory(updatedHistory);
+      })
+      .then(() => {
+        console.log('✅ History saved successfully');
+        setIsSaving(false);
+      })
+      .catch(err => {
+        console.error('❌ Failed to save:', err);
+        // Show error but don't block the deletion
+        alert(`Warning: Deletion saved but history may not be recorded: ${err.message}`);
+        setIsSaving(false);
+      });
+    
+    // Update state after initiating save
+    setAllocations(filtered);
     setHistory(updatedHistory);
   };
 
