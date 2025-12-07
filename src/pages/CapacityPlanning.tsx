@@ -893,7 +893,7 @@ export default function CapacityPlanning() {
     alert('Project copied to next sprint (including allocations and capacity planning)!');
   };
 
-  const handleCopyMemberToNextSprint = (member: TeamMember, currentSprint: SprintInfo) => {
+  const handleCopyMemberToNextSprint = async (member: TeamMember, currentSprint: SprintInfo) => {
     const currentIndex = sprints.findIndex(
       s => s.year === currentSprint.year && s.month === currentSprint.month && s.sprint === currentSprint.sprint
     );
@@ -906,14 +906,18 @@ export default function CapacityPlanning() {
     const nextSprint = sprints[currentIndex + 1];
     const currentAllocs = getSprintAllocations(currentSprint).filter(a => a.productManagerId === member.id);
 
+    console.log(`📋 Found ${currentAllocs.length} allocations to copy for ${member.fullName}`);
+    
     if (currentAllocs.length === 0) {
       alert('No allocations to copy for this member');
       return;
     }
 
-    // Copy all member allocations to next sprint
-    currentAllocs.forEach(alloc => {
+    // Copy all member allocations to next sprint sequentially to avoid race conditions
+    for (const alloc of currentAllocs) {
+      const project = projects.find(p => p.id === alloc.projectId);
       console.log('📋 Copying allocation:', {
+        project: project?.projectName || 'Unknown',
         from: `${currentSprint.year}-${currentSprint.month}-${currentSprint.sprint}`,
         to: `${nextSprint.year}-${nextSprint.month}-${nextSprint.sprint}`,
         percentage: alloc.allocationPercentage,
@@ -933,7 +937,10 @@ export default function CapacityPlanning() {
         },
         currentUser.email
       );
-    });
+      
+      // Small delay to prevent race conditions
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
 
     // Mark member as explicitly added to next sprint
     const memberKey = `${member.id}-${nextSprint.year}-${nextSprint.month}-${nextSprint.sprint}`;
@@ -941,7 +948,7 @@ export default function CapacityPlanning() {
     newExplicitlyAddedMembers.add(memberKey);
     setExplicitlyAddedMembers(newExplicitlyAddedMembers);
 
-    alert(`${member.fullName}'s allocations copied to next sprint!`);
+    alert(`${member.fullName}'s ${currentAllocs.length} allocation(s) copied to next sprint!`);
   };
 
   // Remove member from sprint handlers
