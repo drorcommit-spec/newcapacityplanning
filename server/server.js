@@ -103,6 +103,14 @@ async function processWriteQueue() {
     // Write new data atomically
     const tempFile = DB_FILE + '.tmp';
     await fs.writeFile(tempFile, jsonString);
+    
+    // On Windows, fs.rename fails if target exists, so delete first
+    try {
+      await fs.unlink(DB_FILE);
+    } catch (err) {
+      // File doesn't exist, that's fine
+    }
+    
     await fs.rename(tempFile, DB_FILE);
     console.log('✅ Database saved successfully');
     
