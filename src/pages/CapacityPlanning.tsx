@@ -913,6 +913,13 @@ export default function CapacityPlanning() {
 
     // Copy all member allocations to next sprint
     currentAllocs.forEach(alloc => {
+      console.log('📋 Copying allocation:', {
+        from: `${currentSprint.year}-${currentSprint.month}-${currentSprint.sprint}`,
+        to: `${nextSprint.year}-${nextSprint.month}-${nextSprint.sprint}`,
+        percentage: alloc.allocationPercentage,
+        days: alloc.allocationDays
+      });
+      
       addAllocation(
         {
           projectId: alloc.projectId,
@@ -920,8 +927,8 @@ export default function CapacityPlanning() {
           year: nextSprint.year,
           month: nextSprint.month,
           sprint: nextSprint.sprint,
-          allocationPercentage: alloc.allocationPercentage,
-          allocationDays: alloc.allocationDays,
+          allocationPercentage: alloc.allocationPercentage || 0,
+          allocationDays: alloc.allocationDays || 0,
           isPlanned: true
         },
         currentUser.email
