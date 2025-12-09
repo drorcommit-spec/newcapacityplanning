@@ -25,7 +25,7 @@ export default function CapacityPlanning() {
   const currentUser = user || { email: 'unknown', fullName: 'Unknown User' };
 
   // View state
-  const [viewMode, setViewMode] = useState<ViewMode>('projects');
+  const [viewMode, setViewMode] = useState<ViewMode>('team');
   const [showFilters, setShowFilters] = useState(true);
   const [sprintCount, setSprintCount] = useState(3);
   const [expandedSprint, setExpandedSprint] = useState<string | null>(null);
@@ -894,6 +894,8 @@ export default function CapacityPlanning() {
   };
 
   const handleCopyMemberToNextSprint = async (member: TeamMember, currentSprint: SprintInfo) => {
+    console.log('🚀 COPY FUNCTION CALLED for:', member.fullName);
+    
     const currentIndex = sprints.findIndex(
       s => s.year === currentSprint.year && s.month === currentSprint.month && s.sprint === currentSprint.sprint
     );
@@ -904,9 +906,11 @@ export default function CapacityPlanning() {
     }
 
     const nextSprint = sprints[currentIndex + 1];
-    const currentAllocs = getSprintAllocations(currentSprint).filter(a => a.productManagerId === member.id);
-
-    console.log(`📋 Found ${currentAllocs.length} allocations to copy for ${member.fullName}`);
+    const allSprintAllocs = getSprintAllocations(currentSprint);
+    console.log('🔍 All allocations in sprint:', allSprintAllocs.length);
+    
+    const currentAllocs = allSprintAllocs.filter(a => a.productManagerId === member.id);
+    console.log(`📋 Found ${currentAllocs.length} allocations to copy for ${member.fullName}`, currentAllocs);
     
     if (currentAllocs.length === 0) {
       alert('No allocations to copy for this member');
@@ -938,8 +942,8 @@ export default function CapacityPlanning() {
         currentUser.email
       );
       
-      // Small delay to prevent race conditions
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Delay to prevent race conditions and ensure save completes
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
 
     // Mark member as explicitly added to next sprint
