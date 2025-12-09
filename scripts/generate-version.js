@@ -37,6 +37,8 @@ try {
 
 export const VERSION_INFO = ${JSON.stringify(versionInfo, null, 2)} as const;
 
+export const APP_VERSION = VERSION_INFO.fullVersion;
+
 export const getVersionString = () => VERSION_INFO.fullVersion;
 export const getVersion = () => VERSION_INFO.version;
 export const getGitHash = () => VERSION_INFO.gitHash;
