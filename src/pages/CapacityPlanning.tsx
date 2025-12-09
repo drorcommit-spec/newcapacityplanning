@@ -19,7 +19,7 @@ interface SprintInfo {
 
 export default function CapacityPlanning() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { teamMembers, projects, allocations, addAllocation, updateAllocation, deleteAllocation, updateProject } = useData();
+  const { teamMembers, projects, allocations, addAllocation, updateAllocation, deleteAllocation, addProject, updateProject } = useData();
   const { user } = useAuth();
   const { canWrite } = usePermissions();
   const currentUser = user || { email: 'unknown', fullName: 'Unknown User' };
@@ -69,6 +69,7 @@ export default function CapacityPlanning() {
   const [showEditProjectModal, setShowEditProjectModal] = useState(false);
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
   const [showRoleRequirementsModal, setShowRoleRequirementsModal] = useState(false);
+  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [roleRequirements, setRoleRequirements] = useState<Record<string, number>>({});
   const [selectedSprint, setSelectedSprint] = useState<SprintInfo | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -90,6 +91,11 @@ export default function CapacityPlanning() {
   // Track members explicitly added to sprints (even if they have no allocations)
   // Key format: "memberId-year-month-sprint"
   const [explicitlyAddedMembers, setExplicitlyAddedMembers] = useState<Set<string>>(new Set());
+  
+  // State for inline project creation flow
+  const [returnToAddMember, setReturnToAddMember] = useState(false);
+  const [pendingMember, setPendingMember] = useState<TeamMember | null>(null);
+  const [pendingSprint, setPendingSprint] = useState<SprintInfo | null>(null);
   
   // Track projects explicitly added to sprints (even if they have no allocations)
   const [sprintProjects, setSprintProjects] = useState<Map<string, Set<string>>>(new Map());
@@ -803,6 +809,36 @@ export default function CapacityPlanning() {
     setAllocationPercentage('');
   };
 
+  const handleNewProjectCreated = (projectId: string) => {
+    setShowNewProjectModal(false);
+
+    // If returning to add member flow, restore context
+    if (returnToAddMember && pendingMember && pendingSprint) {
+      // Wait a bit for the project to be added to the projects array
+      setTimeout(() => {
+        const newProject = projects.find(p => p.id === projectId);
+        if (newProject) {
+          setSelectedMember(pendingMember);
+          setSelectedSprint(pendingSprint);
+          setSelectedProject(newProject);
+          setReturnToAddMember(false);
+          setPendingMember(null);
+          setPendingSprint(null);
+          
+          // Open Add Member modal
+          setShowAddMemberModal(true);
+          // Focus on percentage input
+          setTimeout(() => percentageInputRef.current?.focus(), 100);
+        } else {
+          // Fallback: just reset state if project not found
+          setReturnToAddMember(false);
+          setPendingMember(null);
+          setPendingSprint(null);
+        }
+      }, 100);
+    }
+  };
+
   const handleRemoveAllocation = (allocationId: string) => {
     if (confirm('Remove this allocation?')) {
       // Find the allocation to get project and sprint info
@@ -917,11 +953,19 @@ export default function CapacityPlanning() {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    // Mark member as explicitly added to next sprint
+    // Wait a bit longer to ensure all state updates have been processed
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // Mark member as explicitly added to next sprint - this will trigger a re-render
     const memberKey = `${member.id}-${nextSprint.year}-${nextSprint.month}-${nextSprint.sprint}`;
-    const newExplicitlyAddedMembers = new Set(explicitlyAddedMembers);
-    newExplicitlyAddedMembers.add(memberKey);
-    setExplicitlyAddedMembers(newExplicitlyAddedMembers);
+    setExplicitlyAddedMembers(prev => {
+      const newSet = new Set(prev);
+      newSet.add(memberKey);
+      return newSet;
+    });
+
+    // Small delay to ensure final state update has propagated
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     alert(`${member.fullName}'s ${currentAllocs.length} allocation(s) copied to next sprint!`);
   };
@@ -1063,7 +1107,6 @@ export default function CapacityPlanning() {
   // Handle new project creation success
   const handleProjectCreated = (projectId: string) => {
     setShowCreateProjectModal(false);
-    setShowAddProjectModal(false);
     
     if (!selectedSprint) return;
 
@@ -1076,8 +1119,29 @@ export default function CapacityPlanning() {
     updatedSprintProjects.get(sprintKey)!.add(projectId);
     setSprintProjects(updatedSprintProjects);
 
-    // Set pending project ID to trigger useEffect when project appears
-    setPendingProjectId(projectId);
+    // If a member is selected, we need to ask for allocation percentage
+    if (selectedMember) {
+      // Wait a bit for the project to be added to the projects array
+      setTimeout(() => {
+        const newProject = projects.find(p => p.id === projectId);
+        if (newProject) {
+          setSelectedProject(newProject);
+          // Close Add Project modal and open Add Member modal
+          setShowAddProjectModal(false);
+          setShowAddMemberModal(true);
+          // Focus on percentage input
+          setTimeout(() => percentageInputRef.current?.focus(), 100);
+        } else {
+          // Fallback: close modals if project not found
+          setShowAddProjectModal(false);
+        }
+      }, 100);
+    } else {
+      // No member selected, just close the modal
+      setShowAddProjectModal(false);
+      // Set pending project ID to trigger useEffect when project appears
+      setPendingProjectId(projectId);
+    }
   };
 
   // Watch for when the pending project appears in the projects array
@@ -2417,7 +2481,6 @@ export default function CapacityPlanning() {
                 }
                 return (
                   <select
-                    autoFocus
                     value={''}
                     onChange={(e) => {
                       const member = teamMembers.find(m => m.id === e.target.value);
@@ -2461,14 +2524,26 @@ export default function CapacityPlanning() {
                   ref={projectSelectRef}
                   value={''}
                   onChange={(e) => {
-                    const project = projects.find(p => p.id === e.target.value);
-                    setSelectedProject(project || null);
-                    // Focus percentage input after project is selected
-                    setTimeout(() => percentageInputRef.current?.focus(), 100);
+                    if (e.target.value === '__CREATE_NEW__') {
+                      // Save context
+                      setPendingMember(selectedMember);
+                      setPendingSprint(selectedSprint);
+                      setReturnToAddMember(true);
+                      // Close add member modal
+                      setShowAddMemberModal(false);
+                      // Open project creation modal
+                      setShowNewProjectModal(true);
+                    } else {
+                      const project = projects.find(p => p.id === e.target.value);
+                      setSelectedProject(project || null);
+                      // Focus percentage input after project is selected
+                      setTimeout(() => percentageInputRef.current?.focus(), 100);
+                    }
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 >
                   <option value="">Select a project...</option>
+                  <option value="__CREATE_NEW__" className="font-semibold text-green-600">+ Create New Project</option>
                   {selectedSprint && getAvailableProjectsForMember(selectedSprint, selectedMember.id).map(project => (
                     <option key={project.id} value={project.id}>
                       {project.customerName} - {project.projectName}
@@ -3014,6 +3089,32 @@ export default function CapacityPlanning() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* New Project Modal - from Add Member dropdown */}
+      <Modal
+        isOpen={showNewProjectModal}
+        onClose={() => {
+          setShowNewProjectModal(false);
+          if (returnToAddMember) {
+            // User cancelled, restore add member modal
+            setShowAddMemberModal(true);
+            setReturnToAddMember(false);
+          }
+        }}
+        title="Create New Project"
+      >
+        <ProjectForm
+          onSuccess={handleNewProjectCreated}
+          onCancel={() => {
+            setShowNewProjectModal(false);
+            if (returnToAddMember) {
+              // User cancelled, restore add member modal
+              setShowAddMemberModal(true);
+              setReturnToAddMember(false);
+            }
+          }}
+        />
       </Modal>
     </div>
   );

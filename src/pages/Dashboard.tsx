@@ -532,7 +532,7 @@ export default function Dashboard() {
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="text-xs font-semibold text-gray-700">❗ Missing Resources</div>
-                        <div className="text-xs text-gray-600 mt-1">Projects with no allocations</div>
+                        <div className="text-xs text-gray-600 mt-1">Projects without / missing allocations</div>
                       </div>
                       <div className={`text-2xl font-bold ${kpi.projectsMissingCapacity > 0 ? 'text-red-600' : 'text-gray-400'}`}>
                         {kpi.projectsMissingCapacity}

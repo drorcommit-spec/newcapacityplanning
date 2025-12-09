@@ -1,12 +1,13 @@
 {
   "name": "product-capacity-platform",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "server": "cd server && npm start",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
+    "prebuild": "node scripts/generate-version.js",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },

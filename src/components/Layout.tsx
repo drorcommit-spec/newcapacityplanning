@@ -166,11 +166,11 @@ export default function Layout({ children }: LayoutProps) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
-      <footer className="fixed bottom-0 right-0 p-2 z-40">
+      <footer className="fixed bottom-0 left-0 p-2 z-40">
         <div className="text-xs text-gray-400 bg-white/90 px-2 py-1 rounded shadow-sm border border-gray-200">
           <span className="font-semibold">v{APP_VERSION}</span>
           <span className="ml-2 text-gray-300">|</span>
-          <span className="ml-2">{import.meta.env.DEV ? '🟢 Local' : '🔵 Production'}</span>
+          <span className="ml-2">{import.meta.env.DEV ? '🟢 Dev' : '🔵 Prod'}</span>
         </div>
       </footer>
       <Chatbot />
