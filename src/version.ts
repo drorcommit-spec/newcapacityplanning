@@ -1,12 +1,12 @@
 // Auto-generated file - do not edit manually
-// This file is generated at build time by scripts/generate-version.js
+// Generated at build time
 
 export const VERSION_INFO = {
-  version: "1.2.2",
-  gitHash: "c103a3b",
-  gitBranch: "main",
-  buildTime: "2024-12-09T00:00:00.000Z",
-  fullVersion: "1.2.2 (c103a3b)"
+  "version": "1.2.2",
+  "gitHash": "292b8d5",
+  "gitBranch": "main",
+  "buildTime": "2025-12-09T19:56:08.453Z",
+  "fullVersion": "1.2.2 (292b8d5)"
 } as const;
 
 export const APP_VERSION = VERSION_INFO.fullVersion;

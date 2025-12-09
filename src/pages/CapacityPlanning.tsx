@@ -1478,9 +1478,16 @@ export default function CapacityPlanning() {
     const requirementKey = `${project.id}-${sprint.year}-${sprint.month}-${sprint.sprint}`;
     const requirements = sprintRoleRequirements[requirementKey];
     
-    // If no requirements set, simple red/green based on member count
+    // Calculate total allocation
+    const totalAllocation = members.reduce((sum, m) => sum + (m.percentage || 0), 0);
+    
+    // If no requirements set, check total allocation
     if (!requirements || Object.keys(requirements).length === 0) {
-      return members.length === 0 ? 'bg-red-200' : 'bg-green-50';
+      // Red if no members OR all members at 0%
+      if (members.length === 0 || totalAllocation === 0) {
+        return 'bg-red-200';
+      }
+      return 'bg-green-50';
     }
 
     // Calculate allocated percentages per role
