@@ -13,4 +13,9 @@ export const supabase = USE_SUPABASE && SUPABASE_URL && SUPABASE_ANON_KEY
 // Check if Supabase is enabled
 export const isSupabaseEnabled = () => USE_SUPABASE && supabase !== null;
 
-console.log('🔧 Database Mode:', isSupabaseEnabled() ? 'Supabase (Production)' : 'JSON File (Local)');
+// Determine environment based on URL
+const isDev = SUPABASE_URL.includes('nkonqfrhikxrxhorsosk'); // Dev project ID
+const envLabel = isDev ? 'Development' : 'Production';
+
+console.log('🔧 Database Mode:', isSupabaseEnabled() ? `Supabase (${envLabel})` : 'JSON File (Local)');
+console.log('🔗 Supabase URL:', SUPABASE_URL || 'Not configured');

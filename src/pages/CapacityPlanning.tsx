@@ -748,9 +748,7 @@ export default function CapacityPlanning() {
   };
 
   const handleAddMember = () => {
-    alert('🚨 handleAddMember STARTED!');
     if (!selectedMember || !selectedSprint) {
-      alert('🚨 EARLY RETURN: No member or sprint selected');
       return;
     }
     
@@ -785,16 +783,6 @@ export default function CapacityPlanning() {
       alert(`${selectedMember.fullName} is already allocated to this project in this sprint. Please edit the existing allocation instead.`);
       return;
     }
-
-    alert('🔥 ABOUT TO CALL addAllocation!');
-    console.log('🔥 Calling addAllocation with:', {
-      projectId: selectedProject.id,
-      productManagerId: selectedMember.id,
-      year: selectedSprint.year,
-      month: selectedSprint.month,
-      sprint: selectedSprint.sprint,
-      allocationPercentage: percentage,
-    });
     
     addAllocation(
       {
@@ -809,8 +797,6 @@ export default function CapacityPlanning() {
       },
       currentUser.email
     );
-    
-    alert('🔥 addAllocation CALLED!');
 
     setShowAddMemberModal(false);
     setSelectedMember(null);
@@ -894,8 +880,6 @@ export default function CapacityPlanning() {
   };
 
   const handleCopyMemberToNextSprint = async (member: TeamMember, currentSprint: SprintInfo) => {
-    console.log('🚀 COPY FUNCTION CALLED for:', member.fullName);
-    
     const currentIndex = sprints.findIndex(
       s => s.year === currentSprint.year && s.month === currentSprint.month && s.sprint === currentSprint.sprint
     );
@@ -906,11 +890,7 @@ export default function CapacityPlanning() {
     }
 
     const nextSprint = sprints[currentIndex + 1];
-    const allSprintAllocs = getSprintAllocations(currentSprint);
-    console.log('🔍 All allocations in sprint:', allSprintAllocs.length);
-    
-    const currentAllocs = allSprintAllocs.filter(a => a.productManagerId === member.id);
-    console.log(`📋 Found ${currentAllocs.length} allocations to copy for ${member.fullName}`, currentAllocs);
+    const currentAllocs = getSprintAllocations(currentSprint).filter(a => a.productManagerId === member.id);
     
     if (currentAllocs.length === 0) {
       alert('No allocations to copy for this member');
@@ -919,15 +899,6 @@ export default function CapacityPlanning() {
 
     // Copy all member allocations to next sprint sequentially to avoid race conditions
     for (const alloc of currentAllocs) {
-      const project = projects.find(p => p.id === alloc.projectId);
-      console.log('📋 Copying allocation:', {
-        project: project?.projectName || 'Unknown',
-        from: `${currentSprint.year}-${currentSprint.month}-${currentSprint.sprint}`,
-        to: `${nextSprint.year}-${nextSprint.month}-${nextSprint.sprint}`,
-        percentage: alloc.allocationPercentage,
-        days: alloc.allocationDays
-      });
-      
       addAllocation(
         {
           projectId: alloc.projectId,
