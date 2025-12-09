@@ -26,9 +26,6 @@ server/*.backup.json
 # Migration config (contains credentials)
 server/migrate-config.json
 
-# Auto-generated files
-src/version.ts
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
