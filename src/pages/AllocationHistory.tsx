@@ -16,9 +16,14 @@ export default function AllocationHistory() {
     return new Date(dateString).toLocaleString();
   };
 
-  const getChangedByName = (userId: string) => {
-    const member = teamMembers.find(m => m.id === userId);
-    return member?.fullName || 'Unknown User';
+  const getChangedByName = (userIdOrEmail: string) => {
+    // Try to find by ID first
+    let member = teamMembers.find(m => m.id === userIdOrEmail);
+    // If not found, try to find by email
+    if (!member) {
+      member = teamMembers.find(m => m.email === userIdOrEmail);
+    }
+    return member?.fullName || userIdOrEmail || 'Unknown User';
   };
 
   const getProjectName = (projectId?: string) => {
