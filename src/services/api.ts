@@ -156,9 +156,10 @@ export async function createBackup(): Promise<void> {
 
 // Save sprint projects
 export async function saveSprintProjects(sprintProjects: Record<string, string[]>): Promise<void> {
-  // Supabase support can be added later if needed
+  // Use Supabase if enabled (production)
   if (isSupabaseEnabled()) {
-    console.warn('Sprint projects not yet supported in Supabase');
+    const { saveSprintProjectsToSupabase } = await import('./supabaseApi');
+    await saveSprintProjectsToSupabase(sprintProjects);
     return;
   }
 
@@ -174,9 +175,10 @@ export async function saveSprintProjects(sprintProjects: Record<string, string[]
 
 // Save sprint role requirements
 export async function saveSprintRoleRequirements(sprintRoleRequirements: Record<string, Record<string, number>>): Promise<void> {
-  // Supabase support can be added later if needed
+  // Use Supabase if enabled (production)
   if (isSupabaseEnabled()) {
-    console.warn('Sprint role requirements not yet supported in Supabase');
+    const { saveSprintRoleRequirementsToSupabase } = await import('./supabaseApi');
+    await saveSprintRoleRequirementsToSupabase(sprintRoleRequirements);
     return;
   }
 

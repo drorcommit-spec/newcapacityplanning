@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { getCurrentSprint, getMonthName, getSprintDateRange } from '../utils/dateUtils';
+import { saveSprintProjects } from '../services/api';
 import Card from '../components/Card';
 
 interface SprintInfo {
@@ -63,7 +64,7 @@ export default function Dashboard() {
 
   // Calculate overall summary
   const overallSummary = useMemo(() => {
-    const activeProjects = projects.filter(p => p.status === 'Active' && !p.isArchived);
+    const activeProjects = projects.filter(p => !p.isArchived);
     const activeMembers = teamMembers.filter(m => m.isActive);
     
     const currentSprintAllocs = allocations.filter(
@@ -116,7 +117,7 @@ export default function Dashboard() {
   // Calculate KPIs for each sprint
   const sprintKPIs = useMemo(() => {
     return sprints.map(sprint => {
-      const activeProjects = projects.filter(p => p.status === 'Active' && !p.isArchived);
+      const activeProjects = projects.filter(p => !p.isArchived);
       const activeMembers = teamMembers.filter(m => m.isActive);
       
       const sprintAllocations = allocations.filter(
@@ -134,17 +135,21 @@ export default function Dashboard() {
       const projectsInSprint = activeProjects.filter(p => allSprintProjectIds.has(p.id));
 
       // PROJECT KPIs
-      // Missing Resources: Projects that are in this sprint but have insufficient capacity
+      // Missing Resources: Projects that are in this sprint but need member allocation
       // A project is "missing resources" if:
-      // 1. It's assigned to this sprint (via allocations OR sprintProjects)
-      // 2. Total allocation is < 20% (including 0% - projects with no member allocations)
-      // 3. OR it has role requirements but at least one role has insufficient allocation
+      // 1. Total allocation = 0% (project in sprint but no members assigned), OR
+      // 2. At least one role requirement is not met (allocated < required)
       const projectsMissingCapacity = projectsInSprint.filter(project => {
         const projectAllocs = sprintAllocations.filter(a => a.projectId === project.id);
-        const totalAllocation = projectAllocs.reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
         
-        // Check if total allocation < 20%
-        if (totalAllocation < 20) return true;
+        // Calculate total allocation (sum of all member allocations)
+        const totalAllocation = projectAllocs.reduce((sum, a) => {
+          const percentage = a.allocationPercentage ?? 0;
+          return sum + percentage;
+        }, 0);
+        
+        // Check if total allocation = 0% (includes: no members, or all members at 0%)
+        if (totalAllocation === 0) return true;
         
         // Check role requirements if they exist
         const requirementKey = `${project.id}-${sprint.year}-${sprint.month}-${sprint.sprint}`;
@@ -514,184 +519,106 @@ export default function Dashboard() {
                 </p>
               </div>
 
-              {/* PROJECT KPIs Section */}
-              <div className="mb-4">
-                <h3 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                  <span>📊 PROJECT KPIs</span>
-                </h3>
-                
-                <div className="space-y-2">
-                  <button
-                    onClick={() => navigate(`/capacity-planning?view=projects&kpi=missing-resources&sprint=${index}`)}
-                    className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
-                      kpi.projectsMissingCapacity > 0 
-                        ? 'border-red-300 bg-red-50 hover:bg-red-100' 
-                        : 'border-gray-200 bg-white hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="text-xs font-semibold text-gray-700">❗ Missing Resources</div>
-                        <div className="text-xs text-gray-600 mt-1">Projects without / missing allocations</div>
-                      </div>
-                      <div className={`text-2xl font-bold ${kpi.projectsMissingCapacity > 0 ? 'text-red-600' : 'text-gray-400'}`}>
-                        {kpi.projectsMissingCapacity}
-                      </div>
+              {/* KPIs - Compact View */}
+              <div className="space-y-2">
+                {/* Missing Resources */}
+                <button
+                  onClick={() => navigate(`/capacity-planning?view=projects&kpi=missing-resources&sprint=${index}`)}
+                  className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
+                    kpi.projectsMissingCapacity > 0 
+                      ? 'border-red-300 bg-red-50 hover:bg-red-100' 
+                      : 'border-gray-200 bg-white hover:bg-gray-50'
+                  }`}
+                  title="Projects with 0% allocation or unmet role requirements"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-700">❗ Missing Resources</span>
+                      <span className="text-gray-400 text-xs cursor-help" title="Projects with 0% allocation or unmet role requirements">ℹ️</span>
                     </div>
-                  </button>
-
-                  <button
-                    onClick={() => navigate(`/capacity-planning?view=projects&kpi=new-reactivated&sprint=${index}`)}
-                    className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
-                      kpi.newOrStaleProjects > 0 
-                        ? 'border-blue-300 bg-blue-50 hover:bg-blue-100' 
-                        : 'border-gray-200 bg-white hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="text-xs font-semibold text-gray-700">🆕 New/Reactivated</div>
-                        <div className="text-xs text-gray-600 mt-1">First sprint or 6+ month gap</div>
-                      </div>
-                      <div className={`text-2xl font-bold ${kpi.newOrStaleProjects > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
-                        {kpi.newOrStaleProjects}
-                      </div>
+                    <div className={`text-2xl font-bold ${kpi.projectsMissingCapacity > 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                      {kpi.projectsMissingCapacity}
                     </div>
-                  </button>
+                  </div>
+                </button>
 
-                  {/* Expandable Project KPIs */}
-                  <button
-                    onClick={() => toggleExpanded(sprintKey, 'projects')}
-                    className="w-full py-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors flex items-center justify-center gap-1"
-                  >
-                    <span>{projectsExpanded ? '▼' : '▶'}</span>
-                    <span>{projectsExpanded ? 'Hide' : 'Show'} More Project KPIs</span>
-                  </button>
-
-                  {projectsExpanded && (
-                    <div className="space-y-2 pt-2 border-t">
-                      <button
-                        onClick={() => navigate(`/capacity-planning?view=projects&kpi=no-pmo&sprint=${index}`)}
-                        className={`w-full p-2 rounded border text-left hover:shadow ${
-                          kpi.projectsNoPMO > 0 ? 'border-purple-300 bg-purple-50' : 'border-gray-200 bg-white'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="text-xs font-semibold">📋 No PMO Contact</div>
-                            <div className="text-[10px] text-gray-600">No PMO contact or 0% PMO allocation</div>
-                          </div>
-                          <span className={`text-lg font-bold ${kpi.projectsNoPMO > 0 ? 'text-purple-600' : 'text-gray-400'}`}>
-                            {kpi.projectsNoPMO}
-                          </span>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => navigate(`/capacity-planning?view=projects&kpi=pending&sprint=${index}`)}
-                        className={`w-full p-2 rounded border text-left hover:shadow ${
-                          kpi.pendingProjects > 0 ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200 bg-white'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="text-xs font-semibold">⏳ Pending Projects</div>
-                            <div className="text-[10px] text-gray-600">Projects with Pending status</div>
-                          </div>
-                          <span className={`text-lg font-bold ${kpi.pendingProjects > 0 ? 'text-yellow-600' : 'text-gray-400'}`}>
-                            {kpi.pendingProjects}
-                          </span>
-                        </div>
-                      </button>
+                {/* New/Reactivated */}
+                <button
+                  onClick={() => navigate(`/capacity-planning?view=projects&kpi=new-reactivated&sprint=${index}`)}
+                  className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
+                    kpi.newOrStaleProjects > 0 
+                      ? 'border-blue-300 bg-blue-50 hover:bg-blue-100' 
+                      : 'border-gray-200 bg-white hover:bg-gray-50'
+                  }`}
+                  title="Projects new or not worked on for 6+ months"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-700">🆕 New/Reactivated</span>
+                      <span className="text-gray-400 text-xs cursor-help" title="Projects new or not worked on for 6+ months">ℹ️</span>
                     </div>
-                  )}
-                </div>
-              </div>
-
-              {/* MEMBER KPIs Section */}
-              <div className="mb-4">
-                <h3 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                  <span>👥 MEMBER KPIs</span>
-                </h3>
-                
-                <div className="space-y-2">
-                  <button
-                    onClick={() => navigate(`/capacity-planning?view=team&kpi=over-capacity&sprint=${index}`)}
-                    className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
-                      kpi.membersOverCapacity > 0 
-                        ? 'border-red-300 bg-red-50 hover:bg-red-100' 
-                        : 'border-gray-200 bg-white hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="text-xs font-semibold text-gray-700">❗ Over Capacity</div>
-                        <div className="text-xs text-gray-600 mt-1">Members allocated &gt;{overCapacityThreshold}%</div>
-                      </div>
-                      <div className={`text-2xl font-bold ${kpi.membersOverCapacity > 0 ? 'text-red-600' : 'text-gray-400'}`}>
-                        {kpi.membersOverCapacity}
-                      </div>
+                    <div className={`text-2xl font-bold ${kpi.newOrStaleProjects > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
+                      {kpi.newOrStaleProjects}
                     </div>
-                  </button>
+                  </div>
+                </button>
 
-                  <button
-                    onClick={() => navigate(`/capacity-planning?view=team&kpi=under-capacity&sprint=${index}`)}
-                    className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
-                      kpi.membersUnderCapacity > 0 
-                        ? 'border-yellow-300 bg-yellow-50 hover:bg-yellow-100' 
-                        : 'border-gray-200 bg-white hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="text-xs font-semibold text-gray-700">⚠️ Under Capacity</div>
-                        <div className="text-xs text-gray-600 mt-1">Members allocated &lt;{underCapacityThreshold}%</div>
-                      </div>
-                      <div className={`text-2xl font-bold ${kpi.membersUnderCapacity > 0 ? 'text-yellow-600' : 'text-gray-400'}`}>
-                        {kpi.membersUnderCapacity}
-                      </div>
+                {/* Over Capacity */}
+                <button
+                  onClick={() => navigate(`/capacity-planning?view=team&kpi=over-capacity&sprint=${index}`)}
+                  className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
+                    kpi.membersOverCapacity > 0 
+                      ? 'border-red-300 bg-red-50 hover:bg-red-100' 
+                      : 'border-gray-200 bg-white hover:bg-gray-50'
+                  }`}
+                  title={`Members allocated >${overCapacityThreshold}%`}
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-700">🔴 Over Capacity</span>
+                      <span className="text-gray-400 text-xs cursor-help" title={`Members allocated >${overCapacityThreshold}%`}>ℹ️</span>
                     </div>
-                  </button>
-
-                  {/* Expandable Member KPIs */}
-                  <button
-                    onClick={() => toggleExpanded(sprintKey, 'members')}
-                    className="w-full py-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors flex items-center justify-center gap-1"
-                  >
-                    <span>{membersExpanded ? '▼' : '▶'}</span>
-                    <span>{membersExpanded ? 'Hide' : 'Show'} More Member KPIs</span>
-                  </button>
-
-                  {membersExpanded && (
-                    <div className="space-y-2 pt-2 border-t">
-                      <button
-                        onClick={() => navigate(`/capacity-planning?view=team&kpi=single-project&sprint=${index}`)}
-                        className="w-full p-2 rounded border border-gray-200 bg-white text-left hover:shadow"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="text-xs font-semibold">🎯 Single Project</div>
-                            <div className="text-[10px] text-gray-600">Members focused on 1 project</div>
-                          </div>
-                          <span className="text-lg font-bold text-blue-600">{kpi.membersSingleProject}</span>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => navigate(`/capacity-planning?view=team&kpi=multi-project&sprint=${index}`)}
-                        className="w-full p-2 rounded border border-gray-200 bg-white text-left hover:shadow"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="text-xs font-semibold">🔀 Multi-Project</div>
-                            <div className="text-[10px] text-gray-600">Members working on 3+ projects</div>
-                          </div>
-                          <span className="text-lg font-bold text-indigo-600">{kpi.membersMultipleProjects}</span>
-                        </div>
-                      </button>
+                    <div className={`text-2xl font-bold ${kpi.membersOverCapacity > 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                      {kpi.membersOverCapacity}
                     </div>
-                  )}
-                </div>
+                  </div>
+                </button>
+
+                {/* Under Capacity */}
+                <button
+                  onClick={() => navigate(`/capacity-planning?view=team&kpi=under-capacity&sprint=${index}`)}
+                  className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
+                    kpi.membersUnderCapacity > 0 
+                      ? 'border-yellow-300 bg-yellow-50 hover:bg-yellow-100' 
+                      : 'border-gray-200 bg-white hover:bg-gray-50'
+                  }`}
+                  title={`Members allocated <${underCapacityThreshold}%`}
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-700">⚠️ Under Capacity</span>
+                      <span className="text-gray-400 text-xs cursor-help" title={`Members allocated <${underCapacityThreshold}%`}>ℹ️</span>
+                    </div>
+                    <div className={`text-2xl font-bold ${kpi.membersUnderCapacity > 0 ? 'text-yellow-600' : 'text-gray-400'}`}>
+                      {kpi.membersUnderCapacity}
+                    </div>
+                  </div>
+                </button>
+
+                {/* Multi-Project */}
+                <button
+                  onClick={() => navigate(`/capacity-planning?view=team&kpi=multi-project&sprint=${index}`)}
+                  className="w-full p-3 rounded-lg border border-gray-200 bg-white text-left hover:shadow-md transition-all"
+                  title="Members working on 3+ projects"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-700">🔀 Multi-Project</span>
+                      <span className="text-gray-400 text-xs cursor-help" title="Members working on 3+ projects">ℹ️</span>
+                    </div>
+                    <div className="text-2xl font-bold text-indigo-600">{kpi.membersMultipleProjects}</div>
+                  </div>
+                </button>
               </div>
 
               {/* Sprint Summary */}
@@ -730,23 +657,23 @@ export default function Dashboard() {
             className="p-4 rounded-lg border-2 border-green-400 bg-green-50 hover:bg-green-100 text-left transition-all hover:shadow-md"
           >
             <div className="text-lg font-semibold text-green-900 mb-2">📁 Projects</div>
-            <div className="text-sm text-gray-600">Manage all projects</div>
+            <div className="text-sm text-gray-600">View all projects</div>
           </button>
 
           <button
-            onClick={() => navigate('/team')}
+            onClick={() => navigate('/teams')}
             className="p-4 rounded-lg border-2 border-purple-400 bg-purple-50 hover:bg-purple-100 text-left transition-all hover:shadow-md"
           >
             <div className="text-lg font-semibold text-purple-900 mb-2">👥 Team</div>
-            <div className="text-sm text-gray-600">Manage team members</div>
+            <div className="text-sm text-gray-600">View members' teams</div>
           </button>
 
           <button
             onClick={() => navigate('/roles')}
             className="p-4 rounded-lg border-2 border-orange-400 bg-orange-50 hover:bg-orange-100 text-left transition-all hover:shadow-md"
           >
-            <div className="text-lg font-semibold text-orange-900 mb-2">👔 Roles</div>
-            <div className="text-sm text-gray-600">Manage resource roles</div>
+            <div className="text-lg font-semibold text-orange-900 mb-2">👔 Resource Type</div>
+            <div className="text-sm text-gray-600">View resource types</div>
           </button>
         </div>
       </Card>
@@ -936,14 +863,25 @@ export default function Dashboard() {
                           return (
                             <button
                               key={`${sprint.year}-${sprint.month}-${sprint.sprint}`}
-                              onClick={() => {
+                              onClick={async () => {
                                 const sprintKey = `${sprint.year}-${sprint.month}-${sprint.sprint}`;
                                 const currentProjects = sprintProjects[sprintKey] || [];
                                 if (!currentProjects.includes(project.id)) {
-                                  // This would need to call an API to update sprintProjects
-                                  // For now, we'll navigate to capacity planning
-                                  navigate(`/capacity-planning?sprint=${index}`);
-                                  setShowUnallocatedProjectsPanel(false);
+                                  // Add project to sprint
+                                  const updatedSprintProjects = {
+                                    ...sprintProjects,
+                                    [sprintKey]: [...currentProjects, project.id]
+                                  };
+                                  
+                                  try {
+                                    await saveSprintProjects(updatedSprintProjects);
+                                    // Refresh data to show the update
+                                    await refreshData();
+                                    setShowUnallocatedProjectsPanel(false);
+                                  } catch (error) {
+                                    console.error('Failed to allocate project to sprint:', error);
+                                    alert('Failed to allocate project. Please try again.');
+                                  }
                                 }
                               }}
                               className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${

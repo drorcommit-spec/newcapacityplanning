@@ -474,14 +474,18 @@ export default function CapacityPlanning() {
 
     // Apply missing allocations filter by role
     if (missingAllocationRoles.length > 0) {
-      result = result.filter(({ project, members }) => {
+      result = result.filter(({ project, members, total }) => {
         const requirementKey = `${project.id}-${sprint.year}-${sprint.month}-${sprint.sprint}`;
         const requirements = sprintRoleRequirements[requirementKey];
         
         // If "Any Resource" is selected, show projects with any missing allocations
         if (missingAllocationRoles.includes('ANY')) {
+          // Check if total allocation = 0% (project in sprint but no members)
+          if (total === 0) return true;
+          
+          // Check role requirements if they exist
           if (!requirements || Object.keys(requirements).length === 0) {
-            return members.length === 0; // No requirements, show if no members
+            return false; // No requirements and has allocations, not missing
           }
           return hasMissingRoleAllocations(project, members, sprint);
         }
@@ -698,8 +702,6 @@ export default function CapacityPlanning() {
 
   const handleSelectProject = (project: Project) => {
     setSelectedProject(project);
-    setShowAddProjectModal(false);
-    setShowAddMemberModal(true);
     
     // Track this project as being in the sprint
     if (selectedSprint) {
@@ -710,6 +712,16 @@ export default function CapacityPlanning() {
       }
       updatedSprintProjects.get(sprintKey)!.add(project.id);
       setSprintProjects(updatedSprintProjects);
+    }
+    
+    // If adding project for a specific member, open Add Member modal
+    // Otherwise, just close and show the project in the sprint
+    if (selectedMember) {
+      setShowAddProjectModal(false);
+      setShowAddMemberModal(true);
+    } else {
+      setShowAddProjectModal(false);
+      setSelectedProject(null);
     }
   };
 
@@ -2711,6 +2723,15 @@ export default function CapacityPlanning() {
               </div>
             )}
           </div>
+          
+          {/* Info message when adding project without member */}
+          {!selectedMember && (
+            <div className="border-t pt-3 mt-3">
+              <p className="text-xs text-gray-500 text-center">
+                Click a project above to add it to the sprint without assigning members
+              </p>
+            </div>
+          )}
         </div>
       </Modal>
 

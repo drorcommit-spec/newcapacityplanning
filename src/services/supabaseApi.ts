@@ -11,13 +11,15 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
   console.log('📥 Fetching data from Supabase...');
 
   // Fetch all data in parallel
-  const [teamMembersRes, projectsRes, allocationsRes, historyRes, resourceTypesRes, teamsRes] = await Promise.all([
+  const [teamMembersRes, projectsRes, allocationsRes, historyRes, resourceTypesRes, teamsRes, sprintProjectsData, sprintRoleReqsData] = await Promise.all([
     supabase.from('team_members').select('*').order('created_at', { ascending: false }),
     supabase.from('projects').select('*').order('created_at', { ascending: false }),
     supabase.from('allocations').select('*').order('created_at', { ascending: false }),
     supabase.from('allocation_history').select('*').order('changed_at', { ascending: false }),
     supabase.from('resource_types').select('*').order('created_at', { ascending: false }),
     supabase.from('teams').select('*').order('created_at', { ascending: false }),
+    fetchSprintProjectsFromSupabase(),
+    fetchSprintRoleRequirementsFromSupabase(),
   ]);
 
   // Check for errors (teams table is optional for backward compatibility)
@@ -59,6 +61,8 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
     history: (historyRes.data || []).map(transformHistory),
     resourceRoles: resourceRoles,
     teams: teamsRes.error ? [] : (teamsRes.data || []).map(transformTeam),
+    sprintProjects: sprintProjectsData,
+    sprintRoleRequirements: sprintRoleReqsData,
   };
 
   console.log('✅ Data loaded from Supabase:', {
@@ -68,6 +72,8 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
     history: data.history.length,
     resourceTypes: data.resourceRoles?.length || 0,
     teams: data.teams?.length || 0,
+    sprintProjects: Object.keys(data.sprintProjects || {}).length,
+    sprintRoleRequirements: Object.keys(data.sprintRoleRequirements || {}).length,
   });
 
   return data;
@@ -381,4 +387,75 @@ function transformTeamToSupabase(data: any): any {
     is_archived: data.isArchived,
     created_at: data.createdAt,
   };
+}
+
+// Sprint Projects - stored as JSONB in Supabase
+export async function saveSprintProjectsToSupabase(sprintProjects: Record<string, string[]>): Promise<void> {
+  if (!isSupabaseEnabled() || !supabase) return;
+
+  console.log('💾 Saving sprint projects to Supabase...');
+
+  // Store as a single JSONB document
+  const { error } = await supabase
+    .from('sprint_projects')
+    .upsert({ id: 'default', data: sprintProjects }, { onConflict: 'id' });
+
+  if (error) throw error;
+  console.log('✅ Sprint projects saved');
+}
+
+export async function fetchSprintProjectsFromSupabase(): Promise<Record<string, string[]>> {
+  if (!isSupabaseEnabled() || !supabase) return {};
+
+  const { data, error } = await supabase
+    .from('sprint_projects')
+    .select('data')
+    .eq('id', 'default')
+    .single();
+
+  if (error) {
+    // Table might not exist yet
+    if (error.code === 'PGRST116') {
+      console.warn('⚠️ Sprint projects table not found - returning empty object');
+      return {};
+    }
+    throw error;
+  }
+
+  return data?.data || {};
+}
+
+// Sprint Role Requirements - stored as JSONB in Supabase
+export async function saveSprintRoleRequirementsToSupabase(sprintRoleRequirements: Record<string, Record<string, number>>): Promise<void> {
+  if (!isSupabaseEnabled() || !supabase) return;
+
+  console.log('💾 Saving sprint role requirements to Supabase...');
+
+  const { error } = await supabase
+    .from('sprint_role_requirements')
+    .upsert({ id: 'default', data: sprintRoleRequirements }, { onConflict: 'id' });
+
+  if (error) throw error;
+  console.log('✅ Sprint role requirements saved');
+}
+
+export async function fetchSprintRoleRequirementsFromSupabase(): Promise<Record<string, Record<string, number>>> {
+  if (!isSupabaseEnabled() || !supabase) return {};
+
+  const { data, error } = await supabase
+    .from('sprint_role_requirements')
+    .select('data')
+    .eq('id', 'default')
+    .single();
+
+  if (error) {
+    // Table might not exist yet
+    if (error.code === 'PGRST116') {
+      console.warn('⚠️ Sprint role requirements table not found - returning empty object');
+      return {};
+    }
+    throw error;
+  }
+
+  return data?.data || {};
 }
