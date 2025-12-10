@@ -41,6 +41,10 @@ export default function CapacityPlanning() {
   const [pmoContactFilter, setPmoContactFilter] = useState<string>('all');
   const [managerFilter, setManagerFilter] = useState<string>('all');
 
+  // Project collapse/expand state
+  const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(new Set());
+  const [allProjectsCollapsed, setAllProjectsCollapsed] = useState(true);
+
   // Capacity thresholds - editable
   const [underCapacityThreshold, setUnderCapacityThreshold] = useState(() => {
     const saved = localStorage.getItem('underCapacityThreshold');
@@ -1522,6 +1526,120 @@ export default function CapacityPlanning() {
     return 'bg-green-50'; // Fully allocated
   };
 
+  // Toggle individual project collapse/expand
+  const toggleProjectCollapse = (projectId: string) => {
+    const newCollapsed = new Set(collapsedProjects);
+    if (newCollapsed.has(projectId)) {
+      newCollapsed.delete(projectId);
+    } else {
+      newCollapsed.add(projectId);
+    }
+    setCollapsedProjects(newCollapsed);
+    
+    // Update the all collapsed state
+    const totalProjects = projects.filter(p => !p.isArchived).length;
+    setAllProjectsCollapsed(newCollapsed.size === totalProjects);
+  };
+
+  // Initialize collapsed state when switching to projects view
+  useEffect(() => {
+    if (viewMode === 'projects' && allProjectsCollapsed) {
+      const allProjectIds = new Set(projects.filter(p => !p.isArchived).map(p => p.id));
+      setCollapsedProjects(allProjectIds);
+    }
+  }, [viewMode, projects, allProjectsCollapsed]);
+
+  // Export capacity matrix to CSV
+  const exportCapacityMatrix = () => {
+    const activeProjects = projects.filter(p => !p.isArchived);
+    const activeMembers = teamMembers.filter(m => m.isActive);
+    
+    // Get all sprints (current + future)
+    const exportSprints = sprints.slice(0, sprintCount);
+    
+    // Build header row
+    const headers = ['Project'];
+    exportSprints.forEach(sprint => {
+      const sprintLabel = `${sprint.year}-${sprint.month.toString().padStart(2, '0')}-S${sprint.sprint}`;
+      activeMembers.forEach(member => {
+        headers.push(`${sprintLabel} - ${member.fullName}`);
+      });
+      headers.push(`${sprintLabel} - Sum`);
+    });
+    
+    // Build data rows
+    const rows: string[][] = [headers];
+    
+    activeProjects.forEach(project => {
+      const row = [`${project.customerName} - ${project.projectName}`];
+      
+      let projectTotalAcrossSprints = 0;
+      
+      exportSprints.forEach(sprint => {
+        const sprintAllocs = allocations.filter(
+          a => a.year === sprint.year && 
+               a.month === sprint.month && 
+               a.sprint === sprint.sprint &&
+               a.projectId === project.id
+        );
+        
+        let sprintTotal = 0;
+        
+        activeMembers.forEach(member => {
+          const memberAlloc = sprintAllocs.find(a => a.productManagerId === member.id);
+          const percentage = memberAlloc?.allocationPercentage || 0;
+          row.push(`${percentage}%`);
+          sprintTotal += percentage;
+        });
+        
+        row.push(`${sprintTotal}%`);
+        projectTotalAcrossSprints += sprintTotal;
+      });
+      
+      rows.push(row);
+    });
+    
+    // Add member totals row
+    const totalsRow = ['MEMBER TOTALS'];
+    exportSprints.forEach(sprint => {
+      const sprintAllocs = allocations.filter(
+        a => a.year === sprint.year && 
+             a.month === sprint.month && 
+             a.sprint === sprint.sprint
+      );
+      
+      let sprintGrandTotal = 0;
+      
+      activeMembers.forEach(member => {
+        const memberTotal = sprintAllocs
+          .filter(a => a.productManagerId === member.id)
+          .reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
+        totalsRow.push(`${memberTotal}%`);
+        sprintGrandTotal += memberTotal;
+      });
+      
+      totalsRow.push(`${sprintGrandTotal}%`);
+    });
+    
+    rows.push(totalsRow);
+    
+    // Convert to CSV
+    const csvContent = rows.map(row => 
+      row.map(cell => `"${cell}"`).join(',')
+    ).join('\n');
+    
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `capacity-matrix-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Header */}
@@ -1529,6 +1647,47 @@ export default function CapacityPlanning() {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             <h1 className="text-lg font-bold text-gray-900">Capacity Planning</h1>
+            
+            {/* Export Button */}
+            <button
+              onClick={exportCapacityMatrix}
+              className="px-3 py-1 text-sm bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors flex items-center gap-2"
+              title="Export capacity matrix to Excel"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Export Matrix
+            </button>
+
+            {/* Collapse/Expand All Button - Only show in Projects view */}
+            {viewMode === 'projects' && (
+              <button
+                onClick={() => {
+                  if (allProjectsCollapsed) {
+                    // Expand all
+                    setCollapsedProjects(new Set());
+                    setAllProjectsCollapsed(false);
+                  } else {
+                    // Collapse all
+                    const allProjectIds = new Set(projects.filter(p => !p.isArchived).map(p => p.id));
+                    setCollapsedProjects(allProjectIds);
+                    setAllProjectsCollapsed(true);
+                  }
+                }}
+                className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors flex items-center gap-2"
+                title={allProjectsCollapsed ? "Expand all projects" : "Collapse all projects"}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {allProjectsCollapsed ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  )}
+                </svg>
+                {allProjectsCollapsed ? 'Expand All' : 'Collapse All'}
+              </button>
+            )}
             
             {/* Capacity Thresholds Legend - Editable */}
             <div className="flex items-center gap-3 text-xs border-l pl-4">
@@ -2048,14 +2207,14 @@ export default function CapacityPlanning() {
                         <div 
                           key={project.id} 
                           ref={(el) => { projectRefs.current[project.id] = el; }}
-                          className={`border rounded-lg p-3 hover:shadow-md transition-all ${bgColor} ${
+                          className={`border rounded-lg hover:shadow-md transition-all ${bgColor} ${
                             highlightedProjectId === project.id 
                               ? 'border-blue-500 border-4 shadow-lg animate-pulse' 
                               : 'border-gray-200'
-                          }`}
+                          } ${collapsedProjects.has(project.id) ? 'p-2' : 'p-3'}`}
                         >
-                          {/* Project Header */}
-                          <div className="flex justify-between items-start mb-2">
+                          {/* Project Header - Always Visible */}
+                          <div className="flex justify-between items-center">
                             <div className="flex-1">
                               <button
                                 onClick={() => openEditProjectModal(project)}
@@ -2073,30 +2232,50 @@ export default function CapacityPlanning() {
                                 Total: {total}%
                               </div>
                             </div>
-                            {canWrite && (
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() => openProjectCommentModal(project, sprint)}
-                                  className="p-1 rounded hover:bg-blue-100 text-blue-600"
-                                  title="Add/view project comment"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                                  </svg>
-                                  {projectSprintComments[`${project.id}-${sprint.year}-${sprint.month}-${sprint.sprint}`] && (
-                                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"></span>
-                                  )}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setSelectedProject(project);
-                                    setSelectedSprint(sprint);
-                                    const requirementKey = `${project.id}-${sprint.year}-${sprint.month}-${sprint.sprint}`;
-                                    setRoleRequirements(sprintRoleRequirements[requirementKey] || {});
-                                    setShowRoleRequirementsModal(true);
-                                  }}
-                                  className="p-1 rounded hover:bg-purple-100 text-purple-600 relative group"
-                                  title={(() => {
+                            
+                            {/* Collapse/Expand Toggle */}
+                            <button
+                              onClick={() => toggleProjectCollapse(project.id)}
+                              className="p-1 rounded hover:bg-gray-100 text-gray-500 ml-2"
+                              title={collapsedProjects.has(project.id) ? "Expand project" : "Collapse project"}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {collapsedProjects.has(project.id) ? (
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                ) : (
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                                )}
+                              </svg>
+                            </button>
+                          </div>
+
+                          {/* Expandable Content */}
+                          {!collapsedProjects.has(project.id) && (
+                            <div className="mt-2">
+                                {canWrite && (
+                                  <div className="flex gap-1">
+                                    <button
+                                      onClick={() => openProjectCommentModal(project, sprint)}
+                                      className="p-1 rounded hover:bg-blue-100 text-blue-600"
+                                      title="Add/view project comment"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                      </svg>
+                                      {projectSprintComments[`${project.id}-${sprint.year}-${sprint.month}-${sprint.sprint}`] && (
+                                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"></span>
+                                      )}
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setSelectedProject(project);
+                                        setSelectedSprint(sprint);
+                                        const requirementKey = `${project.id}-${sprint.year}-${sprint.month}-${sprint.sprint}`;
+                                        setRoleRequirements(sprintRoleRequirements[requirementKey] || {});
+                                        setShowRoleRequirementsModal(true);
+                                      }}
+                                      className="p-1 rounded hover:bg-purple-100 text-purple-600 relative group"
+                                      title={(() => {
                                     const requirementKey = `${project.id}-${sprint.year}-${sprint.month}-${sprint.sprint}`;
                                     const requirements = sprintRoleRequirements[requirementKey];
                                     if (!requirements || Object.keys(requirements).length === 0) {
@@ -2139,12 +2318,11 @@ export default function CapacityPlanning() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                   </svg>
                                 </button>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Members List */}
-                          <div className="space-y-1 mt-2 border-t pt-2">
+                                  </div>
+                                )}
+                              
+                              {/* Members List */}
+                              <div className="space-y-1 mt-2 border-t pt-2">
                             {members.sort((a, b) => b.percentage - a.percentage).map((member) => {
                               const alloc = allocations.find(a => a.id === member.allocationId);
                               const isEditing = editingAllocationId === member.allocationId;
@@ -2281,8 +2459,10 @@ export default function CapacityPlanning() {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                 </svg>
                               </button>
-                            ))}
-                          </div>
+                              ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                       })

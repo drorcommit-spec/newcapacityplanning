@@ -3,10 +3,10 @@
 
 export const VERSION_INFO = {
   "version": "1.2.2",
-  "gitHash": "6385eab",
+  "gitHash": "68cfe90",
   "gitBranch": "main",
-  "buildTime": "2025-12-09T20:01:09.828Z",
-  "fullVersion": "1.2.2 (6385eab)"
+  "buildTime": "2025-12-10T21:46:10.621Z",
+  "fullVersion": "1.2.2 (68cfe90)"
 } as const;
 
 export const APP_VERSION = VERSION_INFO.fullVersion;
