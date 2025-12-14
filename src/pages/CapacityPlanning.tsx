@@ -45,6 +45,10 @@ export default function CapacityPlanning() {
   const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(new Set());
   const [allProjectsCollapsed, setAllProjectsCollapsed] = useState(true);
 
+  // Member collapse/expand state
+  const [collapsedMembers, setCollapsedMembers] = useState<Set<string>>(new Set());
+  const [allMembersCollapsed, setAllMembersCollapsed] = useState(true);
+
   // Capacity thresholds - editable
   const [underCapacityThreshold, setUnderCapacityThreshold] = useState(() => {
     const saved = localStorage.getItem('underCapacityThreshold');
@@ -403,7 +407,7 @@ export default function CapacityPlanning() {
       const project = projects.find(p => p.id === alloc.projectId);
       const member = teamMembers.find(m => m.id === alloc.productManagerId);
       
-      if (project && member && (project.status === 'Active' || project.status === 'Pending')) {
+      if (project && member && (project.status === 'Active' || project.status === 'Pending' || project.status === 'New Signed Off')) {
         if (!projectMap.has(project.id)) {
           projectMap.set(project.id, { project, members: [], total: 0 });
         }
@@ -424,7 +428,7 @@ export default function CapacityPlanning() {
       trackedProjectIds.forEach(projectId => {
         if (!projectMap.has(projectId)) {
           const project = projects.find(p => p.id === projectId);
-          if (project && (project.status === 'Active' || project.status === 'Pending')) {
+          if (project && (project.status === 'Active' || project.status === 'Pending' || project.status === 'New Signed Off')) {
             projectMap.set(project.id, { project, members: [], total: 0 });
           }
         }
@@ -742,7 +746,7 @@ export default function CapacityPlanning() {
     }
     
     return projects
-      .filter(p => (p.status === 'Active' || p.status === 'Pending') && !p.isArchived && !projectIdsInSprint.has(p.id))
+      .filter(p => (p.status === 'Active' || p.status === 'Pending' || p.status === 'New Signed Off') && !p.isArchived && !projectIdsInSprint.has(p.id))
       .sort((a, b) => {
         const customerCompare = a.customerName.localeCompare(b.customerName);
         if (customerCompare !== 0) return customerCompare;
@@ -761,7 +765,7 @@ export default function CapacityPlanning() {
     );
     
     return projects
-      .filter(p => (p.status === 'Active' || p.status === 'Pending') && !p.isArchived && !memberProjectIds.has(p.id))
+      .filter(p => (p.status === 'Active' || p.status === 'Pending' || p.status === 'New Signed Off') && !p.isArchived && !memberProjectIds.has(p.id))
       .sort((a, b) => {
         const customerCompare = a.customerName.localeCompare(b.customerName);
         if (customerCompare !== 0) return customerCompare;
@@ -917,6 +921,18 @@ export default function CapacityPlanning() {
       }));
     }
 
+    // Copy project-sprint comments
+    const currentCommentKey = `${project.id}-${currentSprint.year}-${currentSprint.month}-${currentSprint.sprint}`;
+    const currentComment = projectSprintComments[currentCommentKey];
+    
+    if (currentComment && currentComment.trim() !== '') {
+      const nextCommentKey = `${project.id}-${nextSprint.year}-${nextSprint.month}-${nextSprint.sprint}`;
+      setProjectSprintComments(prev => ({
+        ...prev,
+        [nextCommentKey]: currentComment
+      }));
+    }
+
     // Track project in next sprint
     const nextSprintKey = `${nextSprint.year}-${nextSprint.month}-${nextSprint.sprint}`;
     setSprintProjects(prev => {
@@ -928,7 +944,7 @@ export default function CapacityPlanning() {
       return updated;
     });
 
-    alert('Project copied to next sprint (including allocations and capacity planning)!');
+    alert('Project copied to next sprint (including allocations, capacity planning, and comments)!');
   };
 
   const handleCopyMemberToNextSprint = async (member: TeamMember, currentSprint: SprintInfo) => {
@@ -1541,6 +1557,21 @@ export default function CapacityPlanning() {
     setAllProjectsCollapsed(newCollapsed.size === totalProjects);
   };
 
+  // Toggle individual member collapse/expand
+  const toggleMemberCollapse = (memberId: string) => {
+    const newCollapsed = new Set(collapsedMembers);
+    if (newCollapsed.has(memberId)) {
+      newCollapsed.delete(memberId);
+    } else {
+      newCollapsed.add(memberId);
+    }
+    setCollapsedMembers(newCollapsed);
+    
+    // Update the all collapsed state
+    const totalMembers = teamMembers.filter(m => m.isActive).length;
+    setAllMembersCollapsed(newCollapsed.size === totalMembers);
+  };
+
   // Initialize collapsed state when switching to projects view
   useEffect(() => {
     if (viewMode === 'projects' && allProjectsCollapsed) {
@@ -1548,6 +1579,14 @@ export default function CapacityPlanning() {
       setCollapsedProjects(allProjectIds);
     }
   }, [viewMode, projects, allProjectsCollapsed]);
+
+  // Initialize collapsed state when switching to team view
+  useEffect(() => {
+    if (viewMode === 'team' && allMembersCollapsed) {
+      const allMemberIds = new Set(teamMembers.filter(m => m.isActive).map(m => m.id));
+      setCollapsedMembers(allMemberIds);
+    }
+  }, [viewMode, teamMembers, allMembersCollapsed]);
 
   // Export capacity matrix to CSV
   const exportCapacityMatrix = () => {
@@ -1660,7 +1699,7 @@ export default function CapacityPlanning() {
               Export Matrix
             </button>
 
-            {/* Collapse/Expand All Button - Only show in Projects view */}
+            {/* Collapse/Expand All Button - Show in both Projects and Team view */}
             {viewMode === 'projects' && (
               <button
                 onClick={() => {
@@ -1686,6 +1725,34 @@ export default function CapacityPlanning() {
                   )}
                 </svg>
                 {allProjectsCollapsed ? 'Expand All' : 'Collapse All'}
+              </button>
+            )}
+
+            {viewMode === 'team' && (
+              <button
+                onClick={() => {
+                  if (allMembersCollapsed) {
+                    // Expand all
+                    setCollapsedMembers(new Set());
+                    setAllMembersCollapsed(false);
+                  } else {
+                    // Collapse all
+                    const allMemberIds = new Set(teamMembers.filter(m => m.isActive).map(m => m.id));
+                    setCollapsedMembers(allMemberIds);
+                    setAllMembersCollapsed(true);
+                  }
+                }}
+                className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors flex items-center gap-2"
+                title={allMembersCollapsed ? "Expand all members" : "Collapse all members"}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {allMembersCollapsed ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  )}
+                </svg>
+                {allMembersCollapsed ? 'Expand All' : 'Collapse All'}
               </button>
             )}
             
@@ -2479,8 +2546,9 @@ export default function CapacityPlanning() {
                       </div>
                     ) : (
                       membersData.map(({ member, projects: memberProjects, total }) => (
-                        <div key={member.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50 hover:shadow-md transition-shadow">
-                          <div className="flex justify-between items-start mb-2">
+                        <div key={member.id} className={`border border-gray-200 rounded-lg bg-gray-50 hover:shadow-md transition-shadow ${collapsedMembers.has(member.id) ? 'p-2' : 'p-3'}`}>
+                          {/* Member Header - Always Visible */}
+                          <div className="flex justify-between items-center">
                             <div className="flex-1">
                               <div className="font-bold text-sm text-gray-900">{member.fullName}</div>
                               {member.role && (
@@ -2491,43 +2559,64 @@ export default function CapacityPlanning() {
                                 <span className="font-semibold">Total: {total}% / {member.capacity ?? 100}%</span>
                               </div>
                             </div>
-                            {canWrite && (
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() => {
-                                    setSelectedMember(member);
-                                    setSelectedSprint(sprint);
-                                    setShowAddProjectModal(true);
-                                  }}
-                                  className="p-1 rounded hover:bg-green-100 text-green-600"
-                                  title="Add project to member"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                  </svg>
-                                </button>
-                                <button
-                                  onClick={() => handleCopyMemberToNextSprint(member, sprint)}
-                                  className="p-1 rounded hover:bg-blue-100 text-blue-600"
-                                  title="Copy member allocations to next sprint"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                  </svg>
-                                </button>
-                                <button
-                                  onClick={() => handleOpenRemoveMemberModal(member, sprint)}
-                                  className="p-1 rounded hover:bg-red-100 text-red-600"
-                                  title="Remove member from sprint"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                </button>
-                              </div>
-                            )}
+                            
+                            {/* Collapse/Expand Toggle */}
+                            <button
+                              onClick={() => toggleMemberCollapse(member.id)}
+                              className="p-1 rounded hover:bg-gray-100 text-gray-500 ml-2"
+                              title={collapsedMembers.has(member.id) ? "Expand member" : "Collapse member"}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {collapsedMembers.has(member.id) ? (
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                ) : (
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                                )}
+                              </svg>
+                            </button>
                           </div>
-                          <div className="space-y-1 mt-2 border-t pt-2">
+
+                          {/* Expandable Content */}
+                          {!collapsedMembers.has(member.id) && (
+                            <div className="mt-2">
+                                {canWrite && (
+                                  <div className="flex gap-1">
+                                    <button
+                                      onClick={() => {
+                                        setSelectedMember(member);
+                                        setSelectedSprint(sprint);
+                                        setShowAddProjectModal(true);
+                                      }}
+                                      className="p-1 rounded hover:bg-green-100 text-green-600"
+                                      title="Add project to member"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      onClick={() => handleCopyMemberToNextSprint(member, sprint)}
+                                      className="p-1 rounded hover:bg-blue-100 text-blue-600"
+                                      title="Copy member allocations to next sprint"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      onClick={() => handleOpenRemoveMemberModal(member, sprint)}
+                                      className="p-1 rounded hover:bg-red-100 text-red-600"
+                                      title="Remove member from sprint"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                )}
+                              
+                              {/* Projects List */}
+                              <div className="space-y-1 mt-2 border-t pt-2">
                             {memberProjects.sort((a, b) => b.percentage - a.percentage).map((proj) => {
                               const projectObj = projects.find(p => p.id === proj.id);
                               const alloc = allocations.find(a => a.id === proj.allocationId);
@@ -2628,8 +2717,10 @@ export default function CapacityPlanning() {
                                   )}
                                 </div>
                               );
-                            })}
-                          </div>
+                              })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))
                     )}

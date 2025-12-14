@@ -259,6 +259,7 @@ export default function ProjectManagement() {
 
   const statusOptions = [
     { value: 'Pending', label: 'Pending' },
+    { value: 'New Signed Off', label: 'New Signed Off' },
     { value: 'Active', label: 'Active' },
     { value: 'Inactive', label: 'Inactive' },
     { value: 'Completed', label: 'Completed' },
@@ -324,10 +325,10 @@ export default function ProjectManagement() {
               {filteredProjects.map(project => (
                 <tr key={project.id} className="border-b hover:bg-gray-50">
                   <td className="py-3 px-4 text-center">
-                    {project.status === 'Active' && isProjectUnallocated(project.id) && (
+                    {(project.status === 'Active' || project.status === 'New Signed Off') && isProjectUnallocated(project.id) && (
                       <span 
                         className="text-red-600 text-xl cursor-help" 
-                        title="⚠️ Active project not assigned to any current or future sprint. This project needs capacity planning attention."
+                        title={`⚠️ ${project.status} project not assigned to any current or future sprint. This project needs capacity planning attention.`}
                       >
                         ❗
                       </span>
@@ -346,6 +347,7 @@ export default function ProjectManagement() {
                     <span className={`px-2 py-1 rounded text-xs ${
                       project.status === 'Active' ? 'bg-green-100 text-green-800' :
                       project.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                      project.status === 'New Signed Off' ? 'bg-purple-100 text-purple-800' :
                       project.status === 'Completed' ? 'bg-blue-100 text-blue-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>

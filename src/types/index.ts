@@ -2,7 +2,7 @@ export type UserRole = 'VP Product' | 'Product Director' | 'Product Manager' | '
 
 export type ProjectType = 'AI' | 'Software' | 'Hybrid';
 
-export type ProjectStatus = 'Pending' | 'Active' | 'Inactive' | 'Completed' | 'Blocked' | 'On Hold';
+export type ProjectStatus = 'Pending' | 'New Signed Off' | 'Active' | 'Inactive' | 'Completed' | 'Blocked' | 'On Hold';
 
 export type ProjectRegion = 'UK' | 'US' | 'Canada' | 'Israel';
 
