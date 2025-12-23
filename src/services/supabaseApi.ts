@@ -459,3 +459,82 @@ export async function fetchSprintRoleRequirementsFromSupabase(): Promise<Record<
 
   return data?.data || {};
 }
+// Sprint Tasks - stored in Supabase
+export async function saveSprintTasksToSupabase(tasks: any[]): Promise<void> {
+  if (!isSupabaseEnabled() || !supabase) return;
+
+  // Transform camelCase to snake_case for database
+  const dbTasks = tasks.map(task => ({
+    id: task.id,
+    member_id: task.memberId,
+    project_id: task.projectId,
+    sprint_id: task.sprintId,
+    title: task.title,
+    description: task.description,
+    start_date: task.startDate,
+    end_date: task.endDate,
+    priority: task.priority,
+    status: task.status,
+    estimated_hours: task.estimatedHours,
+    created_by: task.createdBy,
+    created_at: task.createdAt,
+    updated_at: task.updatedAt,
+  }));
+
+  const { error } = await supabase
+    .from('sprint_tasks')
+    .upsert(dbTasks, { onConflict: 'id' });
+
+  if (error) throw error;
+}
+
+export async function fetchSprintTasksFromSupabase(sprint: { year: number; month: number; sprint: number }): Promise<any[]> {
+  if (!isSupabaseEnabled() || !supabase) return [];
+
+  const sprintId = `${sprint.year}-${sprint.month}-${sprint.sprint}`;
+  const { data, error } = await supabase
+    .from('sprint_tasks')
+    .select('*')
+    .eq('sprint_id', sprintId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    // Table might not exist yet
+    if (error.code === 'PGRST116') {
+      console.warn('⚠️ Sprint tasks table not found - returning empty array');
+      return [];
+    }
+    throw error;
+  }
+
+  // Transform snake_case to camelCase for JavaScript
+  const tasks = (data || []).map(task => ({
+    id: task.id,
+    memberId: task.member_id,
+    projectId: task.project_id,
+    sprintId: task.sprint_id,
+    title: task.title,
+    description: task.description,
+    startDate: task.start_date,
+    endDate: task.end_date,
+    priority: task.priority,
+    status: task.status,
+    estimatedHours: task.estimated_hours,
+    createdBy: task.created_by,
+    createdAt: task.created_at,
+    updatedAt: task.updated_at,
+  }));
+
+  return tasks;
+}
+
+export async function deleteSprintTaskFromSupabase(taskId: string): Promise<void> {
+  if (!isSupabaseEnabled() || !supabase) return;
+
+  const { error } = await supabase
+    .from('sprint_tasks')
+    .delete()
+    .eq('id', taskId);
+
+  if (error) throw error;
+}

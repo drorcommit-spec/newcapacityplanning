@@ -80,6 +80,23 @@ export interface AllocationHistory {
   newValue?: Partial<SprintAllocation>;
 }
 
+export interface SprintTask {
+  id: string;
+  memberId: string;
+  projectId: string;
+  sprintId: string; // format: "year-month-sprint"
+  title: string;
+  description?: string;
+  startDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  status: 'Planned' | 'In Progress' | 'Completed' | 'Blocked';
+  estimatedHours?: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CapacityAlert {
   id: string;
   productManagerId: string;

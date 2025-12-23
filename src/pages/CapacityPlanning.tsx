@@ -6,6 +6,7 @@ import { usePermissions } from '../hooks/usePermissions';
 import { Project, TeamMember, SprintAllocation } from '../types';
 import Modal from '../components/Modal';
 import ProjectForm from '../components/ProjectForm';
+import DailyTaskView from '../components/DailyTaskView';
 import { fetchAllData, saveSprintProjects, saveSprintRoleRequirements } from '../services/api';
 
 type ViewMode = 'projects' | 'team';
@@ -19,7 +20,7 @@ interface SprintInfo {
 
 export default function CapacityPlanning() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { teamMembers, projects, allocations, addAllocation, updateAllocation, deleteAllocation, addProject, updateProject } = useData();
+  const { teamMembers, projects, allocations, addAllocation, updateAllocation, deleteAllocation, addProject, updateProject, refreshData } = useData();
   const { user } = useAuth();
   const { canWrite } = usePermissions();
   const currentUser = user || { email: 'unknown', fullName: 'Unknown User' };
@@ -27,8 +28,13 @@ export default function CapacityPlanning() {
   // View state
   const [viewMode, setViewMode] = useState<ViewMode>('team');
   const [showFilters, setShowFilters] = useState(true);
-  const [sprintCount, setSprintCount] = useState(3);
+  const [sprintCount, setSprintCount] = useState(() => {
+    const saved = localStorage.getItem('sprintCount');
+    return saved ? parseInt(saved) : 3;
+  });
   const [expandedSprint, setExpandedSprint] = useState<string | null>(null);
+  const [showDailyView, setShowDailyView] = useState(false);
+  const [dailyViewSprint, setDailyViewSprint] = useState<SprintInfo | null>(null);
 
   // Filter state
   const [searchText, setSearchText] = useState('');
@@ -69,6 +75,10 @@ export default function CapacityPlanning() {
   useEffect(() => {
     localStorage.setItem('overCapacityThreshold', overCapacityThreshold.toString());
   }, [overCapacityThreshold]);
+
+  useEffect(() => {
+    localStorage.setItem('sprintCount', sprintCount.toString());
+  }, [sprintCount]);
 
   // Modal state
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
@@ -985,8 +995,8 @@ export default function CapacityPlanning() {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    // Wait a bit longer to ensure all state updates have been processed
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Refresh data from server to ensure UI shows all copied allocations
+    await refreshData();
 
     // Mark member as explicitly added to next sprint - this will trigger a re-render
     const memberKey = `${member.id}-${nextSprint.year}-${nextSprint.month}-${nextSprint.sprint}`;
@@ -995,9 +1005,6 @@ export default function CapacityPlanning() {
       newSet.add(memberKey);
       return newSet;
     });
-
-    // Small delay to ensure final state update has propagated
-    await new Promise(resolve => setTimeout(resolve, 100));
 
     alert(`${member.fullName}'s ${currentAllocs.length} allocation(s) copied to next sprint!`);
   };
@@ -2232,6 +2239,18 @@ export default function CapacityPlanning() {
                     <div className="flex gap-1">
                       <button 
                         className="p-1.5 rounded hover:bg-white/50" 
+                        title="Daily Task View"
+                        onClick={() => {
+                          setDailyViewSprint(sprint);
+                          setShowDailyView(true);
+                        }}
+                      >
+                        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </button>
+                      <button 
+                        className="p-1.5 rounded hover:bg-white/50" 
                         title={isExpanded ? "Restore to normal view" : "Expand sprint view"}
                         onClick={() => setExpandedSprint(isExpanded ? null : sprintKey)}
                       >
@@ -3415,6 +3434,41 @@ export default function CapacityPlanning() {
           }}
         />
       </Modal>
+
+      {/* Daily Task View Modal */}
+      {showDailyView && dailyViewSprint && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => {
+            setShowDailyView(false);
+            setDailyViewSprint(null);
+          }} />
+          <div className="relative bg-white rounded-lg shadow-xl w-full h-full m-2 overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-semibold">
+                Daily Tasks - {getMonthName(dailyViewSprint.month)} {dailyViewSprint.year} Sprint #{dailyViewSprint.sprint}
+              </h2>
+              <button 
+                onClick={() => {
+                  setShowDailyView(false);
+                  setDailyViewSprint(null);
+                }} 
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+          <DailyTaskView
+            sprint={dailyViewSprint}
+            onClose={() => {
+              setShowDailyView(false);
+              setDailyViewSprint(null);
+            }}
+          />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
