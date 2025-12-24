@@ -91,6 +91,7 @@ export default function CapacityPlanning() {
   const [roleRequirements, setRoleRequirements] = useState<Record<string, number>>({});
   const [selectedSprint, setSelectedSprint] = useState<SprintInfo | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [selectedAllocation, setSelectedAllocation] = useState<SprintAllocation | null>(null);
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<string | null>(null);
@@ -844,27 +845,21 @@ export default function CapacityPlanning() {
 
     // If returning to add member flow, restore context
     if (returnToAddMember && pendingMember && pendingSprint) {
-      // Wait a bit for the project to be added to the projects array
+      // Store the project ID and let the component re-render handle the rest
+      // This avoids closure issues with the projects array
       setTimeout(() => {
-        const newProject = projects.find(p => p.id === projectId);
-        if (newProject) {
-          setSelectedMember(pendingMember);
-          setSelectedSprint(pendingSprint);
-          setSelectedProject(newProject);
-          setReturnToAddMember(false);
-          setPendingMember(null);
-          setPendingSprint(null);
-          
-          // Open Add Member modal
-          setShowAddMemberModal(true);
-          // Focus on percentage input
-          setTimeout(() => percentageInputRef.current?.focus(), 100);
-        } else {
-          // Fallback: just reset state if project not found
-          setReturnToAddMember(false);
-          setPendingMember(null);
-          setPendingSprint(null);
-        }
+        // Force a re-render by updating state, then check for the project
+        setSelectedMember(pendingMember);
+        setSelectedSprint(pendingSprint);
+        setReturnToAddMember(false);
+        setPendingMember(null);
+        setPendingSprint(null);
+        
+        // Store the project ID to be selected when modal opens
+        setSelectedProjectId(projectId);
+        
+        // Open Add Member modal
+        setShowAddMemberModal(true);
       }, 100);
     }
   };
@@ -1226,6 +1221,23 @@ export default function CapacityPlanning() {
 
     return () => clearTimeout(timeoutId);
   }, [projects, pendingProjectId, selectedSprint]);
+
+  // Handle selectedProjectId for new project creation flow
+  useEffect(() => {
+    if (selectedProjectId && showAddMemberModal) {
+      console.log('Looking for project:', selectedProjectId, 'in', projects.length, 'projects');
+      const project = projects.find(p => p.id === selectedProjectId);
+      if (project) {
+        console.log('Found project:', project.customerName, '-', project.projectName);
+        setSelectedProject(project);
+        setSelectedProjectId(null);
+        // Focus on percentage input
+        setTimeout(() => percentageInputRef.current?.focus(), 100);
+      } else {
+        console.warn('Project not found:', selectedProjectId);
+      }
+    }
+  }, [selectedProjectId, projects, showAddMemberModal]);
 
   // Project comment handlers
   const openProjectCommentModal = (project: Project, sprint: SprintInfo) => {
@@ -2777,7 +2789,9 @@ export default function CapacityPlanning() {
                 {selectedRoleFilter && <span className="text-purple-600 ml-1">(Role: {selectedRoleFilter})</span>}
               </label>
               {(() => {
-                const filteredMembers = teamMembers.filter(m => m.isActive && (!selectedRoleFilter || m.role === selectedRoleFilter));
+                const filteredMembers = teamMembers
+                  .filter(m => m.isActive && (!selectedRoleFilter || m.role === selectedRoleFilter))
+                  .sort((a, b) => a.fullName.localeCompare(b.fullName));
                 if (filteredMembers.length === 0 && selectedRoleFilter) {
                   return (
                     <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm">
