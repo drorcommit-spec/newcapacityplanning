@@ -314,7 +314,10 @@ export default function CapacityPlanning() {
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth() + 1;
-    const currentSprint = Math.ceil((today.getDate() / 30) * 2);
+    
+    // Fix sprint calculation: Sprint 1 = days 1-15, Sprint 2 = days 16-end of month
+    const currentDay = today.getDate();
+    const currentSprint = currentDay <= 15 ? 1 : 2;
     
     let year = currentYear;
     let month = currentMonth;

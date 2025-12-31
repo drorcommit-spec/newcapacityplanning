@@ -251,6 +251,7 @@ function transformTeamMember(data: any): any {
     managerId: data.manager_id || null,
     isActive: data.is_active ?? true,
     createdAt: data.created_at,
+    fullTimeSchedule: data.full_time_schedule ?? 100,
   };
 }
 
@@ -264,6 +265,7 @@ function transformTeamMemberToSupabase(data: any): any {
     manager_id: data.managerId || null,
     is_active: data.isActive ?? true,
     created_at: data.createdAt || new Date().toISOString(),
+    full_time_schedule: data.fullTimeSchedule ?? 100,
   };
 }
 

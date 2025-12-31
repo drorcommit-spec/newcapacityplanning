@@ -17,6 +17,7 @@ export interface TeamMember {
   employeeNumber?: string;
   managerId?: string | null; // ID of the manager (another team member), null if no manager
   capacity?: number; // Member capacity percentage (0-100), default 100
+  fullTimeSchedule?: number; // Full-time schedule percentage (100 = full-time, 50 = half-time, etc.), default 100
 }
 
 export interface Customer {
