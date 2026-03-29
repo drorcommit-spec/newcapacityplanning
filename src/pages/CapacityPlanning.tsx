@@ -7,6 +7,7 @@ import { Project, TeamMember, SprintAllocation } from '../types';
 import Modal from '../components/Modal';
 import ProjectForm from '../components/ProjectForm';
 import DailyTaskView from '../components/DailyTaskView';
+import ImportProjects from '../components/ImportProjects';
 import { fetchAllData, saveSprintProjects, saveSprintRoleRequirements } from '../services/api';
 
 type ViewMode = 'projects' | 'team';
@@ -302,6 +303,15 @@ export default function CapacityPlanning() {
   const [projectComment, setProjectComment] = useState('');
   const [commentText, setCommentText] = useState('');
   const [allocationPercentage, setAllocationPercentage] = useState('');
+  const [allocationStartDate, setAllocationStartDate] = useState('');
+  const [editingStartDateAllocationId, setEditingStartDateAllocationId] = useState<string | null>(null);
+  const [editingStartDateValue, setEditingStartDateValue] = useState('');
+  const [isCreatingAllocations, setIsCreatingAllocations] = useState(false);
+  const [showImportProjectsModal, setShowImportProjectsModal] = useState(false);
+  
+  // Multi-sprint allocation state
+  const [numberOfSprints, setNumberOfSprints] = useState(1);
+  const [showMultiSprintPreview, setShowMultiSprintPreview] = useState(false);
   
   // Highlighted project for animation
   const [highlightedProjectId, setHighlightedProjectId] = useState<string | null>(null);
@@ -714,6 +724,81 @@ export default function CapacityPlanning() {
     setShowAddProjectModal(true);
   };
 
+  // Helper function to generate sprint preview for multi-sprint allocations
+  const generateSprintPreview = (startSprint: SprintInfo, count: number): SprintInfo[] => {
+    const sprints: SprintInfo[] = [];
+    let year = startSprint.year;
+    let month = startSprint.month;
+    let sprint = startSprint.sprint;
+    
+    for (let i = 0; i < count; i++) {
+      sprints.push({ year, month, sprint });
+      
+      sprint++;
+      if (sprint > 2) {
+        sprint = 1;
+        month++;
+        if (month > 12) {
+          month = 1;
+          year++;
+        }
+      }
+    }
+    
+    return sprints;
+  };
+
+  // Helper function to create multi-sprint allocations
+  const createMultiSprintAllocations = (
+    member: TeamMember,
+    project: Project,
+    startYear: number,
+    startMonth: number,
+    startSprint: number,
+    percentage: number,
+    numSprints: number
+  ) => {
+    const groupId = crypto.randomUUID();
+    const allocations = [];
+    
+    let year = startYear;
+    let month = startMonth;
+    let sprint = startSprint;
+    
+    for (let i = 0; i < numSprints; i++) {
+      const allocationData = {
+        projectId: project.id,
+        productManagerId: member.id,
+        year,
+        month,
+        sprint,
+        allocationPercentage: percentage,
+        allocationDays: Math.round((percentage / 100) * 10),
+        isPlanned: true,
+        allocationGroupId: groupId,
+        isGroupStart: i === 0,
+        groupStartSprint: `${startYear}-${startMonth}-${startSprint}`,
+        groupTotalSprints: numSprints,
+        groupCurrentIndex: i + 1
+      };
+      
+      allocations.push(allocationData);
+      
+      // Move to next sprint
+      sprint++;
+      if (sprint > 2) {
+        sprint = 1;
+        month++;
+        if (month > 12) {
+          month = 1;
+          year++;
+        }
+      }
+    }
+    
+    return allocations;
+  };
+
   const handleAddMemberToSprint = (sprint: SprintInfo) => {
     setSelectedSprint(sprint);
     setSelectedMember(null);
@@ -787,6 +872,20 @@ export default function CapacityPlanning() {
       });
   };
 
+  // Helper function to calculate sprint from a date
+  const getSprintFromDate = (dateString: string): SprintInfo => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; // 0-indexed
+    const day = date.getDate();
+    
+    // Determine sprint based on day of month
+    // Sprint 1: 1-15, Sprint 2: 16-31
+    const sprint = day <= 15 ? 1 : 2;
+    
+    return { year, month, sprint };
+  };
+
   const handleAddMember = () => {
     if (!selectedMember || !selectedSprint) {
       return;
@@ -810,7 +909,7 @@ export default function CapacityPlanning() {
       return;
     }
 
-    // Check if this member is already allocated to this project in this sprint
+    // Check if this member is already allocated to this project in the starting sprint
     const existingAllocation = allocations.find(
       a => a.projectId === selectedProject.id &&
            a.productManagerId === selectedMember.id &&
@@ -824,23 +923,79 @@ export default function CapacityPlanning() {
       return;
     }
     
-    addAllocation(
-      {
-        projectId: selectedProject.id,
-        productManagerId: selectedMember.id,
-        year: selectedSprint.year,
-        month: selectedSprint.month,
-        sprint: selectedSprint.sprint,
-        allocationPercentage: percentage,
-        allocationDays: (percentage / 100) * 10,
-        isPlanned: true
-      },
-      currentUser.email
-    );
+    // Determine the actual starting sprint based on start date
+    let actualStartSprint = selectedSprint;
+    if (allocationStartDate) {
+      actualStartSprint = getSprintFromDate(allocationStartDate);
+    }
+    
+    // Multi-sprint allocation
+    if (numberOfSprints > 1) {
+      // Close modal and show loading state
+      setShowAddMemberModal(false);
+      setIsCreatingAllocations(true);
+      
+      const multiAllocations = createMultiSprintAllocations(
+        selectedMember,
+        selectedProject,
+        actualStartSprint.year,
+        actualStartSprint.month,
+        actualStartSprint.sprint,
+        percentage,
+        numberOfSprints
+      );
+      
+      // Add each allocation
+      multiAllocations.forEach(alloc => {
+        addAllocation({
+          ...alloc,
+          startDate: allocationStartDate || undefined
+        }, currentUser.email);
+      });
+      
+      // Wait for saves to complete, then refresh and show success
+      setTimeout(async () => {
+        try {
+          await refreshData();
+          setIsCreatingAllocations(false);
+          alert(`✅ Created ${numberOfSprints} sprint allocations for ${selectedMember.fullName} starting from ${getMonthName(actualStartSprint.month)} ${actualStartSprint.year} Sprint ${actualStartSprint.sprint}`);
+        } catch (error) {
+          console.error('Failed to refresh data:', error);
+          setIsCreatingAllocations(false);
+          alert(`⚠️ Allocations created but failed to refresh view. Please refresh the page.`);
+        }
+      }, 1000); // Wait 1 second for saves to complete
+      
+      // Reset form state
+      setSelectedMember(null);
+      setAllocationPercentage('');
+      setAllocationStartDate('');
+      setNumberOfSprints(1);
+      return; // Exit early for multi-sprint
+    } else {
+      // Single sprint allocation
+      addAllocation(
+        {
+          projectId: selectedProject.id,
+          productManagerId: selectedMember.id,
+          year: actualStartSprint.year,
+          month: actualStartSprint.month,
+          sprint: actualStartSprint.sprint,
+          allocationPercentage: percentage,
+          allocationDays: (percentage / 100) * 10,
+          isPlanned: true,
+          startDate: allocationStartDate || undefined
+        },
+        currentUser.email
+      );
+    }
 
     setShowAddMemberModal(false);
     setSelectedMember(null);
     setAllocationPercentage('');
+    setAllocationStartDate('');
+    setNumberOfSprints(1);
+    setNumberOfSprints(1); // Reset to default
   };
 
   const handleNewProjectCreated = (projectId: string) => {
@@ -867,24 +1022,41 @@ export default function CapacityPlanning() {
     }
   };
 
-  const handleRemoveAllocation = (allocationId: string) => {
-    if (confirm('Remove this allocation?')) {
-      // Find the allocation to get project and sprint info
-      const allocation = allocations.find(a => a.id === allocationId);
-      
-      if (allocation) {
-        // Track the project in the sprint so it remains visible even with no allocations
-        const sprintKey = `${allocation.year}-${allocation.month}-${allocation.sprint}`;
-        const updatedSprintProjects = new Map(sprintProjects);
-        if (!updatedSprintProjects.has(sprintKey)) {
-          updatedSprintProjects.set(sprintKey, new Set());
-        }
-        updatedSprintProjects.get(sprintKey)!.add(allocation.projectId);
-        setSprintProjects(updatedSprintProjects);
-      }
-      
-      deleteAllocation(allocationId, currentUser.email);
+  const handleRemoveAllocation = async (allocationId: string) => {
+    if (!confirm('Remove this allocation?')) {
+      return;
     }
+    
+    // Show loading
+    setIsCreatingAllocations(true);
+    
+    // Find the allocation to get project and sprint info
+    const allocation = allocations.find(a => a.id === allocationId);
+    
+    if (allocation) {
+      // Track the project in the sprint so it remains visible even with no allocations
+      const sprintKey = `${allocation.year}-${allocation.month}-${allocation.sprint}`;
+      const updatedSprintProjects = new Map(sprintProjects);
+      if (!updatedSprintProjects.has(sprintKey)) {
+        updatedSprintProjects.set(sprintKey, new Set());
+      }
+      updatedSprintProjects.get(sprintKey)!.add(allocation.projectId);
+      setSprintProjects(updatedSprintProjects);
+    }
+    
+    deleteAllocation(allocationId, currentUser.email);
+    
+    // Wait for delete to complete, then refresh
+    setTimeout(async () => {
+      try {
+        await refreshData();
+        setIsCreatingAllocations(false);
+      } catch (error) {
+        console.error('Failed to refresh data:', error);
+        setIsCreatingAllocations(false);
+        alert('⚠️ Allocation removed but failed to refresh view. Please refresh the page.');
+      }
+    }, 500);
   };
 
   const handleCopyToNextSprint = (project: Project, currentSprint: SprintInfo) => {
@@ -1019,6 +1191,10 @@ export default function CapacityPlanning() {
     
     const { member, sprint } = memberToRemove;
     
+    // Close modal and show loading
+    setShowRemoveMemberModal(false);
+    setIsCreatingAllocations(true);
+    
     // Get sprints to remove from
     const sprintsToRemove = removeFutureSprintsOption === 'future'
       ? sprints.filter(s => {
@@ -1057,15 +1233,25 @@ export default function CapacityPlanning() {
     });
     setRemovedMembers(newRemovedMembers);
     
-    // Close modal
-    setShowRemoveMemberModal(false);
+    // Reset state
     setMemberToRemove(null);
     
-    // Show confirmation
-    const sprintText = removeFutureSprintsOption === 'future' 
-      ? `${sprintsToRemove.length} sprint(s)` 
-      : 'this sprint';
-    alert(`Removed ${member.fullName} from ${sprintText}`);
+    // Wait for deletes to complete, then refresh and show success
+    setTimeout(async () => {
+      try {
+        await refreshData();
+        setIsCreatingAllocations(false);
+        
+        const sprintText = removeFutureSprintsOption === 'future' 
+          ? `${sprintsToRemove.length} sprint(s)` 
+          : 'this sprint';
+        alert(`✅ Removed ${member.fullName} from ${sprintText} (${totalRemoved} allocation${totalRemoved !== 1 ? 's' : ''})`);
+      } catch (error) {
+        console.error('Failed to refresh data:', error);
+        setIsCreatingAllocations(false);
+        alert(`⚠️ Member removed but failed to refresh view. Please refresh the page.`);
+      }
+    }, 800); // Wait a bit longer for multiple deletes
   };
 
   // Inline editing handlers
@@ -1113,7 +1299,7 @@ export default function CapacityPlanning() {
   };
 
   // Remove project from sprint (removes all allocations for that project in that sprint)
-  const handleRemoveProjectFromSprint = (project: Project, sprint: SprintInfo) => {
+  const handleRemoveProjectFromSprint = async (project: Project, sprint: SprintInfo) => {
     const allocsToRemove = allocations.filter(
       a => a.projectId === project.id && 
            a.year === sprint.year && 
@@ -1125,20 +1311,37 @@ export default function CapacityPlanning() {
       ? `Remove "${project.projectName}" and all its ${allocsToRemove.length} allocation(s) from this sprint?`
       : `Remove "${project.projectName}" from this sprint?`;
 
-    if (confirm(message)) {
-      // Remove all allocations
-      allocsToRemove.forEach(alloc => {
-        deleteAllocation(alloc.id, currentUser.email);
-      });
-      
-      // Remove from tracked projects
-      const sprintKey = `${sprint.year}-${sprint.month}-${sprint.sprint}`;
-      const updatedSprintProjects = new Map(sprintProjects);
-      if (updatedSprintProjects.has(sprintKey)) {
-        updatedSprintProjects.get(sprintKey)!.delete(project.id);
-        setSprintProjects(updatedSprintProjects);
-      }
+    if (!confirm(message)) {
+      return;
     }
+    
+    // Show loading
+    setIsCreatingAllocations(true);
+    
+    // Remove all allocations
+    allocsToRemove.forEach(alloc => {
+      deleteAllocation(alloc.id, currentUser.email);
+    });
+    
+    // Remove from tracked projects
+    const sprintKey = `${sprint.year}-${sprint.month}-${sprint.sprint}`;
+    const updatedSprintProjects = new Map(sprintProjects);
+    if (updatedSprintProjects.has(sprintKey)) {
+      updatedSprintProjects.get(sprintKey)!.delete(project.id);
+      setSprintProjects(updatedSprintProjects);
+    }
+    
+    // Wait for deletes to complete, then refresh
+    setTimeout(async () => {
+      try {
+        await refreshData();
+        setIsCreatingAllocations(false);
+      } catch (error) {
+        console.error('Failed to refresh data:', error);
+        setIsCreatingAllocations(false);
+        alert('⚠️ Project removed but failed to refresh view. Please refresh the page.');
+      }
+    }, 500);
   };
 
   // Handle new project creation success
@@ -1703,6 +1906,17 @@ export default function CapacityPlanning() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* Loading Overlay for Operations */}
+      {isCreatingAllocations && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 shadow-xl flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600"></div>
+            <div className="text-lg font-semibold text-gray-900">Processing...</div>
+            <div className="text-sm text-gray-600">Please wait while we save your changes</div>
+          </div>
+        </div>
+      )}
+      
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-2 sticky top-0 z-10">
         <div className="flex justify-between items-center">
@@ -1720,6 +1934,20 @@ export default function CapacityPlanning() {
               </svg>
               Export Matrix
             </button>
+
+            {/* Import Projects Button */}
+            {canWrite && (
+              <button
+                onClick={() => setShowImportProjectsModal(true)}
+                className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors flex items-center gap-2"
+                title="Import projects from Excel"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Import Projects
+              </button>
+            )}
 
             {/* Collapse/Expand All Button - Show in both Projects and Team view */}
             {viewMode === 'projects' && (
@@ -2428,6 +2656,28 @@ export default function CapacityPlanning() {
                               const alloc = allocations.find(a => a.id === member.allocationId);
                               const isEditing = editingAllocationId === member.allocationId;
                               
+                              // Multi-sprint badge logic
+                              const isMultiSprint = alloc?.groupTotalSprints && alloc.groupTotalSprints > 1;
+                              const isGroupStart = alloc?.isGroupStart;
+                              const currentIndex = alloc?.groupCurrentIndex || 1;
+                              const totalSprints = alloc?.groupTotalSprints || 1;
+                              
+                              // Debug logging for multi-sprint allocations
+                              if (alloc && (alloc.allocationGroupId || alloc.groupTotalSprints)) {
+                                console.log('Multi-sprint allocation found:', {
+                                  memberId: member.id,
+                                  memberName: member.fullName,
+                                  allocationId: alloc.id,
+                                  allocationGroupId: alloc.allocationGroupId,
+                                  isGroupStart: alloc.isGroupStart,
+                                  groupStartSprint: alloc.groupStartSprint,
+                                  groupTotalSprints: alloc.groupTotalSprints,
+                                  groupCurrentIndex: alloc.groupCurrentIndex,
+                                  isMultiSprint,
+                                  willShowBadge: isMultiSprint && isGroupStart
+                                });
+                              }
+                              
                               // Check if this member's role allocation exceeds planned capacity
                               const teamMember = teamMembers.find(tm => tm.id === member.id);
                               const requirementKey = `${project.id}-${sprint.year}-${sprint.month}-${sprint.sprint}`;
@@ -2448,38 +2698,104 @@ export default function CapacityPlanning() {
                               
                               return (
                                 <div key={member.allocationId} className="flex justify-between items-center text-xs py-1 gap-2">
-                                  <div className="flex-1 min-w-0 flex items-center gap-1">
-                                    {isOverAllocated && (
-                                      <span 
-                                        className="text-red-600 font-bold" 
-                                        title={`${teamMember?.role} capacity exceeds planning`}
-                                      >
-                                        ❗
-                                      </span>
-                                    )}
-                                    <span className="font-medium">{member.fullName}</span>
-                                    {member.resourceType && (
-                                      <span className="ml-1 text-gray-500 text-[10px]">({member.resourceType})</span>
-                                    )}
-                                    {isEditing ? (
-                                      <input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        value={editingPercentage}
-                                        onChange={(e) => setEditingPercentage(e.target.value)}
-                                        className="ml-2 w-12 px-1 py-0.5 border rounded text-xs"
-                                        autoFocus
-                                        onKeyDown={(e) => {
-                                          if (e.key === 'Enter') saveAllocationEdit(member.allocationId);
-                                          if (e.key === 'Escape') cancelEdit();
-                                        }}
-                                      />
-                                    ) : (
-                                      <span className="ml-2 text-blue-600 font-semibold">{member.percentage}%</span>
-                                    )}
-                                    {alloc?.comment && (
-                                      <span className="ml-1 text-blue-500" title={alloc.comment}>💬</span>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1">
+                                      {isOverAllocated && (
+                                        <span 
+                                          className="text-red-600 font-bold" 
+                                          title={`${teamMember?.role} capacity exceeds planning`}
+                                        >
+                                          ❗
+                                        </span>
+                                      )}
+                                      {isMultiSprint && isGroupStart && (
+                                        <span className="text-[10px] bg-purple-100 text-purple-700 px-1 py-0.5 rounded font-medium" title="Multi-sprint allocation start">
+                                          🎬
+                                        </span>
+                                      )}
+                                      <span className="font-medium">{member.fullName}</span>
+                                      {member.resourceType && (
+                                        <span className="ml-1 text-gray-500 text-[10px]">({member.resourceType})</span>
+                                      )}
+                                      {isEditing ? (
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          max="100"
+                                          value={editingPercentage}
+                                          onChange={(e) => setEditingPercentage(e.target.value)}
+                                          className="ml-2 w-12 px-1 py-0.5 border rounded text-xs"
+                                          autoFocus
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter') saveAllocationEdit(member.allocationId);
+                                            if (e.key === 'Escape') cancelEdit();
+                                          }}
+                                        />
+                                      ) : (
+                                        <span className="ml-2 text-blue-600 font-semibold">{member.percentage}%</span>
+                                      )}
+                                      {alloc?.comment && (
+                                        <span className="ml-1 text-blue-500" title={alloc.comment}>💬</span>
+                                      )}
+                                      {(() => {
+                                        console.log('START DATE DEBUG:', {
+                                          memberName: member.fullName,
+                                          allocationId: member.allocationId,
+                                          hasAlloc: !!alloc,
+                                          startDate: alloc?.startDate,
+                                          editingId: editingStartDateAllocationId
+                                        });
+                                        return null;
+                                      })()}
+                                      {editingStartDateAllocationId === member.allocationId ? (
+                                        <input
+                                          type="date"
+                                          value={editingStartDateValue}
+                                          onChange={(e) => setEditingStartDateValue(e.target.value)}
+                                          onBlur={() => {
+                                            if (alloc) {
+                                              updateAllocation(alloc.id, { startDate: editingStartDateValue || undefined }, currentUser.email);
+                                            }
+                                            setEditingStartDateAllocationId(null);
+                                          }}
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                              if (alloc) {
+                                                updateAllocation(alloc.id, { startDate: editingStartDateValue || undefined }, currentUser.email);
+                                              }
+                                              setEditingStartDateAllocationId(null);
+                                            } else if (e.key === 'Escape') {
+                                              setEditingStartDateAllocationId(null);
+                                            }
+                                          }}
+                                          className="ml-1 text-[10px] px-1 py-0.5 border rounded"
+                                          autoFocus
+                                        />
+                                      ) : (
+                                        <button
+                                          onClick={() => {
+                                            setEditingStartDateAllocationId(member.allocationId);
+                                            setEditingStartDateValue(alloc?.startDate || '');
+                                          }}
+                                          className="ml-2 text-green-600 text-xs font-semibold hover:bg-green-50 px-1.5 py-0.5 rounded border border-green-300"
+                                          title={alloc?.startDate ? `Start: ${new Date(alloc.startDate).toLocaleDateString()} (click to edit)` : 'Click to set start date'}
+                                        >
+                                          📅 {alloc?.startDate ? new Date(alloc.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Set date'}
+                                        </button>
+                                      )}
+                                    </div>
+                                    {isMultiSprint && (
+                                      <div className="text-[10px] text-gray-600 mt-0.5">
+                                        Sprint {currentIndex} of {totalSprints}
+                                        {alloc?.groupStartSprint && (
+                                          <span className="ml-1 text-gray-500">
+                                            • Started {(() => {
+                                              const [year, month, sprint] = alloc.groupStartSprint.split('-');
+                                              return `${getMonthName(parseInt(month))} ${year} S${sprint}`;
+                                            })()}
+                                          </span>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
                                   {canWrite && (
@@ -2692,6 +3008,43 @@ export default function CapacityPlanning() {
                                     {alloc?.comment && (
                                       <span className="ml-1 text-blue-500" title={alloc.comment}>💬</span>
                                     )}
+                                    {/* Start Date - Editable */}
+                                    {editingStartDateAllocationId === proj.allocationId ? (
+                                      <input
+                                        type="date"
+                                        value={editingStartDateValue}
+                                        onChange={(e) => setEditingStartDateValue(e.target.value)}
+                                        onBlur={() => {
+                                          if (alloc) {
+                                            updateAllocation(alloc.id, { startDate: editingStartDateValue || undefined }, currentUser.email);
+                                          }
+                                          setEditingStartDateAllocationId(null);
+                                        }}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            if (alloc) {
+                                              updateAllocation(alloc.id, { startDate: editingStartDateValue || undefined }, currentUser.email);
+                                            }
+                                            setEditingStartDateAllocationId(null);
+                                          } else if (e.key === 'Escape') {
+                                            setEditingStartDateAllocationId(null);
+                                          }
+                                        }}
+                                        className="ml-1 text-[10px] px-1 py-0.5 border rounded"
+                                        autoFocus
+                                      />
+                                    ) : (
+                                      <button
+                                        onClick={() => {
+                                          setEditingStartDateAllocationId(proj.allocationId);
+                                          setEditingStartDateValue(alloc?.startDate || '');
+                                        }}
+                                        className="ml-2 text-green-600 text-xs font-semibold hover:bg-green-50 px-1.5 py-0.5 rounded border border-green-300"
+                                        title={alloc?.startDate ? `Start: ${new Date(alloc.startDate).toLocaleDateString()} (click to edit)` : 'Click to set start date'}
+                                      >
+                                        📅 {alloc?.startDate ? new Date(alloc.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Set date'}
+                                      </button>
+                                    )}
                                   </div>
                                   {canWrite && (
                                     <div className="flex gap-0.5 flex-shrink-0">
@@ -2880,33 +3233,98 @@ export default function CapacityPlanning() {
             </div>
           )}
           {selectedProject && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Allocation %
-                {selectedRoleFilter && selectedProject && selectedSprint && (() => {
-                  const requirementKey = `${selectedProject.id}-${selectedSprint.year}-${selectedSprint.month}-${selectedSprint.sprint}`;
-                  const requirements = sprintRoleRequirements[requirementKey];
-                  const plannedCapacity = requirements?.[selectedRoleFilter];
-                  return plannedCapacity ? <span className="text-purple-600 ml-1">(Planned: {plannedCapacity}%)</span> : null;
-                })()}
-              </label>
-              <input
-                ref={percentageInputRef}
-                type="number"
-                min="0"
-                max="100"
-                value={allocationPercentage}
-                onChange={(e) => setAllocationPercentage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && selectedMember && selectedProject && allocationPercentage) {
-                    e.preventDefault();
-                    handleAddMember();
-                  }
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="Enter percentage (0-100)"
-              />
-            </div>
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Allocation %
+                  {selectedRoleFilter && selectedProject && selectedSprint && (() => {
+                    const requirementKey = `${selectedProject.id}-${selectedSprint.year}-${selectedSprint.month}-${selectedSprint.sprint}`;
+                    const requirements = sprintRoleRequirements[requirementKey];
+                    const plannedCapacity = requirements?.[selectedRoleFilter];
+                    return plannedCapacity ? <span className="text-purple-600 ml-1">(Planned: {plannedCapacity}%)</span> : null;
+                  })()}
+                </label>
+                <input
+                  ref={percentageInputRef}
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={allocationPercentage}
+                  onChange={(e) => setAllocationPercentage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && selectedMember && selectedProject && allocationPercentage && numberOfSprints === 1) {
+                      e.preventDefault();
+                      handleAddMember();
+                    }
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Enter percentage (0-100)"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Date (Optional)
+                </label>
+                <input
+                  type="date"
+                  value={allocationStartDate}
+                  onChange={(e) => setAllocationStartDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  When does this allocation start?
+                </p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Number of Sprints
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="12"
+                  value={numberOfSprints}
+                  onChange={(e) => {
+                    const num = parseInt(e.target.value) || 1;
+                    setNumberOfSprints(Math.max(1, Math.min(12, num)));
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="1"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Create allocations for multiple consecutive sprints (1-12)
+                </p>
+              </div>
+              
+              {numberOfSprints > 1 && selectedSprint && allocationPercentage && (
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                  <div className="text-sm font-medium text-gray-700 mb-2">
+                    Preview: {numberOfSprints} sprints will be created
+                  </div>
+                  <div className="text-xs text-gray-600 space-y-1 max-h-32 overflow-y-auto">
+                    {(() => {
+                      // Use start date to determine starting sprint if provided
+                      const startSprint = allocationStartDate 
+                        ? getSprintFromDate(allocationStartDate)
+                        : selectedSprint;
+                      
+                      return generateSprintPreview(startSprint, numberOfSprints).map((sprint, idx) => (
+                        <div key={idx}>
+                          • {getMonthName(sprint.month)} {sprint.year} Sprint {sprint.sprint} - {allocationPercentage}%
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                  {allocationStartDate && (
+                    <div className="text-xs text-blue-600 mt-2">
+                      ℹ️ Starting from {new Date(allocationStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
           <div className="flex justify-between gap-2">
             <p className="text-xs text-gray-500 self-center">
@@ -3486,6 +3904,11 @@ export default function CapacityPlanning() {
           </div>
         </div>
       )}
+
+      {/* Import Projects Modal */}
+      <Modal isOpen={showImportProjectsModal} onClose={() => setShowImportProjectsModal(false)} title="Import Projects from Excel">
+        <ImportProjects onComplete={() => setShowImportProjectsModal(false)} />
+      </Modal>
     </div>
   );
 }

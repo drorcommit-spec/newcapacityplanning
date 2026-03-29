@@ -265,7 +265,7 @@ function transformTeamMemberToSupabase(data: any): any {
     manager_id: data.managerId || null,
     is_active: data.isActive ?? true,
     created_at: data.createdAt || new Date().toISOString(),
-    full_time_schedule: data.fullTimeSchedule ?? 100,
+    // full_time_schedule: data.fullTimeSchedule ?? 100, // Temporarily commented out until migration runs
   };
 }
 
@@ -310,8 +310,15 @@ function transformAllocation(data: any): any {
     allocationPercentage: data.allocation_percentage,
     allocationDays: data.allocation_days,
     comment: data.comment,
+    startDate: data.start_date,
     createdAt: data.created_at,
     createdBy: data.created_by,
+    // Multi-sprint allocation fields
+    allocationGroupId: data.allocation_group_id,
+    isGroupStart: data.is_group_start,
+    groupStartSprint: data.group_start_sprint,
+    groupTotalSprints: data.group_total_sprints,
+    groupCurrentIndex: data.group_current_index,
   };
 }
 
@@ -326,8 +333,15 @@ function transformAllocationToSupabase(data: any): any {
     allocation_percentage: data.allocationPercentage,
     allocation_days: data.allocationDays,
     comment: data.comment,
+    start_date: data.startDate,
     created_at: data.createdAt,
     created_by: data.createdBy,
+    // Multi-sprint allocation fields
+    allocation_group_id: data.allocationGroupId,
+    is_group_start: data.isGroupStart,
+    group_start_sprint: data.groupStartSprint,
+    group_total_sprints: data.groupTotalSprints,
+    group_current_index: data.groupCurrentIndex,
   };
 }
 

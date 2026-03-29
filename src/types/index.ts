@@ -67,8 +67,15 @@ export interface SprintAllocation {
   createdAt: string;
   createdBy: string;
   comment?: string;
+  startDate?: string;              // Start date for the allocation (ISO date string)
   // New field for Capacity Planning - indicates if this is a planned allocation
   isPlanned?: boolean;
+  // Multi-sprint allocation fields
+  allocationGroupId?: string;     // Links related allocations together
+  isGroupStart?: boolean;          // True for the first sprint in a group
+  groupStartSprint?: string;       // Reference to start sprint (format: "year-month-sprint")
+  groupTotalSprints?: number;      // Total number of sprints in the group
+  groupCurrentIndex?: number;      // Position in group (1, 2, 3...)
 }
 
 export interface AllocationHistory {

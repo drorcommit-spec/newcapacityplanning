@@ -13,14 +13,14 @@ interface ProjectFormProps {
 
 export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
   const { projects, addProject, teamMembers, addTeamMember } = useData();
-  const [isNewCustomer, setIsNewCustomer] = useState(true);
+  const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [showPMOModal, setShowPMOModal] = useState(false);
   const [newPMOData, setNewPMOData] = useState({ fullName: '', email: '' });
   const [formData, setFormData] = useState({
     customerName: '',
     projectName: '',
     projectType: 'Software' as ProjectType,
-    status: 'Pending' as ProjectStatus,
+    status: 'Active' as ProjectStatus,
     pmoContact: '',
     latestStatus: '',
   });
