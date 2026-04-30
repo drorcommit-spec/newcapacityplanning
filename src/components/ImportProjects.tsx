@@ -25,25 +25,48 @@ export default function ImportProjects({ onComplete }: ImportProjectsProps) {
     setResult(null);
     const reader = new FileReader();
     reader.onload = (evt) => {
-      const data = evt.target?.result;
-      const workbook = XLSX.read(data, { type: 'binary' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows: any[] = XLSX.utils.sheet_to_json(sheet);
+      try {
+        const data = evt.target?.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows: any[] = XLSX.utils.sheet_to_json(sheet);
 
-      // Normalize column names (case-insensitive, trim)
-      const parsed: ImportRow[] = rows.map((row) => {
-        const keys = Object.keys(row);
-        const findCol = (names: string[]) => {
-          const key = keys.find(k => names.some(n => k.trim().toLowerCase().includes(n)));
-          return key ? String(row[key]).trim() : '';
-        };
-        return {
-          customerName: findCol(['customer']),
-          projectName: findCol(['project']),
-        };
-      }).filter(r => r.customerName && r.projectName);
+        if (rows.length === 0) {
+          alert('No data found in the file. Make sure the first row contains column headers.');
+          return;
+        }
 
-      setPreview(parsed);
+        // Show detected columns for debugging
+        const sampleKeys = Object.keys(rows[0]);
+        console.log('Detected columns:', sampleKeys);
+
+        // Normalize column names (case-insensitive, trim)
+        const parsed: ImportRow[] = rows.map((row) => {
+          const keys = Object.keys(row);
+          const findCol = (names: string[]) => {
+            const key = keys.find(k => names.some(n => k.trim().toLowerCase().includes(n)));
+            return key ? String(row[key]).trim() : '';
+          };
+          return {
+            customerName: findCol(['customer', 'client', 'company', 'לקוח']),
+            projectName: findCol(['project', 'name', 'פרויקט']),
+          };
+        }).filter(r => r.customerName && r.projectName);
+
+        if (parsed.length === 0) {
+          alert(
+            `Could not find matching columns.\n\n` +
+            `Detected columns: ${sampleKeys.join(', ')}\n\n` +
+            `Expected: A column containing "Customer" and a column containing "Project".\n\n` +
+            `Please rename your columns and try again.`
+          );
+          return;
+        }
+
+        setPreview(parsed);
+      } catch (err: any) {
+        alert(`Error reading file: ${err.message}`);
+      }
     };
     reader.readAsBinaryString(file);
   };

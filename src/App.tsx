@@ -27,7 +27,7 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/" element={
         <ProtectedRoute>
-          <Layout><Dashboard /></Layout>
+          <Navigate to="/capacity-planning" replace />
         </ProtectedRoute>
       } />
       <Route path="/members" element={

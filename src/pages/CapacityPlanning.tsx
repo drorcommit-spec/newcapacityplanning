@@ -8,9 +8,10 @@ import Modal from '../components/Modal';
 import ProjectForm from '../components/ProjectForm';
 import DailyTaskView from '../components/DailyTaskView';
 import ImportProjects from '../components/ImportProjects';
+import ProjectMatrixView from '../components/ProjectMatrixView';
 import { fetchAllData, saveSprintProjects, saveSprintRoleRequirements } from '../services/api';
 
-type ViewMode = 'projects' | 'team';
+type ViewMode = 'projects' | 'team' | 'matrix';
 type CapacityFilter = 'all' | 'under' | 'over' | 'good';
 
 interface SprintInfo {
@@ -27,7 +28,7 @@ export default function CapacityPlanning() {
   const currentUser = user || { email: 'unknown', fullName: 'Unknown User' };
 
   // View state
-  const [viewMode, setViewMode] = useState<ViewMode>('team');
+  const [viewMode, setViewMode] = useState<ViewMode>('matrix');
   const [showFilters, setShowFilters] = useState(true);
   const [sprintCount, setSprintCount] = useState(() => {
     const saved = localStorage.getItem('sprintCount');
@@ -2125,6 +2126,16 @@ export default function CapacityPlanning() {
               >
                 Team
               </button>
+              <button
+                onClick={() => setViewMode('matrix')}
+                className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                  viewMode === 'matrix'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Project List
+              </button>
             </div>
 
             {/* Sprint Controls */}
@@ -2165,8 +2176,8 @@ export default function CapacityPlanning() {
           </div>
         </div>
 
-        {/* Filters */}
-        {showFilters && (
+        {/* Filters - hidden in matrix view (matrix has its own filters) */}
+        {showFilters && viewMode !== 'matrix' && (
           <div className="mt-1.5 pt-1.5 border-t border-gray-200">
             <div className="flex items-center gap-3">
               {/* Search Filter */}
@@ -2439,7 +2450,15 @@ export default function CapacityPlanning() {
         )}
       </div>
 
+      {/* Matrix View */}
+      {viewMode === 'matrix' && (
+        <div className="flex-1">
+          <ProjectMatrixView />
+        </div>
+      )}
+
       {/* Sprint Columns */}
+      {viewMode !== 'matrix' && (
       <div className="flex-1">
         <div className={expandedSprint ? "p-6" : "flex gap-6 p-6 max-w-[1920px] mx-auto"}>
           {sprints.map((sprint) => {
@@ -3118,6 +3137,7 @@ export default function CapacityPlanning() {
           })}
         </div>
       </div>
+      )}
 
       {/* Add Member Modal */}
       <Modal

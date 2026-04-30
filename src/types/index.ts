@@ -41,6 +41,12 @@ export interface Project {
   createdAt: string;
   isArchived: boolean;
   comment?: string;
+  // Planning fields
+  plannedStartMonth?: number;      // 1-12
+  plannedStartYear?: number;
+  plannedStartSprint?: number;     // 1 or 2
+  requiredCapacity?: number;       // 0-100, step 5
+  plannedSprintCount?: number;     // number of sprints
 }
 
 // Sprint-specific role requirements for capacity planning

@@ -23,6 +23,7 @@ export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
     status: 'Active' as ProjectStatus,
     pmoContact: '',
     latestStatus: '',
+    activityCloseDate: '',
   });
   const [customerError, setCustomerError] = useState('');
   const [projectError, setProjectError] = useState('');
@@ -71,6 +72,7 @@ export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
       status: formData.status,
       pmoContact: formData.pmoContact || undefined,
       latestStatus: formData.latestStatus || undefined,
+      activityCloseDate: formData.activityCloseDate || undefined,
       isArchived: false,
     };
 
@@ -193,6 +195,16 @@ export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
           value={formData.status}
           onChange={(e) => setFormData({ ...formData, status: e.target.value as ProjectStatus })}
         />
+        
+        <div>
+          <label className="text-sm font-medium text-gray-700 block mb-1">Sign-off / Activity Close Date</label>
+          <input
+            type="date"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={formData.activityCloseDate}
+            onChange={(e) => setFormData({ ...formData, activityCloseDate: e.target.value })}
+          />
+        </div>
         
         <div>
           <label className="text-sm font-medium text-gray-700 block mb-1">PMO Contact</label>

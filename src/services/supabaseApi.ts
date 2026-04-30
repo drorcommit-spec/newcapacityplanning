@@ -281,6 +281,14 @@ function transformProject(data: any): any {
     isArchived: data.is_archived,
     comment: data.comment,
     createdAt: data.created_at,
+    latestStatus: data.latest_status,
+    activityCloseDate: data.activity_close_date,
+    region: data.region,
+    plannedStartMonth: data.planned_start_month,
+    plannedStartYear: data.planned_start_year,
+    plannedStartSprint: data.planned_start_sprint,
+    requiredCapacity: data.required_capacity,
+    plannedSprintCount: data.planned_sprint_count,
   };
 }
 
@@ -296,6 +304,14 @@ function transformProjectToSupabase(data: any): any {
     is_archived: data.isArchived,
     comment: data.comment,
     created_at: data.createdAt,
+    latest_status: data.latestStatus,
+    activity_close_date: data.activityCloseDate,
+    region: data.region,
+    planned_start_month: data.plannedStartMonth,
+    planned_start_year: data.plannedStartYear,
+    planned_start_sprint: data.plannedStartSprint,
+    required_capacity: data.requiredCapacity,
+    planned_sprint_count: data.plannedSprintCount,
   };
 }
 
