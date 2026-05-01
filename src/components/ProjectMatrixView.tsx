@@ -170,19 +170,20 @@ export default function ProjectMatrixView() {
       if (a.projectId !== projectId) return false;
       if (a.year > curYear) return true;
       if (a.year === curYear && a.month > curMonth) return true;
-      if (a.year === curYear && a.month === curMonth && a.sprint > curSprint) return true;
+      if (a.year === curYear && a.month === curMonth && a.sprint >= curSprint) return true;
       return false;
     });
 
-    if (hasFutureAllocs) return 'green';
-    if (!activityCloseDate) return 'yellow';
-    return 'red';
+    if (hasFutureAllocs && activityCloseDate) return 'green';  // signed + has resources = healthy
+    if (hasFutureAllocs && !activityCloseDate) return 'yellow'; // has resources but not signed = needs attention
+    if (!hasFutureAllocs && activityCloseDate) return 'red';    // signed but no resources = urgent
+    return 'yellow'; // no allocations, no sign-off = needs attention
   };
 
   const LIGHT_MAP: Record<string, { color: string; label: string }> = {
-    green: { color: 'bg-green-500', label: 'Active with future allocations' },
-    yellow: { color: 'bg-yellow-400', label: 'Active - no sign-off date set' },
-    red: { color: 'bg-red-500', label: 'Active with sign-off date but no future allocations' },
+    green: { color: 'bg-green-500', label: 'Signed project with resources assigned' },
+    yellow: { color: 'bg-yellow-400', label: 'Pending sign-off — allocations may need to be removed' },
+    red: { color: 'bg-red-500', label: 'Signed project with no resources assigned' },
     gray: { color: 'bg-gray-400', label: 'Inactive/Completed' },
   };
 
@@ -382,17 +383,17 @@ export default function ProjectMatrixView() {
             <button onClick={() => setLightFilter('all')}
               className={`text-[10px] px-2 py-0.5 rounded ${lightFilter === 'all' ? 'bg-white shadow font-bold text-gray-800' : 'text-gray-500 hover:bg-white'}`}>All</button>
             <button onClick={() => setLightFilter(lightFilter === 'green' ? 'all' : 'green')}
-              title="Projects with people assigned to future sprints"
+              title="Active Project + has sign-off date + has future allocations (healthy)"
               className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${lightFilter === 'green' ? 'bg-green-100 font-bold text-green-800 shadow' : 'text-gray-600 hover:bg-green-50'}`}>
               <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span> Active Projects with Resources
             </button>
             <button onClick={() => setLightFilter(lightFilter === 'yellow' ? 'all' : 'yellow')}
-              title="Active projects missing a sign-off date — needs planning attention"
+              title="Active Project + has future allocations + NO sign-off date yet !! (needs attention - might not get signed)"
               className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${lightFilter === 'yellow' ? 'bg-yellow-100 font-bold text-yellow-800 shadow' : 'text-gray-600 hover:bg-yellow-50'}`}>
               <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block"></span> Pending signoff date
             </button>
             <button onClick={() => setLightFilter(lightFilter === 'red' ? 'all' : 'red')}
-              title="Signed projects with no one assigned to upcoming sprints — needs immediate attention"
+              title="Active Project + has sign-off date + NO future allocations (signed but nobody assigned)"
               className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${lightFilter === 'red' ? 'bg-red-100 font-bold text-red-800 shadow' : 'text-gray-600 hover:bg-red-50'}`}>
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Signoffed Unassigned Projects !!
             </button>
@@ -597,16 +598,20 @@ export default function ProjectMatrixView() {
                 {periods.map((period, pIdx) =>
                   displayedMembers.map((member, mIdx) => {
                     const data = getCellData(project.id, member.id, period);
+                    const isYellowProject = getProjectLightKey(project.id, project.status, project.activityCloseDate) === 'yellow';
                     return (
                       <td key={`${period.key}-${member.id}`}
                         className={`border-b border-r text-center cursor-pointer transition-colors ${pIdx > 0 && mIdx === 0 ? 'border-l-2 border-l-gray-400' : ''} ${
-                          data.hasAny ? (data.pct >= 80 ? 'bg-blue-200 hover:bg-blue-300' : data.pct >= 40 ? 'bg-blue-100 hover:bg-blue-200' : 'bg-blue-50 hover:bg-blue-100')
+                          data.hasAny
+                            ? isYellowProject
+                              ? (data.pct >= 80 ? 'bg-yellow-200 hover:bg-yellow-300' : data.pct >= 40 ? 'bg-yellow-100 hover:bg-yellow-200' : 'bg-yellow-50 hover:bg-yellow-100')
+                              : (data.pct >= 80 ? 'bg-blue-200 hover:bg-blue-300' : data.pct >= 40 ? 'bg-blue-100 hover:bg-blue-200' : 'bg-blue-50 hover:bg-blue-100')
                             : 'hover:bg-gray-100'
                         }`}
                         style={{ width: colW, minWidth: colW, height: 32 }}
                         onClick={() => openCell(project.id, member.id, period)}
-                        title={data.hasAny ? `${member.fullName} ${data.display} (click to edit)` : `Assign ${member.fullName}`}>
-                        {data.hasAny && <span className="text-[10px] font-semibold text-blue-800">{data.display}</span>}
+                        title={data.hasAny ? `${member.fullName} ${data.display}${isYellowProject ? ' ⚠️ Not signed off' : ''} (click to edit)` : `Assign ${member.fullName}`}>
+                        {data.hasAny && <span className={`text-[10px] font-semibold ${isYellowProject ? 'text-yellow-800' : 'text-blue-800'}`}>{data.display}</span>}
                       </td>
                     );
                   })
