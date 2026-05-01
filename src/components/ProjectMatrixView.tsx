@@ -81,8 +81,9 @@ export default function ProjectMatrixView() {
     const memberCount = displayedMembers.length || 1;
 
     // Calculate how many periods fit on screen based on member count
-    // Rough estimate: screen ~1400px usable, project col ~160px, each member col ~58px
-    const availableWidth = 1400 - 160;
+    // Use window width dynamically, fallback to 1920 for wide screens
+    const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
+    const availableWidth = screenWidth - 200; // subtract project column + padding
     const periodWidth = memberCount * 58;
     const fitOnScreen = Math.max(3, Math.floor(availableWidth / periodWidth));
 
