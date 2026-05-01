@@ -31,8 +31,10 @@ export default function ProjectMatrixView() {
   const [projectFilter, setProjectFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
   const [lightFilter, setLightFilter] = useState<string>('all');
+  const [onlyAllocated, setOnlyAllocated] = useState(false);
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
+  const [memberSearch, setMemberSearch] = useState('');
   const [editCell, setEditCell] = useState<{ projectId: string; memberId: string; periodKey: string } | null>(null);
   const [editPercentage, setEditPercentage] = useState('');
   const [editAllocId, setEditAllocId] = useState<string | null>(null);
@@ -49,7 +51,9 @@ export default function ProjectMatrixView() {
   );
 
   const displayedMembers = useMemo(() =>
-    selectedMemberIds.size === 0 ? eligibleMembers : eligibleMembers.filter(m => selectedMemberIds.has(m.id)),
+    selectedMemberIds.size === 0
+      ? eligibleMembers
+      : eligibleMembers.filter(m => selectedMemberIds.has(m.id)),
     [eligibleMembers, selectedMemberIds]
   );
 
@@ -61,24 +65,64 @@ export default function ProjectMatrixView() {
     });
   };
 
-  // Generate visible periods
-  const VISIBLE_PERIODS = 3;
+  const selectAllMembers = () => setSelectedMemberIds(new Set());
+  const selectNoMembers = () => setSelectedMemberIds(new Set(['__none__'])); // special: shows 0 columns
+
+  // Generate visible periods - dynamic based on employee filter and screen space
   const periods: PeriodCol[] = useMemo(() => {
     const cols: PeriodCol[] = [];
     const today = new Date();
-    let year = today.getFullYear();
-    let month = today.getMonth() + 1;
-    let sprint = today.getDate() <= 15 ? 1 : 2;
+    const nowYear = today.getFullYear();
+    const nowMonth = today.getMonth() + 1;
+    const nowSprint = today.getDate() <= 15 ? 1 : 2;
+    const nowVal = nowYear * 24 + (nowMonth - 1) * 2 + nowSprint;
+
+    const hasEmployeeFilter = selectedMemberIds.size > 0 && !selectedMemberIds.has('__none__');
+    const memberCount = displayedMembers.length || 1;
+
+    // Calculate how many periods fit on screen based on member count
+    // Rough estimate: screen ~1400px usable, project col ~160px, each member col ~58px
+    const availableWidth = 1400 - 160;
+    const periodWidth = memberCount * 58;
+    const fitOnScreen = Math.max(3, Math.floor(availableWidth / periodWidth));
+
+    let startVal = nowVal + periodOffset;
+    let periodCount = fitOnScreen;
+
+    if (hasEmployeeFilter) {
+      const memberIds = displayedMembers.map(m => m.id);
+      const memberAllocs = allocations.filter(a => memberIds.includes(a.productManagerId));
+
+      if (memberAllocs.length > 0) {
+        let minVal = Infinity;
+        let maxVal = 0;
+        for (const a of memberAllocs) {
+          const val = a.year * 24 + (a.month - 1) * 2 + a.sprint;
+          if (val < minVal) minVal = val;
+          if (val > maxVal) maxVal = val;
+        }
+
+        if (periodOffset === 0) {
+          // Auto-range: from earliest allocation to latest
+          startVal = Math.min(minVal, nowVal);
+          const endVal = Math.max(maxVal, nowVal + 2);
+          const needed = timeMode === 'sprint'
+            ? endVal - startVal + 1
+            : Math.ceil((endVal - startVal + 1) / 2);
+          periodCount = Math.max(fitOnScreen, Math.min(needed, 30));
+        }
+        // When navigating with offset, use fitOnScreen count
+      }
+    }
+
+    // Convert startVal back to year/month/sprint
+    let year = Math.floor((startVal - 1) / 24);
+    let rem = startVal - (year * 24);
+    let month = Math.floor((rem - 1) / 2) + 1;
+    let sprint = ((rem - 1) % 2) + 1;
 
     if (timeMode === 'sprint') {
-      // Apply offset
-      let totalSprints = (year * 24) + ((month - 1) * 2) + sprint + periodOffset;
-      year = Math.floor((totalSprints - 1) / 24);
-      let rem = totalSprints - (year * 24);
-      month = Math.floor((rem - 1) / 2) + 1;
-      sprint = ((rem - 1) % 2) + 1;
-
-      for (let i = 0; i < VISIBLE_PERIODS; i++) {
+      for (let i = 0; i < periodCount; i++) {
         cols.push({
           key: `${year}-${month}-${sprint}`,
           label: `${MONTH_NAMES[month - 1]} ${year}`,
@@ -90,11 +134,13 @@ export default function ProjectMatrixView() {
         if (month > 12) { month = 1; year++; }
       }
     } else {
-      month += periodOffset;
-      while (month > 12) { month -= 12; year++; }
-      while (month < 1) { month += 12; year--; }
-
-      for (let i = 0; i < VISIBLE_PERIODS; i++) {
+      // For month mode with offset
+      if (!hasEmployeeFilter || periodOffset !== 0) {
+        month += periodOffset;
+        while (month > 12) { month -= 12; year++; }
+        while (month < 1) { month += 12; year--; }
+      }
+      for (let i = 0; i < periodCount; i++) {
         cols.push({
           key: `${year}-${month}`,
           label: `${MONTH_NAMES[month - 1]} ${year}`,
@@ -106,7 +152,7 @@ export default function ProjectMatrixView() {
       }
     }
     return cols;
-  }, [timeMode, periodOffset]);
+  }, [timeMode, periodOffset, selectedMemberIds, displayedMembers, allocations]);
 
   // Traffic light logic (defined before filteredProjects so it can be used for filtering)
   const getProjectLightKey = (projectId: string, status: string, activityCloseDate?: string): string => {
@@ -156,11 +202,35 @@ export default function ProjectMatrixView() {
     if (lightFilter !== 'all') {
       filtered = filtered.filter(p => getProjectLightKey(p.id, p.status, p.activityCloseDate) === lightFilter);
     }
+    if (onlyAllocated) {
+      const today = new Date();
+      const curYear = today.getFullYear();
+      const curMonth = today.getMonth() + 1;
+      const curSprint = today.getDate() <= 15 ? 1 : 2;
+      const hasEmployeeFilter = selectedMemberIds.size > 0 && !selectedMemberIds.has('__none__');
+      const memberIdSet = hasEmployeeFilter ? new Set(displayedMembers.map(m => m.id)) : null;
+
+      const beforeCount = filtered.length;
+      filtered = filtered.filter(p => {
+        const projectAllocs = allocations.filter(a => a.projectId === p.id);
+        const futureAllocs = projectAllocs.filter(a => {
+          if (a.year > curYear) return true;
+          if (a.year === curYear && a.month > curMonth) return true;
+          if (a.year === curYear && a.month === curMonth && a.sprint >= curSprint) return true;
+          return false;
+        });
+        if (memberIdSet) {
+          return futureAllocs.some(a => memberIdSet.has(a.productManagerId));
+        }
+        return futureAllocs.length > 0;
+      });
+      console.log('Allocated only filter:', beforeCount, '->', filtered.length, 'curPeriod:', curYear, curMonth, curSprint, 'employeeFilter:', hasEmployeeFilter, 'memberIds:', memberIdSet ? [...memberIdSet] : 'all');
+    }
     return filtered.sort((a, b) => {
       const cmp = a.customerName.localeCompare(b.customerName);
       return cmp !== 0 ? cmp : a.projectName.localeCompare(b.projectName);
     });
-  }, [projects, projectFilter, statusFilter, lightFilter, allocations]);
+  }, [projects, projectFilter, statusFilter, lightFilter, onlyAllocated, allocations, selectedMemberIds, displayedMembers]);
 
   // Get allocation(s) for a cell - returns both sprints info for month view
   const getCellData = (projectId: string, memberId: string, period: PeriodCol) => {
@@ -288,7 +358,7 @@ export default function ProjectMatrixView() {
 
         {/* Period navigation */}
         <div className="flex items-center gap-1 border-l pl-3">
-          <button onClick={() => setPeriodOffset(o => o - VISIBLE_PERIODS)} className="p-1 rounded hover:bg-gray-100 text-gray-600" title="Previous periods">
+          <button onClick={() => setPeriodOffset(o => o - 3)} className="p-1 rounded hover:bg-gray-100 text-gray-600" title="Previous periods">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
           </button>
           <button onClick={() => setPeriodOffset(o => o - 1)} className="p-1 rounded hover:bg-gray-100 text-gray-600" title="Previous">
@@ -298,7 +368,7 @@ export default function ProjectMatrixView() {
           <button onClick={() => setPeriodOffset(o => o + 1)} className="p-1 rounded hover:bg-gray-100 text-gray-600" title="Next">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
           </button>
-          <button onClick={() => setPeriodOffset(o => o + VISIBLE_PERIODS)} className="p-1 rounded hover:bg-gray-100 text-gray-600" title="Next periods">
+          <button onClick={() => setPeriodOffset(o => o + 3)} className="p-1 rounded hover:bg-gray-100 text-gray-600" title="Next periods">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
           </button>
         </div>
@@ -324,28 +394,73 @@ export default function ProjectMatrixView() {
               className={`w-4 h-4 rounded-full bg-gray-400 ${lightFilter === 'gray' ? 'ring-2 ring-gray-600' : 'opacity-60 hover:opacity-100'}`} />
           </div>
           <input type="text" placeholder="Search projects..." value={projectFilter} onChange={e => setProjectFilter(e.target.value)} className="px-2 py-1 border rounded text-xs w-36" />
-          {/* Employee multi-select */}
+          {/* Only allocated toggle */}
+          <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+            <input type="checkbox" checked={onlyAllocated} onChange={e => setOnlyAllocated(e.target.checked)} className="rounded text-blue-600" />
+            <span className="text-gray-600 whitespace-nowrap">Allocated only</span>
+          </label>
+          {/* Employee multi-select with search */}
           <div className="relative">
-            <button onClick={() => setShowMemberDropdown(!showMemberDropdown)}
-              className="px-2 py-1 border rounded text-xs bg-white hover:bg-gray-50 flex items-center gap-1 min-w-[120px]">
-              <span className="truncate">{selectedMemberIds.size === 0 ? 'All Employees' : `${selectedMemberIds.size} selected`}</span>
+            <button onClick={() => { setShowMemberDropdown(!showMemberDropdown); setMemberSearch(''); }}
+              className="px-2 py-1 border rounded text-xs bg-white hover:bg-gray-50 flex items-center gap-1 min-w-[140px]">
+              <span className="truncate">
+                {selectedMemberIds.size === 0
+                  ? `All Employees (${eligibleMembers.length})`
+                  : `${displayedMembers.length} of ${eligibleMembers.length} selected`}
+              </span>
               <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
             {showMemberDropdown && (
-              <div className="absolute top-full left-0 mt-1 bg-white border rounded shadow-lg z-30 w-56 max-h-64 overflow-y-auto">
-                <div className="p-1 border-b flex gap-1">
-                  <button onClick={() => setSelectedMemberIds(new Set())} className="text-[10px] text-blue-600 hover:underline px-1">All</button>
-                  <button onClick={() => setSelectedMemberIds(new Set(eligibleMembers.map(m => m.id)))} className="text-[10px] text-blue-600 hover:underline px-1">None</button>
-                  <button onClick={() => setShowMemberDropdown(false)} className="text-[10px] text-gray-500 hover:underline px-1 ml-auto">Close</button>
+              <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg z-30 w-64">
+                {/* Search */}
+                <div className="p-2 border-b">
+                  <input type="text" placeholder="Search employees..." value={memberSearch}
+                    onChange={e => setMemberSearch(e.target.value)}
+                    className="w-full px-2 py-1 border rounded text-xs" autoFocus />
                 </div>
-                {eligibleMembers.map(m => (
-                  <label key={m.id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 cursor-pointer text-xs">
-                    <input type="checkbox" checked={selectedMemberIds.size === 0 || selectedMemberIds.has(m.id)}
-                      onChange={() => { if (selectedMemberIds.size === 0) { setSelectedMemberIds(new Set([m.id])); } else { toggleMember(m.id); } }} className="rounded" />
-                    <span className="truncate">{m.fullName}</span>
-                    <span className="text-[9px] text-gray-400 ml-auto">{m.role}</span>
-                  </label>
-                ))}
+                {/* Quick actions */}
+                <div className="px-2 py-1 border-b flex gap-2 bg-gray-50">
+                  <button onClick={selectAllMembers} className="text-[10px] text-blue-600 hover:underline font-medium">Select All</button>
+                  <button onClick={selectNoMembers} className="text-[10px] text-blue-600 hover:underline font-medium">Deselect All</button>
+                  <button onClick={() => setShowMemberDropdown(false)} className="text-[10px] text-gray-500 hover:underline ml-auto">Close</button>
+                </div>
+                {/* Member list */}
+                <div className="max-h-52 overflow-y-auto">
+                  {eligibleMembers
+                    .filter(m => !memberSearch || m.fullName.toLowerCase().includes(memberSearch.toLowerCase()))
+                    .map(m => {
+                      const isChecked = selectedMemberIds.size === 0 || selectedMemberIds.has(m.id);
+                      return (
+                        <label key={m.id} className="flex items-center gap-2 px-3 py-1.5 hover:bg-blue-50 cursor-pointer text-xs">
+                          <input type="checkbox" checked={isChecked}
+                            onChange={() => {
+                              if (selectedMemberIds.size === 0) {
+                                // Currently "all selected" - user wants ONLY this one
+                                setSelectedMemberIds(new Set([m.id]));
+                              } else if (selectedMemberIds.has(m.id)) {
+                                // Uncheck this member
+                                const next = new Set(selectedMemberIds);
+                                next.delete(m.id);
+                                // If none left, go back to "all"
+                                if (next.size === 0 || next.has('__none__')) setSelectedMemberIds(new Set());
+                                else setSelectedMemberIds(next);
+                              } else {
+                                // Check this member
+                                const next = new Set(selectedMemberIds);
+                                next.delete('__none__');
+                                next.add(m.id);
+                                // If all are now selected, reset to empty (= all)
+                                if (next.size === eligibleMembers.length) setSelectedMemberIds(new Set());
+                                else setSelectedMemberIds(next);
+                              }
+                            }}
+                            className="rounded text-blue-600" />
+                          <span className="truncate flex-1">{m.fullName}</span>
+                          <span className="text-[9px] text-gray-400 flex-shrink-0">{m.role}</span>
+                        </label>
+                      );
+                    })}
+                </div>
               </div>
             )}
           </div>
