@@ -370,9 +370,6 @@ export default function ProjectManagement() {
                         }`}
                       >
                         <option value="Active">Active</option>
-                        <option value="Pending">Pending</option>
-                        <option value="New Signed Off">New Signed Off</option>
-                        <option value="Completed">Completed</option>
                         <option value="Inactive">Inactive</option>
                       </select>
                     ) : (
