@@ -88,7 +88,8 @@ export default function ProjectMatrixView() {
     const fitOnScreen = Math.max(3, Math.floor(availableWidth / periodWidth));
 
     let startVal = nowVal + periodOffset;
-    let periodCount = fitOnScreen;
+    // Default: 1 year ahead (24 sprints or 12 months)
+    let periodCount = timeMode === 'sprint' ? 24 : 12;
 
     if (hasEmployeeFilter) {
       const memberIds = displayedMembers.map(m => m.id);
@@ -104,13 +105,13 @@ export default function ProjectMatrixView() {
         }
 
         if (periodOffset === 0) {
-          // Auto-range: from earliest allocation to latest
+          // Auto-range: from earliest allocation to latest, minimum 1 year
           startVal = Math.min(minVal, nowVal);
-          const endVal = Math.max(maxVal, nowVal + 2);
+          const endVal = Math.max(maxVal, nowVal + (timeMode === 'sprint' ? 24 : 24));
           const needed = timeMode === 'sprint'
             ? endVal - startVal + 1
             : Math.ceil((endVal - startVal + 1) / 2);
-          periodCount = Math.max(fitOnScreen, Math.min(needed, 30));
+          periodCount = Math.max(periodCount, Math.min(needed, 30));
         }
         // When navigating with offset, use fitOnScreen count
       }
@@ -394,7 +395,6 @@ export default function ProjectMatrixView() {
             <button onClick={() => setLightFilter(lightFilter === 'gray' ? 'all' : 'gray')} title="Inactive/Completed"
               className={`w-4 h-4 rounded-full bg-gray-400 ${lightFilter === 'gray' ? 'ring-2 ring-gray-600' : 'opacity-60 hover:opacity-100'}`} />
           </div>
-          <input type="text" placeholder="Search projects..." value={projectFilter} onChange={e => setProjectFilter(e.target.value)} className="px-2 py-1 border rounded text-xs w-36" />
           {/* Only allocated toggle */}
           <label className="flex items-center gap-1.5 cursor-pointer text-xs">
             <input type="checkbox" checked={onlyAllocated} onChange={e => setOnlyAllocated(e.target.checked)} className="rounded text-blue-600" />
@@ -467,17 +467,29 @@ export default function ProjectMatrixView() {
           </div>
         </div>
         <span className="text-xs text-gray-500">{filteredProjects.length} projects · {displayedMembers.length} members</span>
+        {(projectFilter || statusFilter !== 'active' || lightFilter !== 'all' || onlyAllocated || selectedMemberIds.size > 0) && (
+          <button onClick={() => {
+            setProjectFilter('');
+            setStatusFilter('active');
+            setLightFilter('all');
+            setOnlyAllocated(false);
+            setSelectedMemberIds(new Set());
+            setPeriodOffset(0);
+          }} className="text-xs text-red-500 hover:text-red-700 hover:underline whitespace-nowrap">
+            ✕ Reset filters
+          </button>
+        )}
       </div>
 
       {/* Matrix */}
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1 overflow-x-auto overflow-y-auto" style={{ maxHeight: 'calc(100vh - 160px)' }}>
         <table className="border-collapse" style={{ minWidth: projW + (periods.length * memberCount * colW) }}>
           <thead className="sticky top-0 z-10">
             {/* Row 1: Period headers spanning all members */}
             <tr className="bg-gray-100">
-              <th rowSpan={3} className="border-b border-r bg-gray-100 text-left px-2 py-2 sticky left-0 z-20"
+              <th rowSpan={3} className="border-b border-r bg-gray-100 text-left px-2 py-1 sticky left-0 z-20 align-top"
                 style={{ width: projW, minWidth: projW }}>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-semibold text-gray-700">Project</span>
                   {canWrite && (
                     <button onClick={() => setShowNewProjectModal(true)}
@@ -488,6 +500,9 @@ export default function ProjectMatrixView() {
                     </button>
                   )}
                 </div>
+                <input type="text" placeholder="🔍 Search..." value={projectFilter}
+                  onChange={e => setProjectFilter(e.target.value)}
+                  className="w-full px-1.5 py-1 border rounded text-[10px] bg-white" />
               </th>
               {periods.map((period, pIdx) => (
                 <th key={period.key} colSpan={memberCount} className={`border-b text-center py-1.5 bg-gray-100 ${pIdx > 0 ? 'border-l-2 border-l-gray-400' : ''} border-r`}>
