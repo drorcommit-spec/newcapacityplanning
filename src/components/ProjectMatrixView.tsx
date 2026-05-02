@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
 import Modal from './Modal';
 import ProjectForm from './ProjectForm';
+import PuzzleMe, { Suggestion } from './PuzzleMe';
 
 type TimeMode = 'sprint' | 'month';
 type StatusFilter = 'active' | 'all' | 'inactive';
@@ -41,6 +42,8 @@ export default function ProjectMatrixView() {
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [infoProjectId, setInfoProjectId] = useState<string | null>(null);
   const [editProjectId, setEditProjectId] = useState<string | null>(null);
+  const [showPuzzleMe, setShowPuzzleMe] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
   // Eligible members
   const eligibleMembers = useMemo(() =>
@@ -495,6 +498,33 @@ export default function ProjectMatrixView() {
             ✕ Reset filters
           </button>
         )}
+        {/* Puzzle Me button */}
+        {canWrite && (
+          <button onClick={() => setShowPuzzleMe(true)}
+            className="flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs font-semibold hover:bg-purple-200 border border-purple-200 ml-auto">
+            🧩 Puzzle Me
+          </button>
+        )}
+        {suggestions.length > 0 && (
+          <div className="flex items-center gap-2 ml-2">
+            <span className="text-xs text-purple-600 font-medium animate-pulse">✨ {suggestions.length} suggestions</span>
+            <button onClick={() => {
+              suggestions.forEach(s => {
+                addAllocation({
+                  projectId: s.projectId, productManagerId: s.memberId,
+                  year: s.year, month: s.month, sprint: s.sprint,
+                  allocationPercentage: s.percentage, allocationDays: (s.percentage / 100) * 10, isPlanned: true,
+                }, currentUser.email);
+              });
+              setSuggestions([]);
+            }} className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded hover:bg-green-200 font-medium">
+              ✓ Accept All
+            </button>
+            <button onClick={() => setSuggestions([])} className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
+              ✕ Dismiss
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Matrix */}
@@ -599,19 +629,42 @@ export default function ProjectMatrixView() {
                   displayedMembers.map((member, mIdx) => {
                     const data = getCellData(project.id, member.id, period);
                     const isYellowProject = getProjectLightKey(project.id, project.status, project.activityCloseDate) === 'yellow';
+                    // Check for suggestion
+                    const suggestion = suggestions.find(s =>
+                      s.projectId === project.id && s.memberId === member.id &&
+                      s.year === period.year && s.month === period.month &&
+                      (period.sprint === 0 || s.sprint === period.sprint)
+                    );
                     return (
                       <td key={`${period.key}-${member.id}`}
                         className={`border-b border-r text-center cursor-pointer transition-colors ${pIdx > 0 && mIdx === 0 ? 'border-l-2 border-l-gray-400' : ''} ${
-                          data.hasAny
-                            ? isYellowProject
-                              ? (data.pct >= 80 ? 'bg-yellow-200 hover:bg-yellow-300' : data.pct >= 40 ? 'bg-yellow-100 hover:bg-yellow-200' : 'bg-yellow-50 hover:bg-yellow-100')
-                              : (data.pct >= 80 ? 'bg-blue-200 hover:bg-blue-300' : data.pct >= 40 ? 'bg-blue-100 hover:bg-blue-200' : 'bg-blue-50 hover:bg-blue-100')
-                            : 'hover:bg-gray-100'
+                          suggestion
+                            ? 'bg-purple-100 animate-pulse border-2 border-purple-400'
+                            : data.hasAny
+                              ? isYellowProject
+                                ? (data.pct >= 80 ? 'bg-yellow-200 hover:bg-yellow-300' : data.pct >= 40 ? 'bg-yellow-100 hover:bg-yellow-200' : 'bg-yellow-50 hover:bg-yellow-100')
+                                : (data.pct >= 80 ? 'bg-blue-200 hover:bg-blue-300' : data.pct >= 40 ? 'bg-blue-100 hover:bg-blue-200' : 'bg-blue-50 hover:bg-blue-100')
+                              : 'hover:bg-gray-100'
                         }`}
                         style={{ width: colW, minWidth: colW, height: 32 }}
-                        onClick={() => openCell(project.id, member.id, period)}
-                        title={data.hasAny ? `${member.fullName} ${data.display}${isYellowProject ? ' ⚠️ Not signed off' : ''} (click to edit)` : `Assign ${member.fullName}`}>
-                        {data.hasAny && <span className={`text-[10px] font-semibold ${isYellowProject ? 'text-yellow-800' : 'text-blue-800'}`}>{data.display}</span>}
+                        onClick={() => {
+                          if (suggestion) {
+                            // Accept this suggestion
+                            addAllocation({
+                              projectId: suggestion.projectId, productManagerId: suggestion.memberId,
+                              year: suggestion.year, month: suggestion.month, sprint: suggestion.sprint,
+                              allocationPercentage: suggestion.percentage, allocationDays: (suggestion.percentage / 100) * 10, isPlanned: true,
+                            }, currentUser.email);
+                            setSuggestions(prev => prev.filter(s => s !== suggestion));
+                          } else {
+                            openCell(project.id, member.id, period);
+                          }
+                        }}
+                        title={suggestion
+                          ? `✨ Suggested: ${member.fullName} ${suggestion.percentage}% — Click to accept`
+                          : data.hasAny ? `${member.fullName} ${data.display}${isYellowProject ? ' ⚠️ Not signed off' : ''} (click to edit)` : `Assign ${member.fullName}`}>
+                        {suggestion && <span className="text-[10px] font-bold text-purple-700">✨{suggestion.percentage}%</span>}
+                        {!suggestion && data.hasAny && <span className={`text-[10px] font-semibold ${isYellowProject ? 'text-yellow-800' : 'text-blue-800'}`}>{data.display}</span>}
                       </td>
                     );
                   })
@@ -653,6 +706,14 @@ export default function ProjectMatrixView() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Puzzle Me */}
+      {showPuzzleMe && (
+        <PuzzleMe
+          onSuggestionsReady={(s) => { setSuggestions(s); setShowPuzzleMe(false); }}
+          onClose={() => setShowPuzzleMe(false)}
+        />
       )}
 
       {/* New Project Modal */}
