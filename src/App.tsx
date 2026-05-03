@@ -30,6 +30,11 @@ function AppRoutes() {
           <Navigate to="/capacity-planning" replace />
         </ProtectedRoute>
       } />
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <Layout><Dashboard /></Layout>
+        </ProtectedRoute>
+      } />
       <Route path="/members" element={
         <ProtectedRoute>
           <Layout><TeamManagement /></Layout>

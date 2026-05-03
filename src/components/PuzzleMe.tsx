@@ -35,7 +35,7 @@ export default function PuzzleMe({ onSuggestionsReady, onClose }: PuzzleMeProps)
   const curMonth = now.getMonth() + 1;
   const curSprint = now.getDate() <= 15 ? 1 : 2;
 
-  const [includeUnsigned, setIncludeUnsigned] = useState(true);
+  const [includeUnsigned, setIncludeUnsigned] = useState(false);
   const [projectInputs, setProjectInputs] = useState<ProjectInput[]>([]);
   const [step, setStep] = useState<'setup' | 'running' | 'done'>('setup');
 
@@ -73,15 +73,25 @@ export default function PuzzleMe({ onSuggestionsReady, onClose }: PuzzleMeProps)
 
   // Initialize project inputs when eligible projects change
   useMemo(() => {
-    setProjectInputs(eligibleProjects.map(p => ({
-      projectId: p.id,
-      selected: false,
-      capacity: p.requiredCapacity || 50,
-      sprintCount: p.plannedSprintCount || 2,
-      startYear: p.plannedStartYear || curYear,
-      startMonth: p.plannedStartMonth || curMonth,
-      startSprint: p.plannedStartSprint || curSprint,
-    })));
+    setProjectInputs(eligibleProjects.map(p => {
+      const name = p.projectName.toLowerCase();
+      // Smart defaults based on project name
+      let defaultCapacity = 20;
+      let defaultSprints = 2;
+      if (name.includes('mvp')) { defaultCapacity = 30; defaultSprints = 3; }
+      else if (name.includes('poc')) { defaultCapacity = 15; defaultSprints = 2; }
+      else if (name.includes('assess')) { defaultCapacity = 15; defaultSprints = 1; }
+
+      return {
+        projectId: p.id,
+        selected: false,
+        capacity: p.requiredCapacity || defaultCapacity,
+        sprintCount: p.plannedSprintCount || defaultSprints,
+        startYear: p.plannedStartYear || curYear,
+        startMonth: p.plannedStartMonth || curMonth,
+        startSprint: p.plannedStartSprint || curSprint,
+      };
+    }));
   }, [eligibleProjects]);
 
   const updateInput = (projectId: string, updates: Partial<ProjectInput>) => {
@@ -109,59 +119,102 @@ export default function PuzzleMe({ onSuggestionsReady, onClose }: PuzzleMeProps)
       }
     }
 
-    // For each selected project, find best employee for each sprint
+    // Build customer history: which employees worked on which customers before
+    const customerHistory: Record<string, Set<string>> = {}; // customerId -> Set<memberId>
+    for (const a of allocations) {
+      const proj = projects.find(p => p.id === a.projectId);
+      if (proj) {
+        const custKey = proj.customerName.toLowerCase();
+        if (!customerHistory[custKey]) customerHistory[custKey] = new Set();
+        customerHistory[custKey].add(a.productManagerId);
+      }
+    }
+
+    // For each selected project, find the BEST SINGLE employee for ALL sprints
     for (const input of selected) {
-      let year = input.startYear;
-      let month = input.startMonth;
-      let sprint = input.startSprint;
+      const proj = projects.find(p => p.id === input.projectId);
+      const custKey = proj?.customerName.toLowerCase() || '';
+      const prevMembers = customerHistory[custKey] || new Set();
 
-      for (let s = 0; s < input.sprintCount; s++) {
-        const sprintKey = `${year}-${month}-${sprint}`;
+      // Generate all sprint keys for this project
+      const sprintKeys: { year: number; month: number; sprint: number; key: string }[] = [];
+      let y = input.startYear, m = input.startMonth, s = input.startSprint;
+      for (let i = 0; i < input.sprintCount; i++) {
+        sprintKeys.push({ year: y, month: m, sprint: s, key: `${y}-${m}-${s}` });
+        s++;
+        if (s > 2) { s = 1; m++; }
+        if (m > 12) { m = 1; y++; }
+      }
 
-        // Find employee with most available capacity in this sprint
-        let bestMember: string | null = null;
-        let bestAvailable = -1;
+      // Score each employee: can they handle ALL sprints?
+      let bestMember: string | null = null;
+      let bestScore = -Infinity;
 
-        for (const m of eligibleMembers) {
-          const used = capacityUsed[m.id][sprintKey] || 0;
-          const memberCap = m.capacity ?? 100;
+      for (const member of eligibleMembers) {
+        const memberCap = member.capacity ?? 100;
+        let canFitAll = true;
+        let totalAvailable = 0;
+
+        for (const sk of sprintKeys) {
+          const used = capacityUsed[member.id][sk.key] || 0;
           const available = memberCap - used;
+          if (available < input.capacity) {
+            canFitAll = false;
+            break;
+          }
+          totalAvailable += available;
+        }
 
-          if (available >= input.capacity && available > bestAvailable) {
-            bestAvailable = available;
-            bestMember = m.id;
+        if (!canFitAll) continue;
+
+        // Score: priority to employees who worked on this customer before
+        const hasCustHistory = prevMembers.has(member.id) ? 1000 : 0;
+        // Secondary: most average available capacity (balanced load)
+        const avgAvailable = totalAvailable / sprintKeys.length;
+        const score = hasCustHistory + avgAvailable;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestMember = member.id;
+        }
+      }
+
+      // Fallback: if no one can fit ALL sprints, find best partial fit
+      if (!bestMember) {
+        let bestPartialScore = -Infinity;
+        for (const member of eligibleMembers) {
+          const memberCap = member.capacity ?? 100;
+          let fittingSprints = 0;
+          for (const sk of sprintKeys) {
+            const used = capacityUsed[member.id][sk.key] || 0;
+            if (memberCap - used >= input.capacity) fittingSprints++;
+          }
+          const hasCustHistory = prevMembers.has(member.id) ? 1000 : 0;
+          const score = hasCustHistory + fittingSprints * 10;
+          if (score > bestPartialScore && fittingSprints > 0) {
+            bestPartialScore = score;
+            bestMember = member.id;
           }
         }
+      }
 
-        // If no one has full capacity, find whoever has the most available
-        if (!bestMember) {
-          for (const m of eligibleMembers) {
-            const used = capacityUsed[m.id][sprintKey] || 0;
-            const memberCap = m.capacity ?? 100;
-            const available = memberCap - used;
-            if (available > 0 && available > bestAvailable) {
-              bestAvailable = available;
-              bestMember = m.id;
-            }
+      // Create suggestions for all sprints with the chosen employee
+      if (bestMember) {
+        for (const sk of sprintKeys) {
+          const used = capacityUsed[bestMember][sk.key] || 0;
+          const memberCap = (eligibleMembers.find(mm => mm.id === bestMember)?.capacity ?? 100);
+          const available = memberCap - used;
+          const pct = Math.min(input.capacity, Math.max(available, 0));
+          if (pct > 0) {
+            suggestions.push({
+              projectId: input.projectId,
+              memberId: bestMember,
+              year: sk.year, month: sk.month, sprint: sk.sprint,
+              percentage: pct,
+            });
+            capacityUsed[bestMember][sk.key] = used + pct;
           }
         }
-
-        if (bestMember) {
-          const pct = Math.min(input.capacity, bestAvailable);
-          suggestions.push({
-            projectId: input.projectId,
-            memberId: bestMember,
-            year, month, sprint,
-            percentage: pct,
-          });
-          // Update capacity map
-          capacityUsed[bestMember][sprintKey] = (capacityUsed[bestMember][sprintKey] || 0) + pct;
-        }
-
-        // Next sprint
-        sprint++;
-        if (sprint > 2) { sprint = 1; month++; }
-        if (month > 12) { month = 1; year++; }
       }
     }
 
@@ -239,6 +292,8 @@ export default function PuzzleMe({ onSuggestionsReady, onClose }: PuzzleMeProps)
                           </td>
                           <td className="py-2">
                             <span className="mr-1">{light}</span>
+                            <span className="text-gray-500 text-xs">{p.customerName}</span>
+                            <span className="mx-1 text-gray-300">·</span>
                             <span className="font-medium text-gray-800">{p.projectName}</span>
                           </td>
                           <td className="py-2 text-center">

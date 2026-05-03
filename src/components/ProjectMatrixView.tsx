@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
@@ -36,6 +36,19 @@ export default function ProjectMatrixView() {
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
   const [memberSearch, setMemberSearch] = useState('');
+  const memberDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!showMemberDropdown) return;
+    const handleClick = (e: MouseEvent) => {
+      if (memberDropdownRef.current && !memberDropdownRef.current.contains(e.target as Node)) {
+        setShowMemberDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showMemberDropdown]);
   const [editCell, setEditCell] = useState<{ projectId: string; memberId: string; periodKey: string } | null>(null);
   const [editPercentage, setEditPercentage] = useState('');
   const [editAllocId, setEditAllocId] = useState<string | null>(null);
@@ -420,7 +433,7 @@ export default function ProjectMatrixView() {
             {onlyAllocated ? 'Showing allocated only' : 'Show all projects'}
           </button>
           {/* Employee multi-select with search */}
-          <div className="relative">
+          <div className="relative" ref={memberDropdownRef}>
             <button onClick={() => { setShowMemberDropdown(!showMemberDropdown); setMemberSearch(''); }}
               className="px-2 py-1 border rounded text-xs bg-white hover:bg-gray-50 flex items-center gap-1 min-w-[140px]">
               <span className="truncate">
