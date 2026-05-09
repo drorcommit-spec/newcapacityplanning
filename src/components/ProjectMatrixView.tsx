@@ -31,8 +31,16 @@ export default function ProjectMatrixView() {
   const [periodOffset, setPeriodOffset] = useState(0);
   const [projectFilter, setProjectFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
-  const [lightFilter, setLightFilter] = useState<string>('all');
+  const [lightFilter, setLightFilter] = useState<Set<string>>(new Set(['green', 'yellow', 'red']));
   const [onlyAllocated, setOnlyAllocated] = useState(false);
+
+  const toggleLight = (key: string) => {
+    setLightFilter(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
   const [memberSearch, setMemberSearch] = useState('');
@@ -209,17 +217,16 @@ export default function ProjectMatrixView() {
   // Filter projects
   const filteredProjects = useMemo(() => {
     let filtered = projects.filter(p => !p.isArchived);
-    if (statusFilter === 'active') {
-      filtered = filtered.filter(p => p.status === 'Active' || p.status === 'Pending' || p.status === 'New Signed Off');
-    } else if (statusFilter === 'inactive') {
-      filtered = filtered.filter(p => p.status === 'Inactive' || p.status === 'Completed');
+    // Filter by traffic light (multi-select toggle)
+    if (lightFilter.size > 0) {
+      filtered = filtered.filter(p => {
+        const key = getProjectLightKey(p.id, p.status, p.activityCloseDate);
+        return lightFilter.has(key);
+      });
     }
     if (projectFilter) {
       const q = projectFilter.toLowerCase();
       filtered = filtered.filter(p => p.projectName.toLowerCase().includes(q) || p.customerName.toLowerCase().includes(q));
-    }
-    if (lightFilter !== 'all') {
-      filtered = filtered.filter(p => getProjectLightKey(p.id, p.status, p.activityCloseDate) === lightFilter);
     }
     if (onlyAllocated) {
       const today = new Date();
@@ -394,24 +401,30 @@ export default function ProjectMatrixView() {
 
         {/* Filters */}
         <div className="flex items-center gap-2 border-l pl-3">
-          {/* Traffic light filter with descriptions */}
+          {/* Traffic light filter - multi-select toggles */}
           <div className="flex items-center gap-1.5 border rounded-lg px-2 py-1 bg-gray-50">
-            <button onClick={() => setLightFilter('all')}
-              className={`text-[10px] px-2 py-0.5 rounded ${lightFilter === 'all' ? 'bg-white shadow font-bold text-gray-800' : 'text-gray-500 hover:bg-white'}`}>All</button>
-            <button onClick={() => setLightFilter(lightFilter === 'green' ? 'all' : 'green')}
+            <button onClick={() => setLightFilter(new Set(['green', 'yellow', 'red']))}
+              className={`text-[10px] px-2 py-0.5 rounded ${lightFilter.size === 3 && !lightFilter.has('gray') ? 'bg-white shadow font-bold text-gray-800' : 'text-gray-500 hover:bg-white'}`}>Active</button>
+            <button onClick={() => toggleLight('green')}
               title="Active Project + has sign-off date + has future allocations (healthy)"
-              className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${lightFilter === 'green' ? 'bg-green-100 font-bold text-green-800 shadow' : 'text-gray-600 hover:bg-green-50'}`}>
-              <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span> Active Projects with Resources
+              className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${lightFilter.has('green') ? 'bg-green-100 font-bold text-green-800 shadow' : 'text-gray-400 hover:bg-green-50'}`}>
+              <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span> With Resources
             </button>
-            <button onClick={() => setLightFilter(lightFilter === 'yellow' ? 'all' : 'yellow')}
+            <button onClick={() => toggleLight('yellow')}
               title="Active Project + has future allocations + NO sign-off date yet !! (needs attention - might not get signed)"
-              className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${lightFilter === 'yellow' ? 'bg-yellow-100 font-bold text-yellow-800 shadow' : 'text-gray-600 hover:bg-yellow-50'}`}>
-              <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block"></span> Pending signoff date
+              className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${lightFilter.has('yellow') ? 'bg-yellow-100 font-bold text-yellow-800 shadow' : 'text-gray-400 hover:bg-yellow-50'}`}>
+              <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block"></span> Pending signoff
             </button>
-            <button onClick={() => setLightFilter(lightFilter === 'red' ? 'all' : 'red')}
+            <button onClick={() => toggleLight('red')}
               title="Active Project + has sign-off date + NO future allocations (signed but nobody assigned)"
-              className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${lightFilter === 'red' ? 'bg-red-100 font-bold text-red-800 shadow' : 'text-gray-600 hover:bg-red-50'}`}>
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Signoffed Unassigned Projects !!
+              className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${lightFilter.has('red') ? 'bg-red-100 font-bold text-red-800 shadow' : 'text-gray-400 hover:bg-red-50'}`}>
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Unassigned !!
+            </button>
+            <span className="text-gray-300">|</span>
+            <button onClick={() => toggleLight('gray')}
+              title="Inactive projects — view past allocations"
+              className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${lightFilter.has('gray') ? 'bg-gray-200 font-bold text-gray-800 shadow' : 'text-gray-400 hover:bg-gray-100'}`}>
+              <span className="w-2.5 h-2.5 rounded-full bg-gray-400 inline-block"></span> Inactive
             </button>
           </div>
           {/* Hide unallocated projects toggle */}
@@ -499,11 +512,10 @@ export default function ProjectMatrixView() {
           </div>
         </div>
         <span className="text-xs text-gray-500">{filteredProjects.length} projects · {displayedMembers.length} members</span>
-        {(projectFilter || statusFilter !== 'active' || lightFilter !== 'all' || onlyAllocated || selectedMemberIds.size > 0) && (
+        {(projectFilter || lightFilter.has('gray') || lightFilter.size !== 3 || onlyAllocated || selectedMemberIds.size > 0) && (
           <button onClick={() => {
             setProjectFilter('');
-            setStatusFilter('active');
-            setLightFilter('all');
+            setLightFilter(new Set(['green', 'yellow', 'red']));
             setOnlyAllocated(false);
             setSelectedMemberIds(new Set());
             setPeriodOffset(0);
