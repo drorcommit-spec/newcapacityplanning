@@ -65,6 +65,10 @@ export default function ProjectMatrixView() {
   const [editProjectId, setEditProjectId] = useState<string | null>(null);
   const [showPuzzleMe, setShowPuzzleMe] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [startEtaProjectId, setStartEtaProjectId] = useState<string | null>(null);
+  const [etaMode, setEtaMode] = useState<'date' | 'sprints'>('date');
+  const [commentProjectId, setCommentProjectId] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState('');
 
   // Eligible members
   const eligibleMembers = useMemo(() =>
@@ -647,6 +651,22 @@ export default function ProjectMatrixView() {
                           </svg>
                         </button>
                       )}
+                      {/* Start/ETA icon */}
+                      <button onClick={() => setStartEtaProjectId(startEtaProjectId === project.id ? null : project.id)}
+                        className={`p-0.5 rounded hover:bg-purple-100 ${project.plannedStartMonth || project.etaMonth ? 'text-purple-500' : 'text-gray-300'}`}
+                        title={project.plannedStartMonth ? `Start: ${MONTH_NAMES[(project.plannedStartMonth || 1) - 1]} S${project.plannedStartSprint || 1}${project.etaMonth ? ` \u2192 ETA: ${MONTH_NAMES[(project.etaMonth || 1) - 1]} S${project.etaSprint || 1}` : ''}` : 'Set Start/ETA'}>
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </button>
+                      {/* Comment icon */}
+                      <button onClick={() => setCommentProjectId(commentProjectId === project.id ? null : project.id)}
+                        className={`p-0.5 rounded hover:bg-blue-100 ${project.projectComment ? 'text-blue-500' : 'text-gray-300'}`}
+                        title={project.projectComment || 'Add comment'}>
+                        <svg className="w-3 h-3" fill={project.projectComment ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 </td>
@@ -781,7 +801,7 @@ export default function ProjectMatrixView() {
                   <div className="text-sm font-bold text-gray-900">{p.customerName}</div>
                   <div className="text-lg font-bold text-gray-900">{p.projectName}</div>
                 </div>
-                <button onClick={() => setInfoProjectId(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+                <button onClick={() => setInfoProjectId(null)} className="text-gray-400 hover:text-gray-600">{'\u2715'}</button>
               </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-gray-500">Status</span><span className={`px-2 py-0.5 rounded text-xs ${p.status === 'Active' ? 'bg-green-100 text-green-800' : p.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>{p.status}</span></div>
@@ -799,6 +819,140 @@ export default function ProjectMatrixView() {
                   <div className="flex justify-between"><span className="text-gray-500">Close Date</span><span>{p.activityCloseDate}</span></div>
                 )}
               </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Start/ETA Popover */}
+      {startEtaProjectId && (() => {
+        const p = projects.find(pr => pr.id === startEtaProjectId);
+        if (!p) return null;
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={() => setStartEtaProjectId(null)}>
+            <div className="bg-white rounded-lg shadow-xl p-4 w-[340px]" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="text-sm font-bold text-gray-900">Start / ETA</h4>
+                <button onClick={() => setStartEtaProjectId(null)} className="text-gray-400 hover:text-gray-600 text-sm">{'\u2715'}</button>
+              </div>
+              <div className="text-xs text-gray-500 mb-3">{p.customerName} - {p.projectName}</div>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-gray-500 font-medium block mb-1">Start</label>
+                  <div className="flex gap-1">
+                    <select value={p.plannedStartMonth || ''} onChange={e => updateProject(p.id, { plannedStartMonth: Number(e.target.value) || undefined })}
+                      className="px-2 py-1.5 border rounded text-xs bg-white flex-1">
+                      <option value="">Month</option>
+                      {MONTH_NAMES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+                    </select>
+                    <select value={p.plannedStartSprint || ''} onChange={e => updateProject(p.id, { plannedStartSprint: Number(e.target.value) || undefined })}
+                      className="px-2 py-1.5 border rounded text-xs bg-white">
+                      <option value="">Sprint</option>
+                      <option value={1}>S1</option>
+                      <option value={2}>S2</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs text-gray-500 font-medium">ETA</label>
+                    <div className="flex bg-gray-100 rounded p-0.5">
+                      <button onClick={() => setEtaMode('date')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-medium ${etaMode === 'date' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500'}`}>
+                        Date
+                      </button>
+                      <button onClick={() => setEtaMode('sprints')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-medium ${etaMode === 'sprints' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500'}`}>
+                        Sprints
+                      </button>
+                    </div>
+                  </div>
+                  {etaMode === 'date' ? (
+                    <div className="flex gap-1">
+                      <select value={p.etaMonth || ''} onChange={e => {
+                        const newMonth = Number(e.target.value) || undefined;
+                        const updates: any = { etaMonth: newMonth };
+                        // Auto-calc sprint count if start is set
+                        if (newMonth && p.etaSprint && p.plannedStartMonth && p.plannedStartSprint) {
+                          const startVal = ((p.plannedStartYear || new Date().getFullYear()) * 24) + ((p.plannedStartMonth - 1) * 2) + (p.plannedStartSprint);
+                          const etaVal = ((p.plannedStartYear || new Date().getFullYear()) * 24) + ((newMonth - 1) * 2) + (p.etaSprint);
+                          updates.plannedSprintCount = Math.max(1, etaVal - startVal + 1);
+                        }
+                        updateProject(p.id, updates);
+                      }}
+                        className="px-2 py-1.5 border rounded text-xs bg-white flex-1">
+                        <option value="">Month</option>
+                        {MONTH_NAMES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+                      </select>
+                      <select value={p.etaSprint || ''} onChange={e => {
+                        const newSprint = Number(e.target.value) || undefined;
+                        const updates: any = { etaSprint: newSprint };
+                        // Auto-calc sprint count if start is set
+                        if (p.etaMonth && newSprint && p.plannedStartMonth && p.plannedStartSprint) {
+                          const startVal = ((p.plannedStartYear || new Date().getFullYear()) * 24) + ((p.plannedStartMonth - 1) * 2) + (p.plannedStartSprint);
+                          const etaVal = ((p.plannedStartYear || new Date().getFullYear()) * 24) + ((p.etaMonth - 1) * 2) + (newSprint);
+                          updates.plannedSprintCount = Math.max(1, etaVal - startVal + 1);
+                        }
+                        updateProject(p.id, updates);
+                      }}
+                        className="px-2 py-1.5 border rounded text-xs bg-white">
+                        <option value="">Sprint</option>
+                        <option value={1}>S1</option>
+                        <option value={2}>S2</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <input type="number" min="1" max="24"
+                        value={p.plannedSprintCount || ''}
+                        onChange={e => {
+                          const count = Number(e.target.value) || undefined;
+                          const updates: any = { plannedSprintCount: count };
+                          // Auto-calc ETA date from start + sprints
+                          if (count && p.plannedStartMonth && p.plannedStartSprint) {
+                            let y = p.plannedStartYear || new Date().getFullYear();
+                            let m = p.plannedStartMonth;
+                            let s = p.plannedStartSprint;
+                            // Advance by (count - 1) sprints to get the last sprint
+                            for (let i = 1; i < count; i++) {
+                              s++;
+                              if (s > 2) { s = 1; m++; }
+                              if (m > 12) { m = 1; y++; }
+                            }
+                            updates.etaMonth = m;
+                            updates.etaSprint = s;
+                            updates.etaYear = y;
+                          }
+                          updateProject(p.id, updates);
+                        }}
+                        className="w-16 px-2 py-1.5 border rounded text-xs text-center" placeholder="-" />
+                      <span className="text-xs text-gray-500">sprints from start</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Comment Popover */}
+      {commentProjectId && (() => {
+        const p = projects.find(pr => pr.id === commentProjectId);
+        if (!p) return null;
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={() => setCommentProjectId(null)}>
+            <div className="bg-white rounded-lg shadow-xl p-4 w-[320px]" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="text-sm font-bold text-gray-900">Comment</h4>
+                <button onClick={() => setCommentProjectId(null)} className="text-gray-400 hover:text-gray-600 text-sm">{'\u2715'}</button>
+              </div>
+              <div className="text-xs text-gray-500 mb-2">{p.customerName} - {p.projectName}</div>
+              <textarea
+                defaultValue={p.projectComment || ''}
+                onBlur={e => updateProject(p.id, { projectComment: e.target.value.trim() || undefined })}
+                className="w-full px-2 py-1.5 border rounded text-xs bg-white resize-none"
+                rows={3} placeholder="Add a comment..." autoFocus />
             </div>
           </div>
         );

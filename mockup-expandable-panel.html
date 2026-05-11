@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Project Icons Mockup - Start/ETA & Comment</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; }
+  .tooltip { position: absolute; z-index: 50; background: #1f2937; color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+  .tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; margin-left: -4px; border: 4px solid transparent; border-top-color: #1f2937; }
+  .icon-wrap:hover .tooltip { opacity: 1; }
+  .popover { position: absolute; z-index: 60; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 12px; min-width: 280px; }
+  .popover-arrow { position: absolute; top: -6px; left: 20px; width: 12px; height: 12px; background: white; border-left: 1px solid #e5e7eb; border-top: 1px solid #e5e7eb; transform: rotate(45deg); }
+</style>
+</head>
+<body class="p-8">
+
+<h2 class="text-lg font-bold mb-2 text-gray-700">Capacity Planning - Project Matrix View</h2>
+<p class="text-xs text-gray-400 mb-4">Mockup: Two icons per project row — hover for tooltip, click to edit</p>
+
+<div class="bg-white rounded-lg shadow border">
+  <!-- Header row -->
+  <div class="grid grid-cols-[280px_80px_80px_80px_80px_80px_80px] text-xs text-gray-500 border-b px-3 py-2 font-medium bg-gray-50">
+    <div>Project</div>
+    <div class="text-center">May S1</div>
+    <div class="text-center">May S2</div>
+    <div class="text-center">Jun S1</div>
+    <div class="text-center">Jun S2</div>
+    <div class="text-center">Jul S1</div>
+    <div class="text-center">Jul S2</div>
+  </div>
+
+  <!-- Row 1: Has Start/ETA + Comment (icons filled/colored) -->
+  <div class="border-b">
+    <div class="grid grid-cols-[280px_80px_80px_80px_80px_80px_80px] px-3 py-2.5 items-center hover:bg-gray-50">
+      <div class="flex items-center gap-1.5">
+        <span class="text-red-500 mr-0.5 text-xs">●</span>
+        <span class="text-gray-400 text-xs">Acme Corp</span>
+        <span class="text-gray-300 text-xs">·</span>
+        <span class="font-medium text-gray-800 text-sm">CRM Integration</span>
+        <!-- Icons -->
+        <div class="flex items-center gap-1 ml-2">
+          <!-- Start/ETA icon - FILLED (has data) -->
+          <div class="icon-wrap relative cursor-pointer" onclick="togglePopover('popover1')">
+            <span class="text-purple-500 hover:text-purple-700 text-sm" title="">📅</span>
+            <div class="tooltip" style="bottom: 28px; left: 50%; transform: translateX(-50%);">
+              Start: Jun S1 → ETA: Aug S2 (5 sprints)
+            </div>
+          </div>
+          <!-- Comment icon - FILLED (has comment) -->
+          <div class="icon-wrap relative cursor-pointer" onclick="togglePopover('popover1c')">
+            <span class="text-blue-500 hover:text-blue-700 text-sm">💬</span>
+            <div class="tooltip" style="bottom: 28px; left: 50%; transform: translateX(-50%);">
+              Waiting for API specs from client
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center"><span class="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded">20%</span></div>
+      <div class="text-center"><span class="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded">20%</span></div>
+      <div class="text-center"><span class="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded">20%</span></div>
+      <div class="text-center"><span class="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded">20%</span></div>
+      <div class="text-center text-gray-300 text-xs">—</div>
+      <div class="text-center text-gray-300 text-xs">—</div>
+    </div>
+    <!-- Start/ETA Popover (shown on click) -->
+    <div id="popover1" class="popover hidden ml-[180px] -mt-1 mb-2">
+      <div class="popover-arrow"></div>
+      <div class="flex gap-4">
+        <div>
+          <label class="text-xs text-gray-500 font-medium block mb-1">Start</label>
+          <div class="flex gap-1">
+            <select class="px-2 py-1 border rounded text-xs bg-white"><option>May</option><option selected>Jun</option><option>Jul</option><option>Aug</option></select>
+            <select class="px-2 py-1 border rounded text-xs bg-white"><option selected>S1</option><option>S2</option></select>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 font-medium block mb-1">ETA</label>
+          <div class="flex gap-1 items-center">
+            <select class="px-2 py-1 border rounded text-xs bg-white"><option>Jun</option><option>Jul</option><option selected>Aug</option><option>Sep</option></select>
+            <select class="px-2 py-1 border rounded text-xs bg-white"><option>S1</option><option selected>S2</option></select>
+            <span class="text-gray-300 text-xs mx-1">|</span>
+            <input type="number" value="5" class="w-10 px-1 py-1 border rounded text-xs text-center" min="1" max="24">
+            <span class="text-xs text-gray-400">sprints</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end mt-2 pt-2 border-t">
+        <button onclick="togglePopover('popover1')" class="text-xs text-gray-500 hover:text-gray-700 px-2 py-1">Close</button>
+      </div>
+    </div>
+    <!-- Comment Popover -->
+    <div id="popover1c" class="popover hidden ml-[210px] -mt-1 mb-2" style="min-width: 260px;">
+      <div class="popover-arrow" style="left: 30px;"></div>
+      <label class="text-xs text-gray-500 font-medium block mb-1">Comment</label>
+      <textarea class="w-full px-2 py-1.5 border rounded text-xs bg-white resize-none" rows="2" placeholder="Add a comment...">Waiting for API specs from client</textarea>
+      <div class="flex justify-end mt-2 pt-2 border-t">
+        <button onclick="togglePopover('popover1c')" class="text-xs text-gray-500 hover:text-gray-700 px-2 py-1">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Has Start/ETA, NO comment (comment icon is gray/outline) -->
+  <div class="border-b">
+    <div class="grid grid-cols-[280px_80px_80px_80px_80px_80px_80px] px-3 py-2.5 items-center hover:bg-gray-50">
+      <div class="flex items-center gap-1.5">
+        <span class="text-red-500 mr-0.5 text-xs">●</span>
+        <span class="text-gray-400 text-xs">BIO Catch</span>
+        <span class="text-gray-300 text-xs">·</span>
+        <span class="font-medium text-gray-800 text-sm">Discovery Phase</span>
+        <div class="flex items-center gap-1 ml-2">
+          <!-- Start/ETA icon - FILLED -->
+          <div class="icon-wrap relative cursor-pointer" onclick="togglePopover('popover2')">
+            <span class="text-purple-500 hover:text-purple-700 text-sm">📅</span>
+            <div class="tooltip" style="bottom: 28px; left: 50%; transform: translateX(-50%);">
+              Start: May S2 → ETA: Jul S1 (3 sprints)
+            </div>
+          </div>
+          <!-- Comment icon - EMPTY (gray) -->
+          <div class="icon-wrap relative cursor-pointer" onclick="togglePopover('popover2c')">
+            <span class="text-gray-300 hover:text-gray-500 text-sm">💬</span>
+            <div class="tooltip" style="bottom: 28px; left: 50%; transform: translateX(-50%);">
+              No comment
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center text-gray-300 text-xs">—</div>
+      <div class="text-center"><span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded">30%</span></div>
+      <div class="text-center"><span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded">30%</span></div>
+      <div class="text-center"><span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded">30%</span></div>
+      <div class="text-center text-gray-300 text-xs">—</div>
+      <div class="text-center text-gray-300 text-xs">—</div>
+    </div>
+    <div id="popover2" class="popover hidden ml-[180px] -mt-1 mb-2">
+      <div class="popover-arrow"></div>
+      <div class="flex gap-4">
+        <div>
+          <label class="text-xs text-gray-500 font-medium block mb-1">Start</label>
+          <div class="flex gap-1">
+            <select class="px-2 py-1 border rounded text-xs bg-white"><option selected>May</option><option>Jun</option><option>Jul</option></select>
+            <select class="px-2 py-1 border rounded text-xs bg-white"><option>S1</option><option selected>S2</option></select>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 font-medium block mb-1">ETA</label>
+          <div class="flex gap-1 items-center">
+            <select class="px-2 py-1 border rounded text-xs bg-white"><option>Jun</option><option selected>Jul</option><option>Aug</option></select>
+            <select class="px-2 py-1 border rounded text-xs bg-white"><option selected>S1</option><option>S2</option></select>
+            <span class="text-gray-300 text-xs mx-1">|</span>
+            <input type="number" value="3" class="w-10 px-1 py-1 border rounded text-xs text-center" min="1" max="24">
+            <span class="text-xs text-gray-400">sprints</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end mt-2 pt-2 border-t">
+        <button onclick="togglePopover('popover2')" class="text-xs text-gray-500 hover:text-gray-700 px-2 py-1">Close</button>
+      </div>
+    </div>
+    <div id="popover2c" class="popover hidden ml-[210px] -mt-1 mb-2" style="min-width: 260px;">
+      <div class="popover-arrow" style="left: 30px;"></div>
+      <label class="text-xs text-gray-500 font-medium block mb-1">Comment</label>
+      <textarea class="w-full px-2 py-1.5 border rounded text-xs bg-white resize-none" rows="2" placeholder="Add a comment..."></textarea>
+      <div class="flex justify-end mt-2 pt-2 border-t">
+        <button onclick="togglePopover('popover2c')" class="text-xs text-gray-500 hover:text-gray-700 px-2 py-1">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3: NO data at all (both icons gray) -->
+  <div class="border-b">
+    <div class="grid grid-cols-[280px_80px_80px_80px_80px_80px_80px] px-3 py-2.5 items-center hover:bg-gray-50">
+      <div class="flex items-center gap-1.5">
+        <span class="text-yellow-500 mr-0.5 text-xs">●</span>
+        <span class="text-gray-400 text-xs">TechFlow</span>
+        <span class="text-gray-300 text-xs">·</span>
+        <span class="font-medium text-gray-800 text-sm">MVP Platform</span>
+        <div class="flex items-center gap-1 ml-2">
+          <!-- Start/ETA icon - EMPTY (gray) -->
+          <div class="icon-wrap relative cursor-pointer" onclick="togglePopover('popover3')">
+            <span class="text-gray-300 hover:text-gray-500 text-sm">📅</span>
+            <div class="tooltip" style="bottom: 28px; left: 50%; transform: translateX(-50%);">
+              No start/ETA set
+            </div>
+          </div>
+          <!-- Comment icon - EMPTY (gray) -->
+          <div class="icon-wrap relative cursor-pointer" onclick="togglePopover('popover3c')">
+            <span class="text-gray-300 hover:text-gray-500 text-sm">💬</span>
+            <div class="tooltip" style="bottom: 28px; left: 50%; transform: translateX(-50%);">
+              No comment
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center"><span class="bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded">40%</span></div>
+      <div class="text-center"><span class="bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded">40%</span></div>
+      <div class="text-center text-gray-300 text-xs">—</div>
+      <div class="text-center text-gray-300 text-xs">—</div>
+      <div class="text-center text-gray-300 text-xs">—</div>
+      <div class="text-center text-gray-300 text-xs">—</div>
+    </div>
+    <div id="popover3" class="popover hidden ml-[180px] -mt-1 mb-2">
+      <div class="popover-arrow"></div>
+      <div class="flex gap-4">
+        <div>
+          <label class="text-xs text-gray-500 font-medium block mb-1">Start</label>
+          <div class="flex gap-1">
+            <select class="px-2 py-1 border rounded text-xs bg-white text-gray-400"><option value="">Month</option><option>May</option><option>Jun</option><option>Jul</option></select>
+            <select class="px-2 py-1 border rounded text-xs bg-white text-gray-400"><option value="">Sprint</option><option>S1</option><option>S2</option></select>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 font-medium block mb-1">ETA</label>
+          <div class="flex gap-1 items-center">
+            <select class="px-2 py-1 border rounded text-xs bg-white text-gray-400"><option value="">Month</option><option>Jun</option><option>Jul</option></select>
+            <select class="px-2 py-1 border rounded text-xs bg-white text-gray-400"><option value="">Sprint</option><option>S1</option><option>S2</option></select>
+            <span class="text-gray-300 text-xs mx-1">|</span>
+            <input type="number" class="w-10 px-1 py-1 border rounded text-xs text-center text-gray-400" placeholder="—" min="1" max="24">
+            <span class="text-xs text-gray-400">sprints</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end mt-2 pt-2 border-t">
+        <button onclick="togglePopover('popover3')" class="text-xs text-gray-500 hover:text-gray-700 px-2 py-1">Close</button>
+      </div>
+    </div>
+    <div id="popover3c" class="popover hidden ml-[210px] -mt-1 mb-2" style="min-width: 260px;">
+      <div class="popover-arrow" style="left: 30px;"></div>
+      <label class="text-xs text-gray-500 font-medium block mb-1">Comment</label>
+      <textarea class="w-full px-2 py-1.5 border rounded text-xs bg-white resize-none" rows="2" placeholder="Add a comment..."></textarea>
+      <div class="flex justify-end mt-2 pt-2 border-t">
+        <button onclick="togglePopover('popover3c')" class="text-xs text-gray-500 hover:text-gray-700 px-2 py-1">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 4: Another example -->
+  <div class="border-b">
+    <div class="grid grid-cols-[280px_80px_80px_80px_80px_80px_80px] px-3 py-2.5 items-center hover:bg-gray-50">
+      <div class="flex items-center gap-1.5">
+        <span class="text-red-500 mr-0.5 text-xs">●</span>
+        <span class="text-gray-400 text-xs">GlobalTech</span>
+        <span class="text-gray-300 text-xs">·</span>
+        <span class="font-medium text-gray-800 text-sm">Data Migration</span>
+        <div class="flex items-center gap-1 ml-2">
+          <div class="icon-wrap relative cursor-pointer">
+            <span class="text-gray-300 hover:text-gray-500 text-sm">📅</span>
+            <div class="tooltip" style="bottom: 28px; left: 50%; transform: translateX(-50%);">No start/ETA set</div>
+          </div>
+          <div class="icon-wrap relative cursor-pointer">
+            <span class="text-blue-500 hover:text-blue-700 text-sm">💬</span>
+            <div class="tooltip" style="bottom: 28px; left: 50%; transform: translateX(-50%);">Client requested delay until Q3</div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center text-gray-300 text-xs">—</div>
+      <div class="text-center text-gray-300 text-xs">—</div>
+      <div class="text-center text-gray-300 text-xs">—</div>
+      <div class="text-center"><span class="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded">15%</span></div>
+      <div class="text-center"><span class="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded">15%</span></div>
+      <div class="text-center text-gray-300 text-xs">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="mt-6 p-4 bg-gray-50 border rounded-lg text-xs text-gray-600 space-y-2">
+  <p class="font-semibold text-sm text-gray-700">How it works:</p>
+  <div class="grid grid-cols-2 gap-3">
+    <div>
+      <p><span class="text-purple-500">📅</span> <strong>Purple</strong> = Start/ETA is set</p>
+      <p><span class="text-gray-300">📅</span> <strong>Gray</strong> = No start/ETA yet</p>
+      <p class="mt-1 text-gray-400">Hover → shows "Start: Jun S1 → ETA: Aug S2 (5 sprints)"</p>
+      <p class="text-gray-400">Click → opens edit popover with dropdowns</p>
+    </div>
+    <div>
+      <p><span class="text-blue-500">💬</span> <strong>Blue</strong> = Has comment</p>
+      <p><span class="text-gray-300">💬</span> <strong>Gray</strong> = No comment</p>
+      <p class="mt-1 text-gray-400">Hover → shows comment text as tooltip</p>
+      <p class="text-gray-400">Click → opens editable textarea popover</p>
+    </div>
+  </div>
+</div>
+
+<script>
+function togglePopover(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.toggle('hidden');
+  }
+}
+// Close popovers when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.popover') && !e.target.closest('.icon-wrap')) {
+    document.querySelectorAll('.popover').forEach(p => p.classList.add('hidden'));
+  }
+});
+</script>
+</body>
+</html>

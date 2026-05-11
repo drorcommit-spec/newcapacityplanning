@@ -47,6 +47,12 @@ export interface Project {
   plannedStartSprint?: number;     // 1 or 2
   requiredCapacity?: number;       // 0-100, step 5
   plannedSprintCount?: number;     // number of sprints
+  // ETA fields
+  etaMonth?: number;               // 1-12
+  etaYear?: number;
+  etaSprint?: number;              // 1 or 2
+  // Comment
+  projectComment?: string;
 }
 
 // Sprint-specific role requirements for capacity planning
