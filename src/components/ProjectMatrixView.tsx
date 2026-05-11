@@ -560,6 +560,80 @@ export default function ProjectMatrixView() {
       <div className="flex-1 overflow-x-auto overflow-y-auto" style={{ maxHeight: 'calc(100vh - 160px)' }}>
         <table className="border-collapse" style={{ minWidth: projW + (periods.length * memberCount * colW) }}>
           <thead className="sticky top-0 z-10">
+            {displayedMembers.length === 1 ? (
+              <>
+                {/* Single employee: clean header */}
+                <tr className="bg-blue-50">
+                  <th rowSpan={4} className="border-b border-r bg-gray-100 text-left px-2 py-1 sticky left-0 z-20 align-top"
+                    style={{ width: projW, minWidth: projW }}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-semibold text-gray-700">Active Projects</span>
+                      {canWrite && (
+                        <button onClick={() => setShowNewProjectModal(true)}
+                          className="p-0.5 rounded hover:bg-green-100 text-green-600" title="Add new project">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                    <input type="text" placeholder="\u{1F50D} Search..." value={projectFilter}
+                      onChange={e => setProjectFilter(e.target.value)}
+                      className="w-full px-1.5 py-1 border rounded text-[10px] bg-white" />
+                  </th>
+                  <th colSpan={periods.length} className="border-b px-3 py-1.5 text-left">
+                    <span className="text-xs font-bold text-blue-700">{displayedMembers[0].fullName}</span>
+                    <span className="text-[10px] text-gray-400 ml-2">{displayedMembers[0].role}</span>
+                    <button onClick={() => setSelectedMemberIds(new Set())} className="ml-3 text-[9px] text-blue-500 hover:underline">[Show all]</button>
+                  </th>
+                </tr>
+                {/* Month row: group periods by month */}
+                <tr className="bg-gray-50">
+                  {(() => {
+                    const monthGroups: { label: string; count: number }[] = [];
+                    let prev = '';
+                    for (const p of periods) {
+                      const key = `${p.label}`;
+                      if (key === prev) {
+                        monthGroups[monthGroups.length - 1].count++;
+                      } else {
+                        monthGroups.push({ label: key, count: 1 });
+                        prev = key;
+                      }
+                    }
+                    return monthGroups.map((g, i) => (
+                      <th key={i} colSpan={g.count} className={`border-b border-r text-center py-1 text-[10px] font-bold text-gray-800 ${i > 0 ? 'border-l' : ''}`}>
+                        {g.label}
+                      </th>
+                    ));
+                  })()}
+                </tr>
+                {/* Sprint row */}
+                <tr className="bg-gray-50">
+                  {periods.map((period, pIdx) => (
+                    <th key={period.key} className={`border-b border-r text-center py-0.5 text-[9px] text-gray-500 ${pIdx > 0 ? '' : ''}`}
+                      style={{ width: colW, minWidth: colW }}>
+                      {period.sublabel || `S${period.sprint}`}
+                    </th>
+                  ))}
+                </tr>
+                {/* Capacity row */}
+                <tr className="bg-gray-50">
+                  {periods.map((period, pIdx) => {
+                    const total = getMemberTotal(displayedMembers[0].id, period);
+                    const cap = displayedMembers[0].capacity ?? 100;
+                    const color = total > cap ? 'text-red-600 bg-red-50' : total >= cap * 0.8 ? 'text-green-700 bg-green-50' : total > 0 ? 'text-yellow-700 bg-yellow-50' : 'text-gray-400 bg-gray-50';
+                    return (
+                      <th key={`${period.key}-tot`} className={`border-b border-r text-center px-0.5 py-0.5 ${color}`}
+                        style={{ width: colW, minWidth: colW }}>
+                        <span className="text-[9px] font-bold">{total}%</span>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </>
+            ) : (
+              <>
             {/* Row 1: Period headers spanning all members */}
             <tr className="bg-gray-100">
               <th rowSpan={3} className="border-b border-r bg-gray-100 text-left px-2 py-1 sticky left-0 z-20 align-top"
@@ -575,7 +649,7 @@ export default function ProjectMatrixView() {
                     </button>
                   )}
                 </div>
-                <input type="text" placeholder="🔍 Search..." value={projectFilter}
+                <input type="text" placeholder="\u{1F50D} Search..." value={projectFilter}
                   onChange={e => setProjectFilter(e.target.value)}
                   className="w-full px-1.5 py-1 border rounded text-[10px] bg-white" />
               </th>
@@ -620,6 +694,8 @@ export default function ProjectMatrixView() {
                 })
               )}
             </tr>
+              </>
+            )}
           </thead>
           <tbody>
             {filteredProjects.map(project => (

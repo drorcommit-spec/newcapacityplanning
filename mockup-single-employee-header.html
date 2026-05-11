@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Single Employee Header Mockup</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f3f4f6; }
+</style>
+</head>
+<body class="p-6">
+
+<h2 class="text-lg font-bold mb-1 text-gray-700">Single Employee View - Header Redesign</h2>
+<p class="text-xs text-gray-400 mb-6">When one employee is selected, the header becomes cleaner with separated year/month/sprint rows</p>
+
+<!-- CURRENT (ugly) -->
+<div class="mb-8">
+  <h3 class="text-sm font-semibold text-red-600 mb-2">CURRENT (too much text per column):</h3>
+  <div class="bg-white rounded border overflow-x-auto">
+    <table class="text-[9px]">
+      <thead>
+        <tr class="bg-gray-100">
+          <th class="border-r px-2 py-1 w-[140px] text-left">Project</th>
+          <th class="border-r px-1 py-1 text-center w-[58px]"><div>May</div><div>2026 S1 (1-15)</div><div class="font-bold">Ariel</div></th>
+          <th class="border-r px-1 py-1 text-center w-[58px]"><div>May</div><div>2026 S2 (16-31)</div><div class="font-bold">Ariel</div></th>
+          <th class="border-r px-1 py-1 text-center w-[58px]"><div>Jun</div><div>2026 S1 (1-15)</div><div class="font-bold">Ariel</div></th>
+          <th class="border-r px-1 py-1 text-center w-[58px]"><div>Jun</div><div>2026 S2 (16-31)</div><div class="font-bold">Ariel</div></th>
+          <th class="border-r px-1 py-1 text-center w-[58px]"><div>Jul</div><div>2026 S1 (1-15)</div><div class="font-bold">Ariel</div></th>
+          <th class="border-r px-1 py-1 text-center w-[58px]"><div>Jul</div><div>2026 S2 (16-31)</div><div class="font-bold">Ariel</div></th>
+          <th class="border-r px-1 py-1 text-center w-[58px]"><div>Aug</div><div>2026 S1 (1-15)</div><div class="font-bold">Ariel</div></th>
+          <th class="border-r px-1 py-1 text-center w-[58px]"><div>Aug</div><div>2026 S2 (16-31)</div><div class="font-bold">Ariel</div></th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+</div>
+
+<!-- PROPOSED Option A: Year row + Month spans + Sprint sub-columns -->
+<div class="mb-8">
+  <h3 class="text-sm font-semibold text-green-600 mb-2">PROPOSED - Option A (Year row + Month spans + Sprint columns):</h3>
+  <div class="bg-white rounded border overflow-x-auto">
+    <table class="text-[10px] border-collapse">
+      <thead>
+        <!-- Row 0: Employee name banner -->
+        <tr class="bg-blue-50">
+          <th class="border-r border-b px-2 py-1 w-[140px] text-left text-xs text-gray-600">Project</th>
+          <th colspan="8" class="border-b px-2 py-1.5 text-left">
+            <span class="text-xs font-bold text-blue-700">Ariel</span>
+            <span class="text-[10px] text-gray-400 ml-2">Product Manager</span>
+            <button class="ml-3 text-[9px] text-blue-500 hover:underline">[Show all]</button>
+          </th>
+        </tr>
+        <!-- Row 1: Year -->
+        <tr class="bg-gray-50">
+          <th class="border-r border-b w-[140px]"></th>
+          <th colspan="8" class="border-b text-center py-0.5 text-[10px] font-bold text-gray-600">2026</th>
+        </tr>
+        <!-- Row 2: Months (spanning 2 cols each) -->
+        <tr class="bg-gray-50">
+          <th class="border-r border-b w-[140px]"></th>
+          <th colspan="2" class="border-r border-b text-center py-1 font-bold text-gray-800">May</th>
+          <th colspan="2" class="border-r border-b text-center py-1 font-bold text-gray-800">Jun</th>
+          <th colspan="2" class="border-r border-b text-center py-1 font-bold text-gray-800">Jul</th>
+          <th colspan="2" class="border-r border-b text-center py-1 font-bold text-gray-800">Aug</th>
+        </tr>
+        <!-- Row 3: Sprint labels -->
+        <tr class="bg-gray-50">
+          <th class="border-r border-b w-[140px]"></th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] text-gray-500">S1</th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] text-gray-500">S2</th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] text-gray-500">S1</th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] text-gray-500">S2</th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] text-gray-500">S1</th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] text-gray-500">S2</th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] text-gray-500">S1</th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] text-gray-500">S2</th>
+        </tr>
+        <!-- Row 4: Capacity -->
+        <tr>
+          <th class="border-r border-b w-[140px] px-2 text-left text-[9px] text-gray-400">Capacity</th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] bg-green-50 text-green-700 font-bold">100%</th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] bg-green-50 text-green-700 font-bold">100%</th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] bg-green-50 text-green-700 font-bold">100%</th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] bg-green-50 text-green-700 font-bold">100%</th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] bg-yellow-50 text-yellow-700 font-bold">80%</th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] bg-yellow-50 text-yellow-700 font-bold">60%</th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] text-gray-400">0%</th>
+          <th class="border-r border-b text-center py-0.5 w-[58px] text-gray-400">0%</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="hover:bg-gray-50">
+          <td class="border-r border-b px-2 py-1.5 w-[140px]">
+            <div class="flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-red-500"></span>
+              <div>
+                <div class="text-[9px] font-semibold">Acme Corp</div>
+                <div class="text-[9px] text-gray-500">CRM Integration</div>
+              </div>
+            </div>
+          </td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-50"><span class="text-[10px] font-semibold text-blue-800">20%</span></td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-50"><span class="text-[10px] font-semibold text-blue-800">20%</span></td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-100"><span class="text-[10px] font-semibold text-blue-800">30%</span></td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-100"><span class="text-[10px] font-semibold text-blue-800">30%</span></td>
+          <td class="border-r border-b text-center w-[58px]"><span class="text-gray-300">—</span></td>
+          <td class="border-r border-b text-center w-[58px]"><span class="text-gray-300">—</span></td>
+          <td class="border-r border-b text-center w-[58px]"><span class="text-gray-300">—</span></td>
+          <td class="border-r border-b text-center w-[58px]"><span class="text-gray-300">—</span></td>
+        </tr>
+        <tr class="hover:bg-gray-50">
+          <td class="border-r border-b px-2 py-1.5 w-[140px]">
+            <div class="flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-red-500"></span>
+              <div>
+                <div class="text-[9px] font-semibold">BIO Catch</div>
+                <div class="text-[9px] text-gray-500">Discovery</div>
+              </div>
+            </div>
+          </td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-200"><span class="text-[10px] font-semibold text-blue-800">50%</span></td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-200"><span class="text-[10px] font-semibold text-blue-800">50%</span></td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-100"><span class="text-[10px] font-semibold text-blue-800">40%</span></td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-100"><span class="text-[10px] font-semibold text-blue-800">40%</span></td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-200"><span class="text-[10px] font-semibold text-blue-800">50%</span></td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-100"><span class="text-[10px] font-semibold text-blue-800">30%</span></td>
+          <td class="border-r border-b text-center w-[58px]"><span class="text-gray-300">—</span></td>
+          <td class="border-r border-b text-center w-[58px]"><span class="text-gray-300">—</span></td>
+        </tr>
+        <tr class="hover:bg-gray-50">
+          <td class="border-r border-b px-2 py-1.5 w-[140px]">
+            <div class="flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+              <div>
+                <div class="text-[9px] font-semibold">TechFlow</div>
+                <div class="text-[9px] text-gray-500">MVP Platform</div>
+              </div>
+            </div>
+          </td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-100"><span class="text-[10px] font-semibold text-blue-800">30%</span></td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-100"><span class="text-[10px] font-semibold text-blue-800">30%</span></td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-100"><span class="text-[10px] font-semibold text-blue-800">30%</span></td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-100"><span class="text-[10px] font-semibold text-blue-800">30%</span></td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-100"><span class="text-[10px] font-semibold text-blue-800">30%</span></td>
+          <td class="border-r border-b text-center w-[58px] bg-blue-100"><span class="text-[10px] font-semibold text-blue-800">30%</span></td>
+          <td class="border-r border-b text-center w-[58px]"><span class="text-gray-300">—</span></td>
+          <td class="border-r border-b text-center w-[58px]"><span class="text-gray-300">—</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Notes -->
+<div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-gray-600 space-y-1">
+  <p class="font-semibold text-sm text-gray-700">Design notes:</p>
+  <ul class="space-y-1 ml-3 list-disc">
+    <li>Employee name shown as a banner row at the top (with role + "Show all" link)</li>
+    <li>Year row spans all columns (only shown once, or changes when crossing year boundary)</li>
+    <li>Month row spans 2 columns each (S1 + S2)</li>
+    <li>Sprint row shows just "S1" / "S2" — compact</li>
+    <li>Capacity row shows the utilization per sprint</li>
+    <li>This layout only activates when a SINGLE employee is selected</li>
+    <li>When multiple employees are shown, it stays as the current layout</li>
+  </ul>
+</div>
+
+</body>
+</html>
