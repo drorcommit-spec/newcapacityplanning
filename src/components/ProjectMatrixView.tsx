@@ -590,8 +590,15 @@ export default function ProjectMatrixView() {
             <tr className="bg-gray-50">
               {periods.map((period, pIdx) =>
                 displayedMembers.map((member, mIdx) => (
-                  <th key={`${period.key}-${member.id}`} className={`border-b border-r text-center px-0.5 py-1 ${pIdx > 0 && mIdx === 0 ? 'border-l-2 border-l-gray-400' : ''}`}
-                    style={{ width: colW, minWidth: colW }} title={`${member.fullName} (${member.role})`}>
+                  <th key={`${period.key}-${member.id}`} className={`border-b border-r text-center px-0.5 py-1 cursor-pointer hover:bg-blue-50 ${pIdx > 0 && mIdx === 0 ? 'border-l-2 border-l-gray-400' : ''} ${selectedMemberIds.size === 1 && selectedMemberIds.has(member.id) ? 'bg-blue-100' : ''}`}
+                    style={{ width: colW, minWidth: colW }} title={`${member.fullName} (${member.role}) — Click to filter`}
+                    onClick={() => {
+                      if (selectedMemberIds.size === 1 && selectedMemberIds.has(member.id)) {
+                        setSelectedMemberIds(new Set());
+                      } else {
+                        setSelectedMemberIds(new Set([member.id]));
+                      }
+                    }}>
                     <div className="text-[9px] font-semibold text-gray-700 truncate">{member.fullName.split(' ')[0]}</div>
                   </th>
                 ))
