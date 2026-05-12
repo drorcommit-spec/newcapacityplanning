@@ -80,7 +80,7 @@ export default function Login() {
             <span className="text-5xl">{'\u{1F9E9}'}</span>
             <h1 className="text-3xl font-bold text-gray-900">Puzzle</h1>
           </div>
-          <p className="text-center text-gray-600 text-sm">Solve Your Capacity Planning</p>
+          <p className="text-center text-gray-600 text-sm">Solves Your Capacity Planning</p>
         </div>
         <form onSubmit={handleLogin} className="space-y-4">
           <Input
@@ -108,9 +108,6 @@ export default function Login() {
             {loading ? 'Logging in...' : 'Login'}
           </Button>
         </form>
-        <p className="text-sm text-gray-500 text-center mt-4">
-          Default password for new users: 12345678
-        </p>
       </div>
       <div className="mt-8 text-center space-y-2">
         <p className="text-xs text-gray-400">

@@ -53,7 +53,7 @@ export default function Layout({ children }: LayoutProps) {
                     <span className="text-2xl">🧩</span>
                     <span className="text-xl font-bold text-gray-900">Puzzle</span>
                   </div>
-                  <span className="text-[10px] text-gray-500 -mt-1">Solve Your Capacity Planning</span>
+                  <span className="text-[10px] text-gray-500 -mt-1">Solves Your Capacity Planning</span>
                 </div>
               </Link>
               <div className="hidden md:flex gap-4">
