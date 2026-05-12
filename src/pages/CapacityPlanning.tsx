@@ -24,7 +24,7 @@ export default function CapacityPlanning() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { teamMembers, projects, allocations, addAllocation, updateAllocation, deleteAllocation, addProject, updateProject, refreshData } = useData();
   const { user } = useAuth();
-  const { canWrite } = usePermissions();
+  const { canWrite, isMemberTeam } = usePermissions();
   const currentUser = user || { email: 'unknown', fullName: 'Unknown User' };
 
   // View state
@@ -1904,6 +1904,11 @@ export default function CapacityPlanning() {
     link.click();
     document.body.removeChild(link);
   };
+
+  // Member users see only the matrix view (which handles its own filtering)
+  if (isMemberTeam) {
+    return <ProjectMatrixView />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">

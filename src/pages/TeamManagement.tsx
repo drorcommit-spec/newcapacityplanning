@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
+import bcrypt from 'bcryptjs';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import Modal from '../components/Modal';
@@ -8,6 +10,7 @@ import Input from '../components/Input';
 import Select from '../components/Select';
 import { UserRole } from '../types';
 import { getTeams, fetchAllData } from '../services/api';
+import { supabase, isSupabaseEnabled } from '../services/supabase';
 
 interface ResourceType {
   id: string;
@@ -36,6 +39,11 @@ export default function TeamManagement() {
   const [emailError, setEmailError] = useState('');
   const [showNewResourceTypeInput, setShowNewResourceTypeInput] = useState(false);
   const [newResourceTypeName, setNewResourceTypeName] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminPwdMsg, setAdminPwdMsg] = useState('');
+  const { user } = useAuth();
+  const currentMember = teamMembers.find(m => m.id === user?.id);
+  const isAdmin = currentMember?.teams?.some(t => t.toLowerCase() !== 'member' && t.toLowerCase() !== 'management') && (currentMember?.teams?.length || 0) > 0;
 
   // Load available teams and resource types
   useEffect(() => {
@@ -90,6 +98,8 @@ export default function TeamManagement() {
     setEmailError('');
     setEditingId(null);
     setIsModalOpen(false);
+    setAdminPassword('');
+    setAdminPwdMsg('');
   };
 
   const handleEdit = (member: typeof teamMembers[0]) => {
@@ -495,6 +505,50 @@ export default function TeamManagement() {
               </div>
             )}
           </div>
+
+          {/* Admin: Set Password */}
+          {editingId && isAdmin && (
+            <div className="border-t pt-3 mt-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Set Password (Admin)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={adminPassword}
+                  onChange={e => { setAdminPassword(e.target.value); setAdminPwdMsg(''); }}
+                  placeholder="New password (min 8 chars)"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (adminPassword.length < 8) { setAdminPwdMsg('Min 8 characters'); return; }
+                    try {
+                      if (isSupabaseEnabled() && supabase) {
+                        const hash = bcrypt.hashSync(adminPassword, 10);
+                        const { error } = await supabase.from('team_members').update({ password_hash: hash }).eq('id', editingId);
+                        if (error) { setAdminPwdMsg('Error: ' + error.message); return; }
+                      } else {
+                        const res = await fetch(`http://localhost:3002/api/auth/admin/set-password`, {
+                          method: 'POST', headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ memberId: editingId, newPassword: adminPassword }),
+                        });
+                        if (!res.ok) { const d = await res.json(); setAdminPwdMsg(d.error || 'Failed'); return; }
+                      }
+                      setAdminPwdMsg('Password updated!');
+                      setAdminPassword('');
+                    } catch { setAdminPwdMsg('Connection error'); }
+                  }}
+                  className="px-3 py-2 bg-purple-600 text-white rounded-md text-sm hover:bg-purple-700"
+                >
+                  Set
+                </button>
+              </div>
+              {adminPwdMsg && <p className={`text-xs mt-1 ${adminPwdMsg.includes('updated') ? 'text-green-600' : 'text-red-600'}`}>{adminPwdMsg}</p>}
+            </div>
+          )}
+
           <div className="flex gap-2 justify-end">
             <Button type="button" variant="secondary" onClick={resetForm}>
               Cancel

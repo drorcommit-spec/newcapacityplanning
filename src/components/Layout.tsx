@@ -17,7 +17,7 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const { teamMembers } = useData();
-  const { isReadOnly } = usePermissions();
+  const { isReadOnly, isMemberTeam } = usePermissions();
   const navigate = useNavigate();
   const location = useLocation();
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
@@ -57,6 +57,7 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
               </Link>
               <div className="hidden md:flex gap-4">
+                {!isMemberTeam && (
                 <Link 
                   to="/dashboard" 
                   className={`px-3 py-2 rounded-md transition-colors ${
@@ -67,6 +68,7 @@ export default function Layout({ children }: LayoutProps) {
                 >
                   Dashboard
                 </Link>
+                )}
                 <Link 
                   to="/capacity-planning" 
                   className={`px-3 py-2 rounded-md transition-colors ${
@@ -75,8 +77,9 @@ export default function Layout({ children }: LayoutProps) {
                       : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
                   }`}
                 >
-                  Capacity Planning
+                  {isMemberTeam ? 'My Allocations' : 'Capacity Planning'}
                 </Link>
+                {!isMemberTeam && (
                 <Link 
                   to="/history" 
                   className={`px-3 py-2 rounded-md transition-colors ${
@@ -87,6 +90,7 @@ export default function Layout({ children }: LayoutProps) {
                 >
                   History
                 </Link>
+                )}
                 {!isReadOnly && (
                   <div 
                     className="relative"

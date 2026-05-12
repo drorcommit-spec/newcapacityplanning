@@ -24,7 +24,7 @@ interface PeriodCol {
 export default function ProjectMatrixView() {
   const { projects, allocations, teamMembers, addAllocation, updateAllocation, deleteAllocation, addProject, updateProject } = useData();
   const { user } = useAuth();
-  const { canWrite } = usePermissions();
+  const { canWrite, isMemberTeam } = usePermissions();
   const currentUser = user || { email: 'unknown' };
 
   const [timeMode, setTimeMode] = useState<TimeMode>('sprint');
@@ -45,6 +45,14 @@ export default function ProjectMatrixView() {
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
   const [memberSearch, setMemberSearch] = useState('');
   const memberDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Auto-filter to own user for member team users
+  useEffect(() => {
+    if (isMemberTeam && user?.id) {
+      setSelectedMemberIds(new Set([user.id]));
+      setOnlyAllocated(true);
+    }
+  }, [isMemberTeam, user?.id]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -403,7 +411,8 @@ export default function ProjectMatrixView() {
           </button>
         </div>
 
-        {/* Filters */}
+        {/* Filters - hidden for member users */}
+        {!isMemberTeam && (
         <div className="flex items-center gap-2 border-l pl-3">
           {/* Traffic light filter - multi-select toggles */}
           <div className="flex items-center gap-1.5 border rounded-lg px-2 py-1 bg-gray-50">
@@ -515,8 +524,11 @@ export default function ProjectMatrixView() {
             )}
           </div>
         </div>
+        )}
+        {!isMemberTeam && (
         <span className="text-xs text-gray-500">{filteredProjects.length} projects · {displayedMembers.length} members</span>
-        {(projectFilter || lightFilter.has('gray') || lightFilter.size !== 3 || onlyAllocated || selectedMemberIds.size > 0) && (
+        )}
+        {!isMemberTeam && (projectFilter || lightFilter.has('gray') || lightFilter.size !== 3 || onlyAllocated || selectedMemberIds.size > 0) && (
           <button onClick={() => {
             setProjectFilter('');
             setLightFilter(new Set(['green', 'yellow', 'red']));
@@ -528,7 +540,7 @@ export default function ProjectMatrixView() {
           </button>
         )}
         {/* Puzzle Me button */}
-        {canWrite && (
+        {canWrite && !isMemberTeam && (
           <button onClick={() => setShowPuzzleMe(true)}
             className="flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs font-semibold hover:bg-purple-200 border border-purple-200 ml-auto">
             🧩 Puzzle Me
@@ -584,7 +596,7 @@ export default function ProjectMatrixView() {
                   <th colSpan={periods.length} className="border-b px-3 py-1.5 text-left">
                     <span className="text-xs font-bold text-blue-700">{displayedMembers[0].fullName}</span>
                     <span className="text-[10px] text-gray-400 ml-2">{displayedMembers[0].role}</span>
-                    <button onClick={() => setSelectedMemberIds(new Set())} className="ml-3 text-[9px] text-blue-500 hover:underline">[Show all]</button>
+                    {!isMemberTeam && <button onClick={() => setSelectedMemberIds(new Set())} className="ml-3 text-[9px] text-blue-500 hover:underline">[Show all]</button>}
                   </th>
                 </tr>
                 {/* Month row: group periods by month */}
@@ -707,14 +719,23 @@ export default function ProjectMatrixView() {
                       <div className="flex items-center gap-1">
                         <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getProjectLight(project.id, project.status, project.activityCloseDate).color}`}
                           title={getProjectLight(project.id, project.status, project.activityCloseDate).label} />
+                        {isMemberTeam ? (
+                          <span className="text-[10px] font-semibold text-gray-900 truncate">{project.customerName}</span>
+                        ) : (
                         <button onClick={() => setEditProjectId(project.id)} className="text-[10px] font-semibold text-gray-900 truncate hover:text-blue-600 hover:underline" title="Click to edit project">
                           {project.customerName}
                         </button>
+                        )}
                       </div>
+                      {isMemberTeam ? (
+                        <span className="text-[10px] text-gray-500 truncate pl-3">{project.projectName}</span>
+                      ) : (
                       <button onClick={() => setEditProjectId(project.id)} className="text-[10px] text-gray-500 truncate pl-3 hover:text-blue-600 hover:underline" title="Click to edit project">
                         {project.projectName}
                       </button>
+                      )}
                     </div>
+                    {!isMemberTeam && (
                     <div className="flex gap-0.5 flex-shrink-0">
                       <button onClick={() => setInfoProjectId(project.id)}
                         className="p-0.5 rounded hover:bg-blue-100 text-blue-500" title="Project info">
@@ -751,6 +772,7 @@ export default function ProjectMatrixView() {
                         </svg>
                       </button>
                     </div>
+                    )}
                   </div>
                 </td>
                 {periods.map((period, pIdx) =>
@@ -765,7 +787,7 @@ export default function ProjectMatrixView() {
                     );
                     return (
                       <td key={`${period.key}-${member.id}`}
-                        className={`border-b border-r text-center cursor-pointer transition-colors ${pIdx > 0 && mIdx === 0 ? 'border-l-2 border-l-gray-400' : ''} ${
+                        className={`border-b border-r text-center ${isMemberTeam ? '' : 'cursor-pointer'} transition-colors ${pIdx > 0 && mIdx === 0 ? 'border-l-2 border-l-gray-400' : ''} ${
                           suggestion
                             ? 'bg-purple-100 animate-pulse border-2 border-purple-400'
                             : data.hasAny
@@ -776,8 +798,8 @@ export default function ProjectMatrixView() {
                         }`}
                         style={{ width: colW, minWidth: colW, height: 32 }}
                         onClick={() => {
+                          if (isMemberTeam) return;
                           if (suggestion) {
-                            // Accept this suggestion
                             addAllocation({
                               projectId: suggestion.projectId, productManagerId: suggestion.memberId,
                               year: suggestion.year, month: suggestion.month, sprint: suggestion.sprint,
