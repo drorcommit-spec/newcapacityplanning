@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
+import bcrypt from 'bcryptjs';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { APP_VERSION } from '../version';
+import { supabase, isSupabaseEnabled } from '../services/supabase';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3002';
 
@@ -13,6 +16,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const { teamMembers } = useData();
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -22,23 +26,45 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Login failed');
-        return;
+      if (isSupabaseEnabled() && supabase) {
+        // Supabase mode: fetch password_hash from DB
+        const { data: members, error: fetchErr } = await supabase
+          .from('team_members')
+          .select('id, full_name, email, role, is_active, password_hash')
+          .ilike('email', email.trim())
+          .limit(1);
+
+        if (fetchErr) { setError('Database error: ' + fetchErr.message); return; }
+        if (!members || members.length === 0) { setError('Email not found'); return; }
+
+        const member = members[0];
+        if (!member.is_active) { setError('Account is inactive'); return; }
+
+        // If no password hash, use default
+        const hash = member.password_hash || bcrypt.hashSync('12345678', 10);
+        const valid = bcrypt.compareSync(password, hash);
+
+        if (!valid) { setError('Invalid password'); return; }
+
+        // If member had no hash, save the default one
+        if (!member.password_hash) {
+          await supabase.from('team_members').update({ password_hash: hash }).eq('id', member.id);
+        }
+
+        login({ id: member.id, fullName: member.full_name, email: member.email, role: member.role });
+        navigate('/');
+      } else {
+        // Local server mode
+        const res = await fetch(`${API_BASE}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim(), password }),
+        });
+        const data = await res.json();
+        if (!res.ok) { setError(data.error || 'Login failed'); return; }
+        login({ id: data.user.id, fullName: data.user.fullName, email: data.user.email, role: data.user.role });
+        navigate('/');
       }
-      login({
-        id: data.user.id,
-        fullName: data.user.fullName,
-        email: data.user.email,
-        role: data.user.role,
-      });
-      navigate('/');
     } catch (err) {
       setError('Cannot connect to server. Please try again.');
     } finally {

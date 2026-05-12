@@ -4,6 +4,8 @@ import { useData } from '../context/DataContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { useState } from 'react';
 import { APP_VERSION } from '../version';
+import { supabase, isSupabaseEnabled } from '../services/supabase';
+import bcrypt from 'bcryptjs';
 import Chatbot from './Chatbot';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3002';
@@ -210,13 +212,26 @@ export default function Layout({ children }: LayoutProps) {
               if (pwdNew.length < 8) { setPwdError('New password must be at least 8 characters'); return; }
               if (pwdNew !== pwdConfirm) { setPwdError('New passwords do not match'); return; }
               try {
-                const res = await fetch(`${API_BASE}/api/auth/change-password`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ userId: user.id, currentPassword: pwdCurrent, newPassword: pwdNew }),
-                });
-                const data = await res.json();
-                if (!res.ok) { setPwdError(data.error || 'Failed to change password'); return; }
+                if (isSupabaseEnabled() && supabase) {
+                  // Supabase mode
+                  const { data: members, error: fetchErr } = await supabase
+                    .from('team_members').select('password_hash').eq('id', user.id).limit(1);
+                  if (fetchErr || !members || members.length === 0) { setPwdError('User not found'); return; }
+                  const currentHash = members[0].password_hash || bcrypt.hashSync('12345678', 10);
+                  if (!bcrypt.compareSync(pwdCurrent, currentHash)) { setPwdError('Current password is incorrect'); return; }
+                  const newHash = bcrypt.hashSync(pwdNew, 10);
+                  const { error: updateErr } = await supabase.from('team_members').update({ password_hash: newHash }).eq('id', user.id);
+                  if (updateErr) { setPwdError('Failed to update: ' + updateErr.message); return; }
+                } else {
+                  // Local server mode
+                  const res = await fetch(`${API_BASE}/api/auth/change-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.id, currentPassword: pwdCurrent, newPassword: pwdNew }),
+                  });
+                  const data = await res.json();
+                  if (!res.ok) { setPwdError(data.error || 'Failed to change password'); return; }
+                }
                 setPwdSuccess('Password changed successfully!');
                 setTimeout(() => setShowChangePassword(false), 1500);
               } catch { setPwdError('Cannot connect to server'); }
