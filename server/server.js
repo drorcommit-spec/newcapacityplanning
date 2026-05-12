@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -203,10 +204,135 @@ app.get('/api/data', async (req, res) => {
   try {
     console.log('📥 GET /api/data - Request received');
     const data = await readDB();
+    // Strip password hashes from response (security)
+    const safeData = { ...data };
+    safeData.teamMembers = data.teamMembers.map(m => {
+      const { passwordHash, ...rest } = m;
+      return rest;
+    });
     console.log('✅ Data loaded, sending response');
-    res.json(data);
+    res.json(safeData);
   } catch (error) {
     console.error('❌ Error loading data:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Login with email + password
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+    const data = await readDB();
+    const member = data.teamMembers.find(m => m.email.toLowerCase() === email.toLowerCase() && m.isActive);
+    if (!member) {
+      return res.status(401).json({ error: 'Email not found or account is inactive' });
+    }
+    // If member has no password hash yet, set default
+    if (!member.passwordHash) {
+      member.passwordHash = await bcrypt.hash('12345678', 10);
+      await writeDB(data);
+    }
+    const valid = await bcrypt.compare(password, member.passwordHash);
+    if (!valid) {
+      return res.status(401).json({ error: 'Invalid password' });
+    }
+    const { passwordHash, ...safeUser } = member;
+    res.json({ success: true, user: safeUser });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Change own password
+app.post('/api/auth/change-password', async (req, res) => {
+  try {
+    const { userId, currentPassword, newPassword } = req.body;
+    if (!userId || !currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+    const data = await readDB();
+    const member = data.teamMembers.find(m => m.id === userId);
+    if (!member) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    // If no hash yet, treat default as current
+    if (!member.passwordHash) {
+      member.passwordHash = await bcrypt.hash('12345678', 10);
+    }
+    const valid = await bcrypt.compare(currentPassword, member.passwordHash);
+    if (!valid) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+    member.passwordHash = await bcrypt.hash(newPassword, 10);
+    await writeDB(data);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: get member password (returns plain indicator, not actual hash)
+app.get('/api/auth/admin/member-password/:memberId', async (req, res) => {
+  try {
+    const data = await readDB();
+    const member = data.teamMembers.find(m => m.id === req.params.memberId);
+    if (!member) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+    // Admin can see if password is default or custom
+    const isDefault = !member.passwordHash || await bcrypt.compare('12345678', member.passwordHash);
+    res.json({ isDefault, hasPassword: !!member.passwordHash });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: reset/set member password
+app.post('/api/auth/admin/set-password', async (req, res) => {
+  try {
+    const { memberId, newPassword } = req.body;
+    if (!memberId || !newPassword) {
+      return res.status(400).json({ error: 'Member ID and new password are required' });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+    const data = await readDB();
+    const member = data.teamMembers.find(m => m.id === memberId);
+    if (!member) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+    member.passwordHash = await bcrypt.hash(newPassword, 10);
+    await writeDB(data);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Initialize passwords for all members that don't have one
+app.post('/api/auth/init-passwords', async (req, res) => {
+  try {
+    const data = await readDB();
+    const defaultHash = await bcrypt.hash('12345678', 10);
+    let count = 0;
+    for (const member of data.teamMembers) {
+      if (!member.passwordHash) {
+        member.passwordHash = defaultHash;
+        count++;
+      }
+    }
+    if (count > 0) {
+      await writeDB(data);
+    }
+    res.json({ success: true, initialized: count });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });

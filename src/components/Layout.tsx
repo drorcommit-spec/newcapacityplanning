@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { APP_VERSION } from '../version';
 import Chatbot from './Chatbot';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+
 interface LayoutProps {
   children: React.ReactNode;
 }
@@ -17,6 +19,12 @@ export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [pwdCurrent, setPwdCurrent] = useState('');
+  const [pwdNew, setPwdNew] = useState('');
+  const [pwdConfirm, setPwdConfirm] = useState('');
+  const [pwdError, setPwdError] = useState('');
+  const [pwdSuccess, setPwdSuccess] = useState('');
 
   // Get current user's full data including teams
   const currentMember = teamMembers.find(m => m.id === user?.id);
@@ -149,7 +157,10 @@ export default function Layout({ children }: LayoutProps) {
             </div>
             <div className="flex items-center gap-4">
               <div className="flex flex-col items-end">
-                <span className="text-sm font-medium text-gray-700">{user.fullName}</span>
+                <button onClick={() => { setShowChangePassword(true); setPwdError(''); setPwdSuccess(''); setPwdCurrent(''); setPwdNew(''); setPwdConfirm(''); }}
+                  className="text-sm font-medium text-gray-700 hover:text-blue-600 hover:underline cursor-pointer" title="Click to change password">
+                  {user.fullName}
+                </button>
                 <span className="text-xs text-gray-500">{user.email}</span>
                 {currentMember?.teams && currentMember.teams.length > 0 && (
                   <div className="flex gap-1 mt-1">
@@ -184,6 +195,56 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </footer>
       <Chatbot />
+
+      {/* Change Password Modal */}
+      {showChangePassword && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50" onClick={() => setShowChangePassword(false)}>
+          <div className="bg-white rounded-lg shadow-xl p-5 w-[340px]" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-sm font-bold text-gray-900">Change Password</h3>
+              <button onClick={() => setShowChangePassword(false)} className="text-gray-400 hover:text-gray-600">{'\u2715'}</button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setPwdError(''); setPwdSuccess('');
+              if (pwdNew.length < 8) { setPwdError('New password must be at least 8 characters'); return; }
+              if (pwdNew !== pwdConfirm) { setPwdError('New passwords do not match'); return; }
+              try {
+                const res = await fetch(`${API_BASE}/api/auth/change-password`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userId: user.id, currentPassword: pwdCurrent, newPassword: pwdNew }),
+                });
+                const data = await res.json();
+                if (!res.ok) { setPwdError(data.error || 'Failed to change password'); return; }
+                setPwdSuccess('Password changed successfully!');
+                setTimeout(() => setShowChangePassword(false), 1500);
+              } catch { setPwdError('Cannot connect to server'); }
+            }} className="space-y-3">
+              <div>
+                <label className="text-xs text-gray-600 font-medium block mb-1">Current Password</label>
+                <input type="password" value={pwdCurrent} onChange={e => setPwdCurrent(e.target.value)} required
+                  className="w-full px-3 py-2 border rounded text-sm" placeholder="Enter current password" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-600 font-medium block mb-1">New Password</label>
+                <input type="password" value={pwdNew} onChange={e => setPwdNew(e.target.value)} required minLength={8}
+                  className="w-full px-3 py-2 border rounded text-sm" placeholder="Min 8 characters" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-600 font-medium block mb-1">Confirm New Password</label>
+                <input type="password" value={pwdConfirm} onChange={e => setPwdConfirm(e.target.value)} required minLength={8}
+                  className="w-full px-3 py-2 border rounded text-sm" placeholder="Repeat new password" />
+              </div>
+              {pwdError && <div className="text-red-600 text-xs bg-red-50 p-2 rounded">{pwdError}</div>}
+              {pwdSuccess && <div className="text-green-600 text-xs bg-green-50 p-2 rounded">{pwdSuccess}</div>}
+              <button type="submit" className="w-full px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700">
+                Change Password
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

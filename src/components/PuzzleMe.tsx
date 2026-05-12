@@ -64,12 +64,12 @@ export default function PuzzleMe({ onSuggestionsReady, onClose }: PuzzleMeProps)
 
   useMemo(() => {
     setProjectInputs(eligibleProjects.map(p => {
-      const name = p.projectName.toLowerCase();
-      let defaultCapacity = 20;
-      let defaultSprints = 2;
-      if (name.includes('mvp')) { defaultCapacity = 30; defaultSprints = 3; }
-      else if (name.includes('poc')) { defaultCapacity = 15; defaultSprints = 2; }
-      else if (name.includes('assess')) { defaultCapacity = 15; defaultSprints = 1; }
+      const name = (p.projectName + ' ' + p.customerName).toLowerCase();
+      let defaultCapacity = 10;
+      let defaultSprints = 1;
+      if (name.includes('mvp')) { defaultCapacity = 20; defaultSprints = 4; }
+      else if (name.includes('poc')) { defaultCapacity = 25; defaultSprints = 2; }
+      else if (name.includes('assess')) { defaultCapacity = 10; defaultSprints = 1; }
       return {
         projectId: p.id, selected: false,
         capacity: p.requiredCapacity || defaultCapacity,
