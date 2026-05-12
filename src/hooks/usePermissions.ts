@@ -32,18 +32,24 @@ export function usePermissions() {
     team => team.toLowerCase() === 'management'
   ) ?? false;
 
-  console.log('🔐 Teams:', { hasNoTeams, isMemberTeam, isManagementTeam });
+  // Check if user belongs to "Operations" team (case-insensitive)
+  const isOperationsTeam = currentMember?.teams?.some(
+    team => team.toLowerCase() === 'operations'
+  ) ?? false;
+
+  console.log('🔐 Teams:', { hasNoTeams, isMemberTeam, isManagementTeam, isOperationsTeam });
 
   // Permission rules:
   // - Users with NO teams = read-only access to everything
   // - Users in "Member" team = read-only access to everything
+  // - Users in "Operations" team = can manage Projects but NOT Allocations, NOT Members/Teams/Resource Types
   // - Users in "Management" team = can manage Projects and Allocations but not Members/Teams/Resource Types
   // - All other users = full access (Admin)
-  const canManageMembers = !hasNoTeams && !isMemberTeam && !isManagementTeam;
-  const canManageTeams = !hasNoTeams && !isMemberTeam && !isManagementTeam;
-  const canManageResourceTypes = !hasNoTeams && !isMemberTeam && !isManagementTeam;
-  const canManageProjects = !hasNoTeams && !isMemberTeam; // Management CAN manage projects
-  const canManageAllocations = !hasNoTeams && !isMemberTeam; // Management CAN manage allocations
+  const canManageMembers = !hasNoTeams && !isMemberTeam && !isManagementTeam && !isOperationsTeam;
+  const canManageTeams = !hasNoTeams && !isMemberTeam && !isManagementTeam && !isOperationsTeam;
+  const canManageResourceTypes = !hasNoTeams && !isMemberTeam && !isManagementTeam && !isOperationsTeam;
+  const canManageProjects = !hasNoTeams && !isMemberTeam; // Management and Operations CAN manage projects
+  const canManageAllocations = !hasNoTeams && !isMemberTeam && !isOperationsTeam; // Operations CANNOT manage allocations
 
   console.log('🔐 Final Permissions:', {
     canWrite: canManageAllocations,
@@ -62,6 +68,7 @@ export function usePermissions() {
     hasNoTeams,
     isMemberTeam,
     isManagementTeam,
+    isOperationsTeam,
     canManageMembers,
     canManageTeams,
     canManageResourceTypes,
