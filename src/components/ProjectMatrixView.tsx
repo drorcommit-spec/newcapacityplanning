@@ -10,7 +10,7 @@ type TimeMode = 'sprint' | 'month';
 type StatusFilter = 'active' | 'all' | 'inactive';
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const ALLOWED_ROLES = ['Product Manager', 'Product Director'];
+const UNASSIGNED_MANAGER_ID = '__unassigned__';
 
 interface PeriodCol {
   key: string;
@@ -45,6 +45,70 @@ export default function ProjectMatrixView() {
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
   const [memberSearch, setMemberSearch] = useState('');
   const memberDropdownRef = useRef<HTMLDivElement>(null);
+  const [selectedManagerIds, setSelectedManagerIds] = useState<Set<string>>(new Set());
+  const [showManagerDropdown, setShowManagerDropdown] = useState(false);
+  const [managerSearch, setManagerSearch] = useState('');
+  const managerDropdownRef = useRef<HTMLDivElement>(null);
+
+  // All active members (no role filter)
+  const allActiveMembers = useMemo(() =>
+    teamMembers
+      .filter(m => m.isActive)
+      .sort((a, b) => a.fullName.localeCompare(b.fullName)),
+    [teamMembers]
+  );
+
+  // Managers: active members who are defined as managerId of at least one other active member
+  const availableManagers = useMemo(() => {
+    const managerIdSet = new Set<string>();
+    allActiveMembers.forEach(m => {
+      if (m.managerId) managerIdSet.add(m.managerId);
+    });
+    // Also check if there are members with no manager (for "Unassigned" option)
+    const hasUnassigned = allActiveMembers.some(m => !m.managerId);
+    const managers = allActiveMembers
+      .filter(m => managerIdSet.has(m.id))
+      .sort((a, b) => a.fullName.localeCompare(b.fullName));
+    return { managers, hasUnassigned };
+  }, [allActiveMembers]);
+
+  // Default manager selection: logged-in user if they're a manager, otherwise first alphabetically
+  useEffect(() => {
+    if (isMemberTeam) return; // member team users get auto-filtered differently
+    if (selectedManagerIds.size > 0) return; // already selected
+    if (availableManagers.managers.length === 0) return;
+
+    const userIsManager = availableManagers.managers.some(m => m.id === user?.id);
+    if (userIsManager && user?.id) {
+      setSelectedManagerIds(new Set([user.id]));
+    } else {
+      setSelectedManagerIds(new Set([availableManagers.managers[0].id]));
+    }
+  }, [availableManagers.managers, user?.id, isMemberTeam]);
+
+  // Eligible members based on selected manager(s): manager + their direct reports
+  const eligibleMembers = useMemo(() => {
+    if (selectedManagerIds.size === 0) return allActiveMembers;
+
+    const result = new Set<string>();
+    selectedManagerIds.forEach(managerId => {
+      if (managerId === UNASSIGNED_MANAGER_ID) {
+        // Add all members with no manager
+        allActiveMembers.forEach(m => {
+          if (!m.managerId) result.add(m.id);
+        });
+      } else {
+        // Add the manager themselves
+        result.add(managerId);
+        // Add their direct reports
+        allActiveMembers.forEach(m => {
+          if (m.managerId === managerId) result.add(m.id);
+        });
+      }
+    });
+
+    return allActiveMembers.filter(m => result.has(m.id));
+  }, [allActiveMembers, selectedManagerIds]);
 
   // Auto-filter to own user for member team users
   useEffect(() => {
@@ -54,17 +118,20 @@ export default function ProjectMatrixView() {
     }
   }, [isMemberTeam, user?.id]);
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
-    if (!showMemberDropdown) return;
+    if (!showMemberDropdown && !showManagerDropdown) return;
     const handleClick = (e: MouseEvent) => {
-      if (memberDropdownRef.current && !memberDropdownRef.current.contains(e.target as Node)) {
+      if (showMemberDropdown && memberDropdownRef.current && !memberDropdownRef.current.contains(e.target as Node)) {
         setShowMemberDropdown(false);
+      }
+      if (showManagerDropdown && managerDropdownRef.current && !managerDropdownRef.current.contains(e.target as Node)) {
+        setShowManagerDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [showMemberDropdown]);
+  }, [showMemberDropdown, showManagerDropdown]);
   const [editCell, setEditCell] = useState<{ projectId: string; memberId: string; periodKey: string } | null>(null);
   const [editPercentage, setEditPercentage] = useState('');
   const [editAllocId, setEditAllocId] = useState<string | null>(null);
@@ -78,14 +145,7 @@ export default function ProjectMatrixView() {
   const [commentProjectId, setCommentProjectId] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
 
-  // Eligible members
-  const eligibleMembers = useMemo(() =>
-    teamMembers
-      .filter(m => m.isActive && m.role && ALLOWED_ROLES.some(r => m.role.toLowerCase().includes(r.toLowerCase())))
-      .sort((a, b) => a.fullName.localeCompare(b.fullName)),
-    [teamMembers]
-  );
-
+  // Displayed members: filtered by employee dropdown within the manager's team
   const displayedMembers = useMemo(() =>
     selectedMemberIds.size === 0
       ? eligibleMembers
@@ -458,7 +518,83 @@ export default function ProjectMatrixView() {
             </svg>
             {onlyAllocated ? 'Only Projects with Allocations' : 'All Projects'}
           </button>
-          {/* Employee multi-select with search */}
+          {/* Manager multi-select dropdown */}
+          <div className="relative" ref={managerDropdownRef}>
+            <button onClick={() => { setShowManagerDropdown(!showManagerDropdown); setManagerSearch(''); }}
+              className="px-2 py-1 border rounded text-xs bg-white hover:bg-gray-50 flex items-center gap-1 min-w-[120px]">
+              <svg className="w-3 h-3 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+              <span className="truncate">
+                {selectedManagerIds.size === 0
+                  ? 'All Managers'
+                  : selectedManagerIds.size === 1
+                    ? (selectedManagerIds.has(UNASSIGNED_MANAGER_ID) ? 'Unassigned' : availableManagers.managers.find(m => selectedManagerIds.has(m.id))?.fullName || 'Manager')
+                    : `${selectedManagerIds.size} managers`}
+              </span>
+              <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {showManagerDropdown && (
+              <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg z-30 w-64">
+                <div className="p-2 border-b">
+                  <input type="text" placeholder="Search managers..." value={managerSearch}
+                    onChange={e => setManagerSearch(e.target.value)}
+                    className="w-full px-2 py-1 border rounded text-xs" autoFocus />
+                </div>
+                <div className="px-2 py-1 border-b flex gap-2 bg-gray-50">
+                  <button onClick={() => setSelectedManagerIds(new Set(availableManagers.managers.map(m => m.id)))} className="text-[10px] text-blue-600 hover:underline font-medium">Select All</button>
+                  <button onClick={() => setShowManagerDropdown(false)} className="text-[10px] text-gray-500 hover:underline ml-auto">Close</button>
+                </div>
+                <div className="max-h-52 overflow-y-auto">
+                  {availableManagers.managers
+                    .filter(m => !managerSearch || m.fullName.toLowerCase().includes(managerSearch.toLowerCase()))
+                    .map(m => {
+                      const isChecked = selectedManagerIds.has(m.id);
+                      const directReportCount = allActiveMembers.filter(member => member.managerId === m.id).length;
+                      return (
+                        <label key={m.id} className="flex items-center gap-2 px-3 py-1.5 hover:bg-blue-50 cursor-pointer text-xs">
+                          <input type="checkbox" checked={isChecked}
+                            onChange={() => {
+                              const next = new Set(selectedManagerIds);
+                              if (next.has(m.id)) {
+                                next.delete(m.id);
+                                // Must have at least one selected
+                                if (next.size === 0) return;
+                              } else {
+                                next.add(m.id);
+                              }
+                              setSelectedManagerIds(next);
+                              setSelectedMemberIds(new Set()); // reset employee filter when manager changes
+                            }}
+                            className="rounded text-blue-600" />
+                          <span className="truncate flex-1">{m.fullName}</span>
+                          <span className="text-[9px] text-gray-400 flex-shrink-0">{directReportCount} reports</span>
+                        </label>
+                      );
+                    })}
+                  {/* Unassigned option */}
+                  {availableManagers.hasUnassigned && (
+                    <label className="flex items-center gap-2 px-3 py-1.5 hover:bg-yellow-50 cursor-pointer text-xs border-t">
+                      <input type="checkbox" checked={selectedManagerIds.has(UNASSIGNED_MANAGER_ID)}
+                        onChange={() => {
+                          const next = new Set(selectedManagerIds);
+                          if (next.has(UNASSIGNED_MANAGER_ID)) {
+                            next.delete(UNASSIGNED_MANAGER_ID);
+                            if (next.size === 0) return;
+                          } else {
+                            next.add(UNASSIGNED_MANAGER_ID);
+                          }
+                          setSelectedManagerIds(next);
+                          setSelectedMemberIds(new Set());
+                        }}
+                        className="rounded text-yellow-600" />
+                      <span className="truncate flex-1 text-yellow-700">Unassigned (no manager)</span>
+                      <span className="text-[9px] text-gray-400 flex-shrink-0">{allActiveMembers.filter(m => !m.managerId).length}</span>
+                    </label>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          {/* Employee multi-select with search (contextual to selected managers) */}
           <div className="relative" ref={memberDropdownRef}>
             <button onClick={() => { setShowMemberDropdown(!showMemberDropdown); setMemberSearch(''); }}
               className="px-2 py-1 border rounded text-xs bg-white hover:bg-gray-50 flex items-center gap-1 min-w-[140px]">
@@ -494,21 +630,16 @@ export default function ProjectMatrixView() {
                           <input type="checkbox" checked={isChecked}
                             onChange={() => {
                               if (selectedMemberIds.size === 0) {
-                                // Currently "all selected" - user wants ONLY this one
                                 setSelectedMemberIds(new Set([m.id]));
                               } else if (selectedMemberIds.has(m.id)) {
-                                // Uncheck this member
                                 const next = new Set(selectedMemberIds);
                                 next.delete(m.id);
-                                // If none left, go back to "all"
                                 if (next.size === 0 || next.has('__none__')) setSelectedMemberIds(new Set());
                                 else setSelectedMemberIds(next);
                               } else {
-                                // Check this member
                                 const next = new Set(selectedMemberIds);
                                 next.delete('__none__');
                                 next.add(m.id);
-                                // If all are now selected, reset to empty (= all)
                                 if (next.size === eligibleMembers.length) setSelectedMemberIds(new Set());
                                 else setSelectedMemberIds(next);
                               }
@@ -535,6 +666,13 @@ export default function ProjectMatrixView() {
             setOnlyAllocated(false);
             setSelectedMemberIds(new Set());
             setPeriodOffset(0);
+            // Reset manager to default (logged-in user or first)
+            const userIsManager = availableManagers.managers.some(m => m.id === user?.id);
+            if (userIsManager && user?.id) {
+              setSelectedManagerIds(new Set([user.id]));
+            } else if (availableManagers.managers.length > 0) {
+              setSelectedManagerIds(new Set([availableManagers.managers[0].id]));
+            }
           }} className="text-xs text-red-500 hover:text-red-700 hover:underline whitespace-nowrap">
             ✕ Reset filters
           </button>
