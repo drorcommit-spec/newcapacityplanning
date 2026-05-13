@@ -1941,8 +1941,8 @@ export default function CapacityPlanning() {
               Export Matrix
             </button>
 
-            {/* Import Projects Button */}
-            {canWrite && (
+            {/* Import Projects Button - hidden for now */}
+            {false && canWrite && (
               <button
                 onClick={() => setShowImportProjectsModal(true)}
                 className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors flex items-center gap-2"
