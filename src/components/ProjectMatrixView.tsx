@@ -589,7 +589,7 @@ export default function ProjectMatrixView() {
                         </button>
                       )}
                     </div>
-                    <input type="text" placeholder="\u{1F50D} Search..." value={projectFilter}
+                    <input type="text" placeholder="🔍 Search..." value={projectFilter}
                       onChange={e => setProjectFilter(e.target.value)}
                       className="w-full px-1.5 py-1 border rounded text-[10px] bg-white" />
                   </th>
@@ -661,7 +661,7 @@ export default function ProjectMatrixView() {
                     </button>
                   )}
                 </div>
-                <input type="text" placeholder="\u{1F50D} Search..." value={projectFilter}
+                <input type="text" placeholder="🔍 Search..." value={projectFilter}
                   onChange={e => setProjectFilter(e.target.value)}
                   className="w-full px-1.5 py-1 border rounded text-[10px] bg-white" />
               </th>
