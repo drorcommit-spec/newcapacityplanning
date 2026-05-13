@@ -258,7 +258,7 @@ export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
               Cancel
             </Button>
           )}
-          <Button type="submit">Create Project</Button>
+          <Button type="submit">Create Customer Project</Button>
         </div>
       </form>
 

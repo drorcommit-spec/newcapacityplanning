@@ -131,7 +131,7 @@ export default function Layout({ children }: LayoutProps) {
                           }`}
                           onClick={() => setShowSettingsDropdown(false)}
                         >
-                          Projects
+                          Customer Projects
                         </Link>
                         <Link 
                           to="/roles" 

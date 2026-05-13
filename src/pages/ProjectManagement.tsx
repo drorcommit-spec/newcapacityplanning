@@ -270,7 +270,7 @@ export default function ProjectManagement() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Customer Projects</h1>
         {canManageProjects && (
           <div className="flex gap-2">
             <button
@@ -411,7 +411,7 @@ export default function ProjectManagement() {
         </div>
       </Card>
 
-      <Modal isOpen={isModalOpen} onClose={resetForm} title={editingId ? 'Edit Project' : 'Add Project'}>
+      <Modal isOpen={isModalOpen} onClose={resetForm} title={editingId ? 'Edit Customer Project' : 'Add Customer Project'}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Input

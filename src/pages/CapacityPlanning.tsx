@@ -2109,7 +2109,8 @@ export default function CapacityPlanning() {
           </div>
           
           <div className="flex gap-2 items-center">
-            {/* View Mode Toggle */}
+            {/* View Mode Toggle - hidden, only matrix view active for now */}
+            {false && (
             <div className="flex bg-gray-100 rounded p-0.5">
               <button
                 onClick={() => setViewMode('projects')}
@@ -2142,6 +2143,7 @@ export default function CapacityPlanning() {
                 Project List
               </button>
             </div>
+            )}
 
             {/* Sprint Controls - hidden in matrix/Project List view */}
             {viewMode !== 'matrix' && (

@@ -1006,7 +1006,7 @@ export default function ProjectMatrixView() {
       )}
 
       {/* New Project Modal */}
-      <Modal isOpen={showNewProjectModal} onClose={() => setShowNewProjectModal(false)} title="Create New Project">
+      <Modal isOpen={showNewProjectModal} onClose={() => setShowNewProjectModal(false)} title="Create New Customer Project">
         <ProjectForm
           onSuccess={() => setShowNewProjectModal(false)}
           onCancel={() => setShowNewProjectModal(false)}
