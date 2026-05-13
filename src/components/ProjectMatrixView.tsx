@@ -24,7 +24,7 @@ interface PeriodCol {
 export default function ProjectMatrixView() {
   const { projects, allocations, teamMembers, addAllocation, updateAllocation, deleteAllocation, addProject, updateProject } = useData();
   const { user } = useAuth();
-  const { canWrite, isMemberTeam } = usePermissions();
+  const { canWrite, canManageProjects, isMemberTeam } = usePermissions();
   const currentUser = user || { email: 'unknown' };
 
   const [timeMode, setTimeMode] = useState<TimeMode>('sprint');
@@ -580,7 +580,7 @@ export default function ProjectMatrixView() {
                     style={{ width: projW, minWidth: projW }}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-semibold text-gray-700">Active Projects</span>
-                      {canWrite && (
+                      {canManageProjects && (
                         <button onClick={() => setShowNewProjectModal(true)}
                           className="p-0.5 rounded hover:bg-green-100 text-green-600" title="Add new project">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -652,7 +652,7 @@ export default function ProjectMatrixView() {
                 style={{ width: projW, minWidth: projW }}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-semibold text-gray-700">Active Projects</span>
-                  {canWrite && (
+                  {canManageProjects && (
                     <button onClick={() => setShowNewProjectModal(true)}
                       className="p-0.5 rounded hover:bg-green-100 text-green-600" title="Add new project">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -744,7 +744,7 @@ export default function ProjectMatrixView() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </button>
-                      {canWrite && (
+                      {canManageProjects && (
                         <button onClick={() => {
                           if (confirm(`Set "${project.projectName}" as Inactive?`)) {
                             updateProject(project.id, { status: 'Inactive' });

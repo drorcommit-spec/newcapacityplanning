@@ -153,7 +153,7 @@ export default function Layout({ children }: LayoutProps) {
                           }`}
                           onClick={() => setShowSettingsDropdown(false)}
                         >
-                          Teams
+                          Team Permissions
                         </Link>
                       </div>
                     )}

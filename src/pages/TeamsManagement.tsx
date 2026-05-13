@@ -126,7 +126,7 @@ export default function TeamsManagement() {
       )}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Teams</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Team Permissions</h1>
           <p className="text-gray-600 mt-1">Manage team names for member assignment</p>
         </div>
         {canManageTeams && (
