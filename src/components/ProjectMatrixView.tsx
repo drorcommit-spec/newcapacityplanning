@@ -143,15 +143,24 @@ export default function ProjectMatrixView() {
   const [startEtaProjectId, setStartEtaProjectId] = useState<string | null>(null);
   const [etaMode, setEtaMode] = useState<'date' | 'sprints'>('date');
   const [commentProjectId, setCommentProjectId] = useState<string | null>(null);
+  const [focusedProjectId, setFocusedProjectId] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
 
   // Displayed members: filtered by employee dropdown within the manager's team
-  const displayedMembers = useMemo(() =>
-    selectedMemberIds.size === 0
+  // When a project is focused, override to show only members allocated to that project
+  const displayedMembers = useMemo(() => {
+    if (focusedProjectId) {
+      // Show only members who have allocations on the focused project
+      const focusedMemberIds = new Set<string>();
+      allocations.forEach(a => {
+        if (a.projectId === focusedProjectId) focusedMemberIds.add(a.productManagerId);
+      });
+      return allActiveMembers.filter(m => focusedMemberIds.has(m.id));
+    }
+    return selectedMemberIds.size === 0
       ? eligibleMembers
-      : eligibleMembers.filter(m => selectedMemberIds.has(m.id)),
-    [eligibleMembers, selectedMemberIds]
-  );
+      : eligibleMembers.filter(m => selectedMemberIds.has(m.id));
+  }, [eligibleMembers, selectedMemberIds, focusedProjectId, allocations, allActiveMembers]);
 
   const toggleMember = (id: string) => {
     setSelectedMemberIds(prev => {
@@ -288,6 +297,12 @@ export default function ProjectMatrixView() {
 
   // Filter projects
   const filteredProjects = useMemo(() => {
+    // When a project is focused, show only that project
+    if (focusedProjectId) {
+      const focused = projects.find(p => p.id === focusedProjectId);
+      return focused ? [focused] : [];
+    }
+
     let filtered = projects.filter(p => !p.isArchived);
     // Filter by traffic light (multi-select toggle)
     if (lightFilter.size > 0) {
@@ -328,7 +343,7 @@ export default function ProjectMatrixView() {
       const cmp = a.customerName.localeCompare(b.customerName);
       return cmp !== 0 ? cmp : a.projectName.localeCompare(b.projectName);
     });
-  }, [projects, projectFilter, statusFilter, lightFilter, onlyAllocated, allocations, selectedMemberIds, displayedMembers]);
+  }, [projects, projectFilter, statusFilter, lightFilter, onlyAllocated, allocations, selectedMemberIds, displayedMembers, focusedProjectId]);
 
   // Get allocation(s) for a cell - returns both sprints info for month view
   const getCellData = (projectId: string, memberId: string, period: PeriodCol) => {
@@ -438,6 +453,21 @@ export default function ProjectMatrixView() {
   };
 
   const closeEdit = () => { setEditCell(null); setEditAllocId(null); setEditPercentage(''); };
+
+  // Focus on a project: show only that project's allocated members
+  const handleFocusProject = (projectId: string) => {
+    if (focusedProjectId === projectId) {
+      // Unfocus
+      setFocusedProjectId(null);
+      return;
+    }
+
+    // Check project has allocations
+    const hasAllocs = allocations.some(a => a.projectId === projectId);
+    if (!hasAllocs) return;
+
+    setFocusedProjectId(projectId);
+  };
 
   const colW = 58;
   const projW = 160;
@@ -663,13 +693,14 @@ export default function ProjectMatrixView() {
         {!isMemberTeam && (
         <span className="text-xs text-gray-500">{filteredProjects.length} projects · {displayedMembers.length} members</span>
         )}
-        {!isMemberTeam && (projectFilter || lightFilter.has('gray') || lightFilter.size !== 3 || onlyAllocated || selectedMemberIds.size > 0) && (
+        {!isMemberTeam && (projectFilter || lightFilter.has('gray') || lightFilter.size !== 3 || onlyAllocated || selectedMemberIds.size > 0 || focusedProjectId) && (
           <button onClick={() => {
             setProjectFilter('');
             setLightFilter(new Set(['green', 'yellow', 'red']));
             setOnlyAllocated(false);
             setSelectedMemberIds(new Set());
             setPeriodOffset(0);
+            setFocusedProjectId(null);
             // Reset manager to default (logged-in user or first)
             const userIsManager = availableManagers.managers.some(m => m.id === user?.id);
             if (userIsManager && user?.id) {
@@ -914,6 +945,16 @@ export default function ProjectMatrixView() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                         </svg>
                       </button>
+                      {/* Focus on project members icon - only show if project has allocations */}
+                      {allocations.some(a => a.projectId === project.id) && (
+                      <button onClick={() => handleFocusProject(project.id)}
+                        className={`p-0.5 rounded hover:bg-green-100 ${focusedProjectId === project.id ? 'text-green-600 bg-green-100' : 'text-gray-300'}`}
+                        title={focusedProjectId === project.id ? 'Unfocus (show all)' : 'Show only members allocated to this project'}>
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </button>
+                      )}
                     </div>
                     )}
                   </div>
