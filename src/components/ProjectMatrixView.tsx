@@ -535,26 +535,9 @@ export default function ProjectMatrixView() {
         </div>
         )}
 
-        {/* Period navigation */}
-        <div className="flex items-center gap-1 border-l pl-3">
-          <button onClick={() => setPeriodOffset(o => o - 3)} className="p-1 rounded hover:bg-gray-100 text-gray-600" title="Previous periods">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
-          </button>
-          <button onClick={() => setPeriodOffset(o => o - 1)} className="p-1 rounded hover:bg-gray-100 text-gray-600" title="Previous">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-          </button>
-          <button onClick={() => setPeriodOffset(0)} className="px-2 py-1 rounded text-xs font-medium text-gray-700 hover:bg-gray-100" title="Go to current">Today</button>
-          <button onClick={() => setPeriodOffset(o => o + 1)} className="p-1 rounded hover:bg-gray-100 text-gray-600" title="Next">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-          </button>
-          <button onClick={() => setPeriodOffset(o => o + 3)} className="p-1 rounded hover:bg-gray-100 text-gray-600" title="Next periods">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
-          </button>
-        </div>
-
         {/* Filters - hidden for member users */}
         {!isMemberTeam && (
-        <div className="flex items-center gap-2 border-l pl-3">
+        <div className="flex items-center gap-2">
           {/* Traffic light filter - multi-select toggles */}
           <div className="flex items-center gap-1.5 border rounded-lg px-2 py-1 bg-gray-50">
             <button onClick={() => setLightFilter(new Set(['green', 'yellow', 'red']))}
@@ -583,7 +566,7 @@ export default function ProjectMatrixView() {
           </div>
           {/* Missing Role filter dropdown */}
           <div className="flex items-center gap-1">
-            <span className="text-[10px] text-gray-500 font-medium">Missing:</span>
+            <span className="text-[10px] text-gray-500 font-medium">Missing Required Staff:</span>
             <select
               value={missingRoleFilter}
               onChange={e => setMissingRoleFilter(e.target.value)}
@@ -804,6 +787,23 @@ export default function ProjectMatrixView() {
             </button>
           </div>
         )}
+      </div>
+
+      {/* Period navigation - above the matrix */}
+      <div className="flex items-center gap-1 px-4 py-1.5 bg-gray-50 border-b">
+        <button onClick={() => setPeriodOffset(o => o - 3)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Previous periods">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
+        </button>
+        <button onClick={() => setPeriodOffset(o => o - 1)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Previous">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <button onClick={() => setPeriodOffset(0)} className="px-2 py-1 rounded text-xs font-medium text-gray-700 hover:bg-gray-200" title="Go to current">Today</button>
+        <button onClick={() => setPeriodOffset(o => o + 1)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Next">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        </button>
+        <button onClick={() => setPeriodOffset(o => o + 3)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Next periods">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+        </button>
       </div>
 
       {/* Matrix */}
