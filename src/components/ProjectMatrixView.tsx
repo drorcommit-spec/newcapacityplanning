@@ -144,6 +144,7 @@ export default function ProjectMatrixView() {
   const [etaMode, setEtaMode] = useState<'date' | 'sprints'>('date');
   const [commentProjectId, setCommentProjectId] = useState<string | null>(null);
   const [focusedProjectId, setFocusedProjectId] = useState<string | null>(null);
+  const [missingRoleFilter, setMissingRoleFilter] = useState<string>('none');
   const [commentText, setCommentText] = useState('');
 
   // Displayed members: filtered by employee dropdown within the manager's team
@@ -261,17 +262,28 @@ export default function ProjectMatrixView() {
     return cols;
   }, [timeMode, periodOffset, selectedMemberIds, displayedMembers, allocations]);
 
-  // Traffic light logic (defined before filteredProjects so it can be used for filtering)
-  const getProjectLightKey = (projectId: string, status: string, activityCloseDate?: string): string => {
-    if (status === 'Inactive' || status === 'Completed') return 'gray';
-    const isActive = status === 'Active' || status === 'Pending' || status === 'New Signed Off';
-    if (!isActive) return 'gray';
+  // Key roles for traffic light evaluation (only these determine red/green)
+  const KEY_ROLES = ['Product Manager', 'PMO'];
+  const isArchitectRole = (role: string) => role.toLowerCase().includes('architect');
+
+  // Check if a project is missing a specific key role
+  const isProjectMissingRole = (projectId: string, project: any, roleToCheck: string): boolean => {
+    const requiredRoles = project.requiredRoles || [];
+    
+    // Check if this role is required by the project
+    if (roleToCheck === 'architect') {
+      if (!requiredRoles.some((r: string) => isArchitectRole(r))) return false;
+    } else {
+      if (!requiredRoles.includes(roleToCheck)) return false;
+    }
 
     const today = new Date();
     const curYear = today.getFullYear();
     const curMonth = today.getMonth() + 1;
     const curSprint = today.getDate() <= 15 ? 1 : 2;
-    const hasFutureAllocs = allocations.some(a => {
+
+    // Get future allocations for this project
+    const futureAllocs = allocations.filter(a => {
       if (a.projectId !== projectId) return false;
       if (a.year > curYear) return true;
       if (a.year === curYear && a.month > curMonth) return true;
@@ -279,16 +291,43 @@ export default function ProjectMatrixView() {
       return false;
     });
 
-    if (hasFutureAllocs && activityCloseDate) return 'green';  // signed + has resources = healthy
-    if (hasFutureAllocs && !activityCloseDate) return 'yellow'; // has resources but not signed = needs attention
-    if (!hasFutureAllocs && activityCloseDate) return 'red';    // signed but no resources = urgent
-    return 'yellow'; // no allocations, no sign-off = needs attention
+    // Check if any allocated member has the required role
+    const allocatedMemberIds = [...new Set(futureAllocs.map(a => a.productManagerId))];
+    const allocatedMembers = teamMembers.filter(m => allocatedMemberIds.includes(m.id));
+
+    if (roleToCheck === 'architect') {
+      return !allocatedMembers.some(m => isArchitectRole(m.role));
+    }
+    return !allocatedMembers.some(m => m.role === roleToCheck);
+  };
+
+  // Check if project is missing ANY key role
+  const isProjectMissingAnyKeyRole = (projectId: string, project: any): boolean => {
+    return KEY_ROLES.some(role => isProjectMissingRole(projectId, project, role)) ||
+           isProjectMissingRole(projectId, project, 'architect');
+  };
+
+  // Traffic light logic - new 3-color model for active projects
+  const getProjectLightKey = (projectId: string, status: string, activityCloseDate?: string): string => {
+    if (status === 'Inactive' || status === 'Completed') return 'gray';
+    const isActive = status === 'Active' || status === 'Pending' || status === 'New Signed Off';
+    if (!isActive) return 'gray';
+
+    // Yellow = not signed (pending sign-off)
+    if (!activityCloseDate) return 'yellow';
+
+    // Signed project: check if all key roles are covered
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return 'gray';
+
+    if (isProjectMissingAnyKeyRole(projectId, project)) return 'red';
+    return 'green';
   };
 
   const LIGHT_MAP: Record<string, { color: string; label: string }> = {
-    green: { color: 'bg-green-500', label: 'Signed project with resources assigned' },
-    yellow: { color: 'bg-yellow-400', label: 'Pending sign-off — allocations may need to be removed' },
-    red: { color: 'bg-red-500', label: 'Signed project with no resources assigned' },
+    green: { color: 'bg-green-500', label: 'Fully staffed — all required key roles (PM, PMO, Architect) are allocated' },
+    yellow: { color: 'bg-yellow-400', label: 'Pending sign-off — project not yet signed' },
+    red: { color: 'bg-red-500', label: 'Missing staff — signed project missing PM, PMO, or Architect' },
     gray: { color: 'bg-gray-400', label: 'Inactive/Completed' },
   };
 
@@ -339,11 +378,20 @@ export default function ProjectMatrixView() {
       });
       console.log('Allocated only filter:', beforeCount, '->', filtered.length, 'curPeriod:', curYear, curMonth, curSprint, 'employeeFilter:', hasEmployeeFilter, 'memberIds:', memberIdSet ? [...memberIdSet] : 'all');
     }
+    // Apply missing role filter
+    if (missingRoleFilter !== 'none') {
+      filtered = filtered.filter(p => {
+        if (missingRoleFilter === 'any') {
+          return isProjectMissingAnyKeyRole(p.id, p);
+        }
+        return isProjectMissingRole(p.id, p, missingRoleFilter);
+      });
+    }
     return filtered.sort((a, b) => {
       const cmp = a.customerName.localeCompare(b.customerName);
       return cmp !== 0 ? cmp : a.projectName.localeCompare(b.projectName);
     });
-  }, [projects, projectFilter, statusFilter, lightFilter, onlyAllocated, allocations, selectedMemberIds, displayedMembers, focusedProjectId]);
+  }, [projects, projectFilter, statusFilter, lightFilter, onlyAllocated, allocations, selectedMemberIds, displayedMembers, focusedProjectId, missingRoleFilter]);
 
   // Get allocation(s) for a cell - returns both sprints info for month view
   const getCellData = (projectId: string, memberId: string, period: PeriodCol) => {
@@ -512,19 +560,19 @@ export default function ProjectMatrixView() {
             <button onClick={() => setLightFilter(new Set(['green', 'yellow', 'red']))}
               className={`text-[10px] px-2 py-0.5 rounded ${lightFilter.size === 3 && !lightFilter.has('gray') ? 'bg-white shadow font-bold text-gray-800' : 'text-gray-500 hover:bg-white'}`}>Active</button>
             <button onClick={() => toggleLight('green')}
-              title="Active Project + has sign-off date + has future allocations (healthy)"
+              title="Signed + all key roles (PM, PMO, Architect) allocated"
               className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${lightFilter.has('green') ? 'bg-green-100 font-bold text-green-800 shadow' : 'text-gray-400 hover:bg-green-50'}`}>
-              <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span> With Resources
+              <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span> Fully Staffed
             </button>
             <button onClick={() => toggleLight('yellow')}
-              title="Active Project + has future allocations + NO sign-off date yet !! (needs attention - might not get signed)"
+              title="Active project not yet signed off"
               className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${lightFilter.has('yellow') ? 'bg-yellow-100 font-bold text-yellow-800 shadow' : 'text-gray-400 hover:bg-yellow-50'}`}>
-              <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block"></span> Pending signoff
+              <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block"></span> Pending Signoff
             </button>
             <button onClick={() => toggleLight('red')}
-              title="Active Project + has sign-off date + NO future allocations (signed but nobody assigned)"
+              title="Signed project missing at least one key role (PM, PMO, or Architect)"
               className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${lightFilter.has('red') ? 'bg-red-100 font-bold text-red-800 shadow' : 'text-gray-400 hover:bg-red-50'}`}>
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Unassigned !!
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Missing Staff
             </button>
             <span className="text-gray-300">|</span>
             <button onClick={() => toggleLight('gray')}
@@ -532,6 +580,22 @@ export default function ProjectMatrixView() {
               className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${lightFilter.has('gray') ? 'bg-gray-200 font-bold text-gray-800 shadow' : 'text-gray-400 hover:bg-gray-100'}`}>
               <span className="w-2.5 h-2.5 rounded-full bg-gray-400 inline-block"></span> Inactive
             </button>
+          </div>
+          {/* Missing Role filter dropdown */}
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-gray-500 font-medium">Missing:</span>
+            <select
+              value={missingRoleFilter}
+              onChange={e => setMissingRoleFilter(e.target.value)}
+              className={`px-2 py-1 border rounded text-[10px] ${missingRoleFilter !== 'none' ? 'bg-red-50 border-red-300 text-red-700 font-bold' : 'bg-white text-gray-600'}`}
+              title="Filter projects missing a specific key role"
+            >
+              <option value="none">None</option>
+              <option value="any">Any (PM, PMO, Architect)</option>
+              <option value="Product Manager">Product Manager</option>
+              <option value="PMO">PMO</option>
+              <option value="architect">Architect (SW/AI)</option>
+            </select>
           </div>
           {/* Hide unallocated projects toggle */}
           <button
@@ -693,7 +757,7 @@ export default function ProjectMatrixView() {
         {!isMemberTeam && (
         <span className="text-xs text-gray-500">{filteredProjects.length} projects · {displayedMembers.length} members</span>
         )}
-        {!isMemberTeam && (projectFilter || lightFilter.has('gray') || lightFilter.size !== 3 || onlyAllocated || selectedMemberIds.size > 0 || focusedProjectId) && (
+        {!isMemberTeam && (projectFilter || lightFilter.has('gray') || lightFilter.size !== 3 || onlyAllocated || selectedMemberIds.size > 0 || focusedProjectId || missingRoleFilter !== 'none') && (
           <button onClick={() => {
             setProjectFilter('');
             setLightFilter(new Set(['green', 'yellow', 'red']));
@@ -701,6 +765,7 @@ export default function ProjectMatrixView() {
             setSelectedMemberIds(new Set());
             setPeriodOffset(0);
             setFocusedProjectId(null);
+            setMissingRoleFilter('none');
             // Reset manager to default (logged-in user or first)
             const userIsManager = availableManagers.managers.some(m => m.id === user?.id);
             if (userIsManager && user?.id) {
@@ -1098,6 +1163,16 @@ export default function ProjectMatrixView() {
                 <div className="flex justify-between"><span className="text-gray-500">Region</span><span>{p.region || '-'}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">PMO Contact</span><span>{pmo?.fullName || '-'}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">Allocations</span><span>{projectAllocs.length} across {uniqueMembers.length} member(s)</span></div>
+                {p.requiredRoles && p.requiredRoles.length > 0 && (
+                  <div className="border-t pt-2 mt-2">
+                    <div className="text-gray-500 text-xs mb-1">Required Resources</div>
+                    <div className="flex flex-wrap gap-1">
+                      {p.requiredRoles.map(role => (
+                        <span key={role} className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded text-xs">{role}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {p.latestStatus && (
                   <div className="border-t pt-2 mt-2">
                     <div className="text-gray-500 text-xs mb-1">Latest Status</div>
@@ -1272,7 +1347,13 @@ function EditProjectForm({ project, onSave, onCancel, teamMembers }: {
     plannedStartSprint: project.plannedStartSprint || 1,
     requiredCapacity: project.requiredCapacity ?? '',
     plannedSprintCount: project.plannedSprintCount ?? '',
+    requiredRoles: project.requiredRoles || ['PMO', 'Product Manager', 'AI Architect'],
   });
+
+  // Get unique roles from active team members
+  const availableRoles = Array.from(new Set(teamMembers.filter((m: any) => m.isActive && m.role).map((m: any) => m.role))).sort() as string[];
+  const DEFAULT_REQUIRED_ROLES = ['PMO', 'Product Manager', 'AI Architect'];
+  const allRoles = [...new Set([...DEFAULT_REQUIRED_ROLES, ...availableRoles])].sort();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1290,6 +1371,7 @@ function EditProjectForm({ project, onSave, onCancel, teamMembers }: {
       plannedStartSprint: form.plannedStartSprint || undefined,
       requiredCapacity: form.requiredCapacity !== '' ? Number(form.requiredCapacity) : undefined,
       plannedSprintCount: form.plannedSprintCount !== '' ? Number(form.plannedSprintCount) : undefined,
+      requiredRoles: form.requiredRoles,
     });
   };
 
@@ -1389,6 +1471,29 @@ function EditProjectForm({ project, onSave, onCancel, teamMembers }: {
             {otherMembers.map((m: any) => <option key={m.id} value={m.id}>{m.fullName}</option>)}
           </optgroup>}
         </select>
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-gray-700 mb-1">Required Resources</label>
+        <div className="border rounded p-2 space-y-1 max-h-32 overflow-y-auto bg-gray-50">
+          {allRoles.map(role => (
+            <label key={role} className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-0.5 rounded text-xs">
+              <input
+                type="checkbox"
+                checked={form.requiredRoles.includes(role)}
+                onChange={() => {
+                  setForm(prev => ({
+                    ...prev,
+                    requiredRoles: prev.requiredRoles.includes(role)
+                      ? prev.requiredRoles.filter((r: string) => r !== role)
+                      : [...prev.requiredRoles, role]
+                  }));
+                }}
+                className="w-3.5 h-3.5 text-blue-600 rounded focus:ring-blue-500"
+              />
+              <span>{role}</span>
+            </label>
+          ))}
+        </div>
       </div>
       <div>
         <label className="block text-xs font-medium text-gray-700 mb-1">Latest Status / Notes</label>

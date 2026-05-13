@@ -289,6 +289,7 @@ function transformProject(data: any): any {
     plannedStartSprint: data.planned_start_sprint,
     requiredCapacity: data.required_capacity,
     plannedSprintCount: data.planned_sprint_count,
+    requiredRoles: Array.isArray(data.required_roles) ? data.required_roles : [],
   };
 }
 
@@ -312,6 +313,7 @@ function transformProjectToSupabase(data: any): any {
     planned_start_sprint: data.plannedStartSprint,
     required_capacity: data.requiredCapacity,
     planned_sprint_count: data.plannedSprintCount,
+    required_roles: data.requiredRoles || [],
   };
 }
 

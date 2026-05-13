@@ -53,6 +53,8 @@ export interface Project {
   etaSprint?: number;              // 1 or 2
   // Comment
   projectComment?: string;
+  // Required resource roles for this project
+  requiredRoles?: string[];
 }
 
 // Sprint-specific role requirements for capacity planning

@@ -16,6 +16,12 @@ export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [showPMOModal, setShowPMOModal] = useState(false);
   const [newPMOData, setNewPMOData] = useState({ fullName: '', email: '' });
+
+  // Get unique roles from active team members for the required roles checklist
+  const availableRoles = Array.from(new Set(teamMembers.filter(m => m.isActive && m.role).map(m => m.role))).sort();
+
+  const DEFAULT_REQUIRED_ROLES = ['PMO', 'Product Manager', 'AI Architect'];
+
   const [formData, setFormData] = useState({
     customerName: '',
     projectName: '',
@@ -24,6 +30,7 @@ export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
     pmoContact: '',
     latestStatus: '',
     activityCloseDate: '',
+    requiredRoles: DEFAULT_REQUIRED_ROLES.filter(r => availableRoles.includes(r) || DEFAULT_REQUIRED_ROLES.includes(r)),
   });
   const [customerError, setCustomerError] = useState('');
   const [projectError, setProjectError] = useState('');
@@ -73,6 +80,7 @@ export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
       pmoContact: formData.pmoContact || undefined,
       latestStatus: formData.latestStatus || undefined,
       activityCloseDate: formData.activityCloseDate || undefined,
+      requiredRoles: formData.requiredRoles,
       isArchived: false,
     };
 
@@ -242,6 +250,31 @@ export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
           </select>
         </div>
         
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-700">Required Resources</label>
+          <div className="border rounded-lg p-2 space-y-1 max-h-36 overflow-y-auto bg-gray-50">
+            {(availableRoles.length > 0 ? [...new Set([...DEFAULT_REQUIRED_ROLES, ...availableRoles])] : DEFAULT_REQUIRED_ROLES).sort().map(role => (
+              <label key={role} className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded text-sm">
+                <input
+                  type="checkbox"
+                  checked={formData.requiredRoles.includes(role)}
+                  onChange={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      requiredRoles: prev.requiredRoles.includes(role)
+                        ? prev.requiredRoles.filter(r => r !== role)
+                        : [...prev.requiredRoles, role]
+                    }));
+                  }}
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                />
+                <span>{role}</span>
+              </label>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400">Select which resource types this project requires</p>
+        </div>
+
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-gray-700">Latest Status/Notes</label>
           <textarea
