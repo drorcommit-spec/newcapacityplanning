@@ -51,6 +51,16 @@ export default function CapacityPlanning() {
   const [pmoContactFilter, setPmoContactFilter] = useState<string>('all');
   const [managerFilter, setManagerFilter] = useState<string>('all');
 
+  // Staff View manager/employee filter state (mirrors Projects View logic)
+  const [staffSelectedManagerIds, setStaffSelectedManagerIds] = useState<Set<string>>(new Set());
+  const [staffSelectedMemberIds, setStaffSelectedMemberIds] = useState<Set<string>>(new Set());
+  const [showStaffManagerDropdown, setShowStaffManagerDropdown] = useState(false);
+  const [showStaffMemberDropdown, setShowStaffMemberDropdown] = useState(false);
+  const [staffManagerSearch, setStaffManagerSearch] = useState('');
+  const [staffMemberSearch, setStaffMemberSearch] = useState('');
+  const staffManagerDropdownRef = useRef<HTMLDivElement>(null);
+  const staffMemberDropdownRef = useRef<HTMLDivElement>(null);
+
   // Project collapse/expand state
   const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(new Set());
   const [allProjectsCollapsed, setAllProjectsCollapsed] = useState(true);
@@ -444,6 +454,71 @@ export default function CapacityPlanning() {
     };
   }, [teamMembers]);
 
+  // Staff View: available managers and eligible members (same logic as Projects View)
+  const UNASSIGNED_MANAGER_ID = '__unassigned__';
+  const staffAllActiveMembers = useMemo(() =>
+    teamMembers.filter(m => m.isActive).sort((a, b) => a.fullName.localeCompare(b.fullName)),
+    [teamMembers]
+  );
+
+  const staffAvailableManagers = useMemo(() => {
+    const managerIdSet = new Set<string>();
+    staffAllActiveMembers.forEach(m => { if (m.managerId) managerIdSet.add(m.managerId); });
+    const hasUnassigned = staffAllActiveMembers.some(m => !m.managerId);
+    const managers = staffAllActiveMembers.filter(m => managerIdSet.has(m.id));
+    return { managers, hasUnassigned };
+  }, [staffAllActiveMembers]);
+
+  // Default staff manager selection
+  useEffect(() => {
+    if (staffSelectedManagerIds.size > 0) return;
+    if (staffAvailableManagers.managers.length === 0) return;
+    const userIsManager = staffAvailableManagers.managers.some(m => m.id === user?.id);
+    if (userIsManager && user?.id) {
+      setStaffSelectedManagerIds(new Set([user.id]));
+    } else {
+      setStaffSelectedManagerIds(new Set([staffAvailableManagers.managers[0].id]));
+    }
+  }, [staffAvailableManagers.managers, user?.id]);
+
+  // Staff eligible members based on selected managers
+  const staffEligibleMembers = useMemo(() => {
+    if (staffSelectedManagerIds.size === 0) return staffAllActiveMembers;
+    const result = new Set<string>();
+    staffSelectedManagerIds.forEach(managerId => {
+      if (managerId === UNASSIGNED_MANAGER_ID) {
+        staffAllActiveMembers.forEach(m => { if (!m.managerId) result.add(m.id); });
+      } else {
+        result.add(managerId);
+        staffAllActiveMembers.forEach(m => { if (m.managerId === managerId) result.add(m.id); });
+      }
+    });
+    return staffAllActiveMembers.filter(m => result.has(m.id));
+  }, [staffAllActiveMembers, staffSelectedManagerIds]);
+
+  // Staff displayed members (filtered by employee dropdown)
+  const staffDisplayedMembers = useMemo(() =>
+    staffSelectedMemberIds.size === 0
+      ? staffEligibleMembers
+      : staffEligibleMembers.filter(m => staffSelectedMemberIds.has(m.id)),
+    [staffEligibleMembers, staffSelectedMemberIds]
+  );
+
+  // Close staff dropdowns when clicking outside
+  useEffect(() => {
+    if (!showStaffManagerDropdown && !showStaffMemberDropdown) return;
+    const handleClick = (e: MouseEvent) => {
+      if (showStaffManagerDropdown && staffManagerDropdownRef.current && !staffManagerDropdownRef.current.contains(e.target as Node)) {
+        setShowStaffManagerDropdown(false);
+      }
+      if (showStaffMemberDropdown && staffMemberDropdownRef.current && !staffMemberDropdownRef.current.contains(e.target as Node)) {
+        setShowStaffMemberDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showStaffManagerDropdown, showStaffMemberDropdown]);
+
   // Get projects with allocations for a sprint
   const getProjectsForSprint = (sprint: SprintInfo) => {
     const sprintAllocs = getSprintAllocations(sprint);
@@ -681,21 +756,17 @@ export default function CapacityPlanning() {
       });
     }
 
-    // Apply team role filter
-    if (teamRoleFilter.length > 0) {
-      result = result.filter(({ member }) => 
-        member.role && teamRoleFilter.includes(member.role)
-      );
-    }
+    // Apply team role filter - hidden, replaced by manager/employee dropdowns
+    // if (teamRoleFilter.length > 0) {
+    //   result = result.filter(({ member }) => 
+    //     member.role && teamRoleFilter.includes(member.role)
+    //   );
+    // }
 
-    // Apply Manager filter (hierarchical - includes all descendants)
-    if (managerFilter !== 'all') {
-      const descendants = getManagerDescendants(managerFilter);
-      result = result.filter(({ member }) => {
-        // Include members who are descendants of the selected manager
-        // OR members who have no manager assigned
-        return descendants.has(member.id) || !member.managerId;
-      });
+    // Apply Staff View manager/employee filter (same as Projects View)
+    if (staffSelectedManagerIds.size > 0 || staffSelectedMemberIds.size > 0) {
+      const displayedIds = new Set(staffDisplayedMembers.map(m => m.id));
+      result = result.filter(({ member }) => displayedIds.has(member.id));
     }
 
     // Apply KPI-specific filters for members
@@ -2276,110 +2347,129 @@ export default function CapacityPlanning() {
                     </select>
                   </div>
                   
-                  {/* Manager Filter */}
-                  <div className="flex items-center gap-1.5">
-                    <label className="text-xs font-medium text-gray-600 whitespace-nowrap">Manager:</label>
-                    <select
-                      value={managerFilter}
-                      onChange={(e) => setManagerFilter(e.target.value)}
-                      className="w-40 px-2 py-1 border border-gray-300 rounded text-xs"
-                      title="Filter members by their manager"
-                    >
-                      <option value="all">All Managers</option>
-                      {getManagerMembers.map(manager => (
-                        <option key={manager.id} value={manager.id}>
-                          {manager.fullName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  {/* Resource Type Filter */}
-                  <div className="flex items-center gap-1.5">
-                    <label className="text-xs font-medium text-gray-600 whitespace-nowrap">Resource:</label>
-                    <div className="relative" ref={teamRoleSelectorRef}>
-                      <button
-                        onClick={() => setShowTeamRoleSelector(!showTeamRoleSelector)}
-                        className="w-48 px-2 py-1 border border-gray-300 rounded text-xs text-left flex items-center justify-between hover:bg-gray-50"
-                        title="Filter members by resource type/role"
-                    >
-                      <span className={teamRoleFilter.length === 0 ? 'text-gray-500' : ''}>
-                        {teamRoleFilter.length === 0 
-                          ? 'All Resources' 
-                          : `${teamRoleFilter.length} selected`}
+                  {/* Manager multi-select dropdown */}
+                  <div className="relative flex items-center gap-1.5" ref={staffManagerDropdownRef}>
+                    <span className="text-xs font-medium text-gray-600 whitespace-nowrap">Manager:</span>
+                    <button onClick={() => { setShowStaffManagerDropdown(!showStaffManagerDropdown); setStaffManagerSearch(''); }}
+                      className="px-2 py-1 border rounded text-xs bg-white hover:bg-gray-50 flex items-center gap-1 min-w-[120px]">
+                      <span className="truncate">
+                        {staffSelectedManagerIds.size === 0
+                          ? 'All Managers'
+                          : staffSelectedManagerIds.size === 1
+                            ? (staffSelectedManagerIds.has(UNASSIGNED_MANAGER_ID) ? 'Unassigned' : staffAvailableManagers.managers.find(m => staffSelectedManagerIds.has(m.id))?.fullName || 'Manager')
+                            : `${staffSelectedManagerIds.size} managers`}
                       </span>
-                      <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
+                      <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                     </button>
-                    {showTeamRoleSelector && (
-                      <div className="absolute top-full left-0 mt-1 w-full bg-white border rounded shadow-lg z-10 p-3 max-h-64 overflow-y-auto">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="text-xs font-medium text-gray-700">Filter by resource:</div>
-                          <button
-                            onClick={() => setShowTeamRoleSelector(false)}
-                            className="text-gray-400 hover:text-gray-600"
-                            title="Close"
-                          >
-                            ✕
-                          </button>
+                    {showStaffManagerDropdown && (
+                      <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg z-30 w-64">
+                        <div className="p-2 border-b">
+                          <input type="text" placeholder="Search managers..." value={staffManagerSearch}
+                            onChange={e => setStaffManagerSearch(e.target.value)}
+                            className="w-full px-2 py-1 border rounded text-xs" autoFocus />
                         </div>
-                        <div className="space-y-1">
-                          {(() => {
-                            const allRoles = Array.from(new Set(teamMembers.filter(m => m.isActive && m.role).map(m => m.role))).sort();
-                            const allSelected = allRoles.length > 0 && allRoles.every(role => teamRoleFilter.includes(role!));
-                            
-                            return (
-                              <>
-                                <label className="flex items-center gap-2 py-1 hover:bg-gray-50 px-2 rounded cursor-pointer border-b border-gray-200 pb-2 mb-1">
-                                  <input
-                                    type="checkbox"
-                                    checked={allSelected}
-                                    onChange={(e) => {
-                                      if (e.target.checked) {
-                                        setTeamRoleFilter(allRoles as string[]);
-                                      } else {
-                                        setTeamRoleFilter([]);
-                                      }
+                        <div className="px-2 py-1 border-b flex gap-2 bg-gray-50">
+                          <button onClick={() => setStaffSelectedManagerIds(new Set(staffAvailableManagers.managers.map(m => m.id)))} className="text-[10px] text-blue-600 hover:underline font-medium">Select All</button>
+                          <button onClick={() => setShowStaffManagerDropdown(false)} className="text-[10px] text-gray-500 hover:underline ml-auto">Close</button>
+                        </div>
+                        <div className="max-h-52 overflow-y-auto">
+                          {staffAvailableManagers.managers
+                            .filter(m => !staffManagerSearch || m.fullName.toLowerCase().includes(staffManagerSearch.toLowerCase()))
+                            .map(m => {
+                              const isChecked = staffSelectedManagerIds.has(m.id);
+                              const directReportCount = staffAllActiveMembers.filter(member => member.managerId === m.id).length;
+                              return (
+                                <label key={m.id} className="flex items-center gap-2 px-3 py-1.5 hover:bg-blue-50 cursor-pointer text-xs">
+                                  <input type="checkbox" checked={isChecked}
+                                    onChange={() => {
+                                      const next = new Set(staffSelectedManagerIds);
+                                      if (next.has(m.id)) { next.delete(m.id); if (next.size === 0) return; }
+                                      else { next.add(m.id); }
+                                      setStaffSelectedManagerIds(next);
+                                      setStaffSelectedMemberIds(new Set());
                                     }}
-                                    className="rounded"
-                                  />
-                                  <span className="text-sm font-medium">Select All / Deselect All</span>
+                                    className="rounded text-blue-600" />
+                                  <span className="truncate flex-1">{m.fullName}</span>
+                                  <span className="text-[9px] text-gray-400 flex-shrink-0">{directReportCount} reports</span>
                                 </label>
-                                {allRoles.map(role => (
-                                  <label key={role} className="flex items-center gap-2 py-1 hover:bg-gray-50 px-2 rounded cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={teamRoleFilter.includes(role!)}
-                                      onChange={(e) => {
-                                        if (e.target.checked) {
-                                          setTeamRoleFilter([...teamRoleFilter, role!]);
-                                        } else {
-                                          setTeamRoleFilter(teamRoleFilter.filter(r => r !== role));
-                                        }
-                                      }}
-                                      className="rounded"
-                                    />
-                                    <span className="text-sm">{role}</span>
-                                  </label>
-                                ))}
-                              </>
-                            );
-                          })()}
+                              );
+                            })}
+                          {staffAvailableManagers.hasUnassigned && (
+                            <label className="flex items-center gap-2 px-3 py-1.5 hover:bg-yellow-50 cursor-pointer text-xs border-t">
+                              <input type="checkbox" checked={staffSelectedManagerIds.has(UNASSIGNED_MANAGER_ID)}
+                                onChange={() => {
+                                  const next = new Set(staffSelectedManagerIds);
+                                  if (next.has(UNASSIGNED_MANAGER_ID)) { next.delete(UNASSIGNED_MANAGER_ID); if (next.size === 0) return; }
+                                  else { next.add(UNASSIGNED_MANAGER_ID); }
+                                  setStaffSelectedManagerIds(next);
+                                  setStaffSelectedMemberIds(new Set());
+                                }}
+                                className="rounded text-yellow-600" />
+                              <span className="truncate flex-1 text-yellow-700">Unassigned (no manager)</span>
+                              <span className="text-[9px] text-gray-400 flex-shrink-0">{staffAllActiveMembers.filter(m => !m.managerId).length}</span>
+                            </label>
+                          )}
                         </div>
-                        {teamRoleFilter.length > 0 && (
-                          <div className="mt-2 pt-2 border-t">
-                            <button
-                              onClick={() => setTeamRoleFilter([])}
-                              className="text-xs text-blue-600 hover:text-blue-700"
-                            >
-                              Clear all
-                            </button>
-                          </div>
-                        )}
                       </div>
                     )}
-                    </div>
+                  </div>
+
+                  {/* Employee multi-select dropdown */}
+                  <div className="relative flex items-center gap-1.5" ref={staffMemberDropdownRef}>
+                    <button onClick={() => { setShowStaffMemberDropdown(!showStaffMemberDropdown); setStaffMemberSearch(''); }}
+                      className="px-2 py-1 border rounded text-xs bg-white hover:bg-gray-50 flex items-center gap-1 min-w-[130px]">
+                      <span className="truncate">
+                        {staffSelectedMemberIds.size === 0
+                          ? `All Employees (${staffEligibleMembers.length})`
+                          : `${staffDisplayedMembers.length} of ${staffEligibleMembers.length} selected`}
+                      </span>
+                      <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    {showStaffMemberDropdown && (
+                      <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg z-30 w-64">
+                        <div className="p-2 border-b">
+                          <input type="text" placeholder="Search employees..." value={staffMemberSearch}
+                            onChange={e => setStaffMemberSearch(e.target.value)}
+                            className="w-full px-2 py-1 border rounded text-xs" autoFocus />
+                        </div>
+                        <div className="px-2 py-1 border-b flex gap-2 bg-gray-50">
+                          <button onClick={() => setStaffSelectedMemberIds(new Set())} className="text-[10px] text-blue-600 hover:underline font-medium">Select All</button>
+                          <button onClick={() => setStaffSelectedMemberIds(new Set(['__none__']))} className="text-[10px] text-blue-600 hover:underline font-medium">Deselect All</button>
+                          <button onClick={() => setShowStaffMemberDropdown(false)} className="text-[10px] text-gray-500 hover:underline ml-auto">Close</button>
+                        </div>
+                        <div className="max-h-52 overflow-y-auto">
+                          {staffEligibleMembers
+                            .filter(m => !staffMemberSearch || m.fullName.toLowerCase().includes(staffMemberSearch.toLowerCase()))
+                            .map(m => {
+                              const isChecked = staffSelectedMemberIds.size === 0 || staffSelectedMemberIds.has(m.id);
+                              return (
+                                <label key={m.id} className="flex items-center gap-2 px-3 py-1.5 hover:bg-blue-50 cursor-pointer text-xs">
+                                  <input type="checkbox" checked={isChecked}
+                                    onChange={() => {
+                                      if (staffSelectedMemberIds.size === 0) {
+                                        setStaffSelectedMemberIds(new Set([m.id]));
+                                      } else if (staffSelectedMemberIds.has(m.id)) {
+                                        const next = new Set(staffSelectedMemberIds);
+                                        next.delete(m.id);
+                                        if (next.size === 0 || next.has('__none__')) setStaffSelectedMemberIds(new Set());
+                                        else setStaffSelectedMemberIds(next);
+                                      } else {
+                                        const next = new Set(staffSelectedMemberIds);
+                                        next.delete('__none__');
+                                        next.add(m.id);
+                                        if (next.size === staffEligibleMembers.length) setStaffSelectedMemberIds(new Set());
+                                        else setStaffSelectedMemberIds(next);
+                                      }
+                                    }}
+                                    className="rounded text-blue-600" />
+                                  <span className="truncate flex-1">{m.fullName}</span>
+                                  <span className="text-[9px] text-gray-400 flex-shrink-0">{m.role}</span>
+                                </label>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
