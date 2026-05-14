@@ -2498,6 +2498,8 @@ export default function CapacityPlanning() {
                       </p>
                     </div>
                     <div className="flex gap-1">
+                      {/* Daily Task View - hidden */}
+                      {false && (
                       <button 
                         className="p-1.5 rounded hover:bg-white/50" 
                         title="Daily Task View"
@@ -2510,6 +2512,7 @@ export default function CapacityPlanning() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                       </button>
+                      )}
                       <button 
                         className="p-1.5 rounded hover:bg-white/50" 
                         title={isExpanded ? "Restore to normal view" : "Expand sprint view"}
@@ -2765,7 +2768,8 @@ export default function CapacityPlanning() {
                                         });
                                         return null;
                                       })()}
-                                      {editingStartDateAllocationId === member.allocationId ? (
+                                      {/* Set date - hidden */}
+                                      {false && (editingStartDateAllocationId === member.allocationId ? (
                                         <input
                                           type="date"
                                           value={editingStartDateValue}
@@ -2796,11 +2800,11 @@ export default function CapacityPlanning() {
                                             setEditingStartDateValue(alloc?.startDate || '');
                                           }}
                                           className="ml-2 text-green-600 text-xs font-semibold hover:bg-green-50 px-1.5 py-0.5 rounded border border-green-300"
-                                          title={alloc?.startDate ? `Start: ${new Date(alloc.startDate).toLocaleDateString()} (click to edit)` : 'Click to set start date'}
+                                          title={alloc?.startDate ? `Start: ${new Date(alloc!.startDate as string).toLocaleDateString()} (click to edit)` : 'Click to set start date'}
                                         >
-                                          📅 {alloc?.startDate ? new Date(alloc.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Set date'}
+                                          📅 {alloc?.startDate ? new Date(alloc!.startDate as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Set date'}
                                         </button>
-                                      )}
+                                      ))}
                                     </div>
                                     {isMultiSprint && (
                                       <div className="text-[10px] text-gray-600 mt-0.5">
@@ -3026,8 +3030,8 @@ export default function CapacityPlanning() {
                                     {alloc?.comment && (
                                       <span className="ml-1 text-blue-500" title={alloc.comment}>💬</span>
                                     )}
-                                    {/* Start Date - Editable */}
-                                    {editingStartDateAllocationId === proj.allocationId ? (
+                                    {/* Start Date - hidden */}
+                                    {false && (editingStartDateAllocationId === proj.allocationId ? (
                                       <input
                                         type="date"
                                         value={editingStartDateValue}
@@ -3058,11 +3062,11 @@ export default function CapacityPlanning() {
                                           setEditingStartDateValue(alloc?.startDate || '');
                                         }}
                                         className="ml-2 text-green-600 text-xs font-semibold hover:bg-green-50 px-1.5 py-0.5 rounded border border-green-300"
-                                        title={alloc?.startDate ? `Start: ${new Date(alloc.startDate).toLocaleDateString()} (click to edit)` : 'Click to set start date'}
+                                        title={alloc?.startDate ? `Start: ${new Date(alloc!.startDate as string).toLocaleDateString()} (click to edit)` : 'Click to set start date'}
                                       >
-                                        📅 {alloc?.startDate ? new Date(alloc.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Set date'}
+                                        📅 {alloc?.startDate ? new Date(alloc!.startDate as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Set date'}
                                       </button>
-                                    )}
+                                    ))}
                                   </div>
                                   {canWrite && (
                                     <div className="flex gap-0.5 flex-shrink-0">
