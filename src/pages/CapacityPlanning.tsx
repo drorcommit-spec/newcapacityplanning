@@ -35,6 +35,7 @@ export default function CapacityPlanning() {
     return saved ? parseInt(saved) : 3;
   });
   const [teamSprintOffset, setTeamSprintOffset] = useState(0); // offset for staff view navigation
+  const [teamExpandedMode, setTeamExpandedMode] = useState(false); // track if user wants expanded view
   const [expandedSprint, setExpandedSprint] = useState<string | null>(null);
   const [showDailyView, setShowDailyView] = useState(false);
   const [dailyViewSprint, setDailyViewSprint] = useState<SprintInfo | null>(null);
@@ -362,6 +363,14 @@ export default function CapacityPlanning() {
     }
     return result;
   }, [sprintCount, teamSprintOffset, viewMode]);
+
+  // Auto-expand first sprint when in expanded mode and sprints change
+  useEffect(() => {
+    if (teamExpandedMode && sprints.length > 0) {
+      const firstKey = `${sprints[0].year}-${sprints[0].month}-${sprints[0].sprint}`;
+      setExpandedSprint(firstKey);
+    }
+  }, [teamExpandedMode, sprints]);
 
   // Get allocations for a specific sprint
   const getSprintAllocations = (sprint: SprintInfo) => {
@@ -2476,17 +2485,17 @@ export default function CapacityPlanning() {
         {/* Sprint navigation for Staff View */}
         {viewMode === 'team' && (
           <div className="flex items-center gap-1 px-6 pt-4 pb-2">
-            <button onClick={() => setTeamSprintOffset(o => o - 3)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Previous 3 sprints">
+            <button onClick={() => { setTeamSprintOffset(o => o - 3); if (expandedSprint) setTeamExpandedMode(true); }} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Previous 3 sprints">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
             </button>
-            <button onClick={() => setTeamSprintOffset(o => o - 1)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Previous sprint">
+            <button onClick={() => { setTeamSprintOffset(o => o - 1); if (expandedSprint) setTeamExpandedMode(true); }} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Previous sprint">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
-            <button onClick={() => setTeamSprintOffset(0)} className="px-2 py-1 rounded text-xs font-medium text-gray-700 hover:bg-gray-200" title="Go to current sprint">Today</button>
-            <button onClick={() => setTeamSprintOffset(o => o + 1)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Next sprint">
+            <button onClick={() => { setTeamSprintOffset(0); if (expandedSprint) setTeamExpandedMode(true); }} className="px-2 py-1 rounded text-xs font-medium text-gray-700 hover:bg-gray-200" title="Go to current sprint">Today</button>
+            <button onClick={() => { setTeamSprintOffset(o => o + 1); if (expandedSprint) setTeamExpandedMode(true); }} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Next sprint">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </button>
-            <button onClick={() => setTeamSprintOffset(o => o + 3)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Next 3 sprints">
+            <button onClick={() => { setTeamSprintOffset(o => o + 3); if (expandedSprint) setTeamExpandedMode(true); }} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Next 3 sprints">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
             </button>
             {teamSprintOffset !== 0 && (
@@ -2551,7 +2560,7 @@ export default function CapacityPlanning() {
                       <button 
                         className="p-1.5 rounded hover:bg-white/50" 
                         title={isExpanded ? "Restore to normal view" : "Expand sprint view"}
-                        onClick={() => setExpandedSprint(isExpanded ? null : sprintKey)}
+                        onClick={() => { setExpandedSprint(isExpanded ? null : sprintKey); setTeamExpandedMode(!isExpanded); }}
                       >
                         {isExpanded ? (
                           <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
