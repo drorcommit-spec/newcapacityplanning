@@ -2607,7 +2607,7 @@ export default function CapacityPlanning() {
             return (
               <div
                 key={sprintKey}
-                className={`bg-white rounded-lg border-2 border-gray-300 ${
+                className={`bg-white rounded-xl border border-gray-100 ${
                   isExpanded 
                     ? 'w-full' 
                     : 'flex-shrink-0 w-[450px] min-w-[400px]'
@@ -2615,16 +2615,16 @@ export default function CapacityPlanning() {
                 style={!isExpanded ? { flexBasis: `${100 / Math.min(sprintCount, 4)}%` } : undefined}
               >
                 {/* Sprint Header */}
-                <div className="px-4 py-3 border-b-2 border-gray-300 bg-gradient-to-r from-blue-50 to-blue-100">
+                <div className="px-4 py-2.5 border-b border-gray-100">
                   <div className="flex justify-between items-center">
                     <div className="flex-1">
-                      <h3 className="font-bold text-gray-900">
+                      <h3 className="font-semibold text-sm text-gray-900">
                         {getMonthName(sprint.month)} {sprint.year}
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-xs text-gray-400">
                         Sprint #{sprint.sprint} ({getSprintDatePeriod(sprint)})
                       </p>
-                      <p className="text-xs text-blue-600 font-medium mt-0.5">
+                      <p className="text-[10px] text-gray-400 mt-0.5">
                         {viewMode === 'projects' 
                           ? `${projectsData.length} Project${projectsData.length !== 1 ? 's' : ''}`
                           : `${membersData.length} Member${membersData.length !== 1 ? 's' : ''}`
@@ -2635,7 +2635,7 @@ export default function CapacityPlanning() {
                       {/* Daily Task View - hidden */}
                       {false && (
                       <button 
-                        className="p-1.5 rounded hover:bg-white/50" 
+                        className="p-1.5 rounded hover:bg-gray-50" 
                         title="Daily Task View"
                         onClick={() => {
                           setDailyViewSprint(sprint);
@@ -2648,27 +2648,27 @@ export default function CapacityPlanning() {
                       </button>
                       )}
                       <button 
-                        className="p-1.5 rounded hover:bg-white/50" 
+                        className="p-1 rounded hover:bg-gray-50" 
                         title={isExpanded ? "Restore to normal view" : "Expand sprint view"}
                         onClick={() => { setExpandedSprint(isExpanded ? null : sprintKey); setTeamExpandedMode(!isExpanded); }}
                       >
                         {isExpanded ? (
-                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
                         ) : (
-                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                           </svg>
                         )}
                       </button>
                       {canWrite && (
                         <button 
-                          className="p-1.5 rounded hover:bg-white/50" 
+                          className="p-1 rounded hover:bg-gray-50" 
                           title={viewMode === 'projects' ? "Add project to sprint" : "Add member to sprint"}
                           onClick={() => viewMode === 'projects' ? handleAddProjectToSprint(sprint) : handleAddMemberToSprint(sprint)}
                         >
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                           </svg>
                         </button>
@@ -3045,76 +3045,81 @@ export default function CapacityPlanning() {
 
                 {/* Sprint Content - Team View */}
                 {viewMode === 'team' && (
-                  <div className={isExpanded ? "p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" : "p-3 space-y-3"}>
+                  <div className={isExpanded ? "p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3" : "p-3 space-y-2.5"}>
                     {membersData.length === 0 ? (
                       <div className="text-center text-gray-400 py-8 text-sm col-span-full">
                         No team members allocated
                       </div>
                     ) : (
                       membersData.map(({ member, projects: memberProjects, total }) => (
-                        <div key={member.id} className={`border border-gray-200 rounded-lg bg-gray-50 hover:shadow-md transition-shadow ${collapsedMembers.has(member.id) ? 'p-2' : 'p-3'}`}>
+                        <div key={member.id} className={`border border-gray-100 rounded-xl bg-white hover:border-gray-200 hover:shadow-sm transition-all ${collapsedMembers.has(member.id) ? 'px-3 py-2' : 'p-3'}`}>
                           {/* Member Header - Always Visible */}
                           <div className="flex justify-between items-center">
                             <div className="flex-1">
-                              <div className="font-bold text-sm text-gray-900">{member.fullName}</div>
+                              <div className="font-semibold text-sm text-gray-900">{member.fullName}</div>
                               {member.role && (
-                                <div className="text-xs text-gray-600">{member.role}</div>
+                                <div className="text-[10px] text-gray-400">{member.role}</div>
                               )}
-                              <div className={`text-xs mt-1 px-2 py-0.5 rounded inline-flex items-center gap-1 ${getCapacityColor(total, member.capacity ?? 100)}`}>
-                                <span>{getCapacityBadge(total, member.capacity ?? 100)}</span>
-                                <span className="font-semibold">Total: {total}% / {member.capacity ?? 100}%</span>
-                              </div>
                             </div>
-                            
-                            {/* Collapse/Expand Toggle */}
-                            <button
-                              onClick={() => toggleMemberCollapse(member.id)}
-                              className="p-1 rounded hover:bg-gray-100 text-gray-500 ml-2"
-                              title={collapsedMembers.has(member.id) ? "Expand member" : "Collapse member"}
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                {collapsedMembers.has(member.id) ? (
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                                ) : (
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                                )}
-                              </svg>
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                              <div className="text-right">
+                                <div className={`text-xs font-bold ${total > (member.capacity ?? 100) ? 'text-red-500' : total < underCapacityThreshold ? 'text-amber-500' : total === 0 ? 'text-gray-300' : 'text-green-600'}`}>{total}%</div>
+                                <div className="text-[9px] text-gray-400">of {member.capacity ?? 100}%</div>
+                              </div>
+                              {/* Collapse/Expand Toggle */}
+                              <button
+                                onClick={() => toggleMemberCollapse(member.id)}
+                                className="p-0.5 rounded hover:bg-gray-100 text-gray-300"
+                                title={collapsedMembers.has(member.id) ? "Expand member" : "Collapse member"}
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  {collapsedMembers.has(member.id) ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                  ) : (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                  )}
+                                </svg>
+                              </button>
+                            </div>
                           </div>
 
                           {/* Expandable Content */}
                           {!collapsedMembers.has(member.id) && (
                             <div className="mt-2">
+                              {/* Capacity Progress Bar */}
+                              <div className="w-full bg-gray-100 rounded-full h-1 mb-2.5">
+                                <div className={`h-1 rounded-full ${total > (member.capacity ?? 100) ? 'bg-red-400' : total < underCapacityThreshold ? 'bg-amber-400' : total === 0 ? 'bg-gray-200' : 'bg-green-400'}`} style={{width: `${Math.min(total, member.capacity ?? 100) / (member.capacity ?? 100) * 100}%`}}></div>
+                              </div>
                                 {canWrite && (
-                                  <div className="flex gap-1">
+                                  <div className="flex gap-1 mb-2">
                                     <button
                                       onClick={() => {
                                         setSelectedMember(member);
                                         setSelectedSprint(sprint);
                                         setShowAddProjectModal(true);
                                       }}
-                                      className="p-1 rounded hover:bg-green-100 text-green-600"
+                                      className="p-0.5 rounded hover:bg-green-50 text-green-500"
                                       title="Add project to member"
                                     >
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                       </svg>
                                     </button>
                                     <button
                                       onClick={() => handleCopyMemberToNextSprint(member, sprint)}
-                                      className="p-1 rounded hover:bg-blue-100 text-blue-600"
+                                      className="p-0.5 rounded hover:bg-blue-50 text-blue-500"
                                       title="Copy member allocations to next sprint"
                                     >
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                       </svg>
                                     </button>
                                     <button
                                       onClick={() => handleOpenRemoveMemberModal(member, sprint)}
-                                      className="p-1 rounded hover:bg-red-100 text-red-600"
+                                      className="p-0.5 rounded hover:bg-red-50 text-red-400"
                                       title="Remove member from sprint"
                                     >
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                       </svg>
                                     </button>
@@ -3122,25 +3127,25 @@ export default function CapacityPlanning() {
                                 )}
                               
                               {/* Projects List */}
-                              <div className="space-y-1 mt-2 border-t pt-2">
+                              <div className="space-y-1">
                             {memberProjects.sort((a, b) => b.percentage - a.percentage).map((proj) => {
                               const projectObj = projects.find(p => p.id === proj.id);
                               const alloc = allocations.find(a => a.id === proj.allocationId);
                               const isEditing = editingAllocationId === proj.allocationId;
                               
                               return (
-                                <div key={proj.allocationId} className="flex justify-between items-center text-xs py-1 gap-2">
+                                <div key={proj.allocationId} className="flex justify-between items-center text-xs py-1 px-2 gap-2 rounded-lg bg-gray-50 hover:bg-gray-100/60 transition-colors">
                                   <div className="flex-1 min-w-0">
                                     <button
                                       onClick={() => projectObj && openEditProjectModal(projectObj)}
-                                      className="font-medium hover:text-blue-600 hover:underline"
+                                      className="text-[11px] font-medium text-gray-700 hover:text-blue-600 hover:underline"
                                     >
                                       {proj.customerName}
                                     </button>
-                                    <span className="mx-1">-</span>
+                                    <span className="text-[11px] text-gray-300 mx-1">-</span>
                                     <button
                                       onClick={() => projectObj && openEditProjectModal(projectObj)}
-                                      className="hover:text-blue-600 hover:underline"
+                                      className="text-[11px] text-gray-500 hover:text-blue-600 hover:underline"
                                     >
                                       {proj.projectName}
                                     </button>
@@ -3159,7 +3164,7 @@ export default function CapacityPlanning() {
                                         }}
                                       />
                                     ) : (
-                                      <span className="ml-2 text-blue-600 font-semibold">{proj.percentage}%</span>
+                                      <span className="ml-2 text-[11px] text-blue-600 font-semibold">{proj.percentage}%</span>
                                     )}
                                     {alloc?.comment && (
                                       <span className="ml-1 text-blue-500" title={alloc.comment}>💬</span>
