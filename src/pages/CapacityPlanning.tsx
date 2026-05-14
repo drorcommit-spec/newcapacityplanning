@@ -3054,7 +3054,7 @@ export default function CapacityPlanning() {
                       membersData.map(({ member, projects: memberProjects, total }) => (
                         <div key={member.id} className={`border border-gray-100 rounded-xl bg-white hover:border-gray-200 hover:shadow-sm transition-all ${collapsedMembers.has(member.id) ? 'px-3 py-2' : 'p-3'}`}>
                           {/* Member Header - Always Visible */}
-                          <div className="flex justify-between items-center">
+                          <div className="flex justify-between items-center cursor-pointer" onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; toggleMemberCollapse(member.id); }}>
                             <div className="flex-1">
                               <div className="font-semibold text-sm text-gray-900">{member.fullName}</div>
                               {member.role && (
