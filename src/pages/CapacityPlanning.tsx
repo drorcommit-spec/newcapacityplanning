@@ -2109,18 +2109,17 @@ export default function CapacityPlanning() {
           </div>
           
           <div className="flex gap-2 items-center">
-            {/* View Mode Toggle - hidden, only matrix view active for now */}
-            {false && (
+            {/* View Mode Toggle */}
             <div className="flex bg-gray-100 rounded p-0.5">
               <button
-                onClick={() => setViewMode('projects')}
+                onClick={() => setViewMode('matrix')}
                 className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                  viewMode === 'projects'
+                  viewMode === 'matrix'
                     ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Projects
+                Projects View
               </button>
               <button
                 onClick={() => setViewMode('team')}
@@ -2130,20 +2129,9 @@ export default function CapacityPlanning() {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Team
-              </button>
-              <button
-                onClick={() => setViewMode('matrix')}
-                className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                  viewMode === 'matrix'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Project List
+                Staff
               </button>
             </div>
-            )}
 
             {/* Sprint Controls - hidden in matrix/Project List view */}
             {viewMode !== 'matrix' && (
