@@ -34,6 +34,7 @@ export default function CapacityPlanning() {
     const saved = localStorage.getItem('sprintCount');
     return saved ? parseInt(saved) : 3;
   });
+  const [teamSprintOffset, setTeamSprintOffset] = useState(0); // offset for staff view navigation
   const [expandedSprint, setExpandedSprint] = useState<string | null>(null);
   const [showDailyView, setShowDailyView] = useState(false);
   const [dailyViewSprint, setDailyViewSprint] = useState<SprintInfo | null>(null);
@@ -334,6 +335,19 @@ export default function CapacityPlanning() {
     let month = currentMonth;
     let sprint = currentSprint;
 
+    // Apply team sprint offset (can go negative for past sprints)
+    const offset = viewMode === 'team' ? teamSprintOffset : 0;
+    for (let i = 0; i < offset; i++) {
+      sprint++;
+      if (sprint > 2) { sprint = 1; month++; }
+      if (month > 12) { month = 1; year++; }
+    }
+    for (let i = 0; i > offset; i--) {
+      sprint--;
+      if (sprint < 1) { sprint = 2; month--; }
+      if (month < 1) { month = 12; year--; }
+    }
+
     for (let i = 0; i < sprintCount; i++) {
       result.push({ year, month, sprint });
       sprint++;
@@ -347,7 +361,7 @@ export default function CapacityPlanning() {
       }
     }
     return result;
-  }, [sprintCount]);
+  }, [sprintCount, teamSprintOffset, viewMode]);
 
   // Get allocations for a specific sprint
   const getSprintAllocations = (sprint: SprintInfo) => {
@@ -2129,7 +2143,7 @@ export default function CapacityPlanning() {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Staff
+                Staff View
               </button>
             </div>
 
@@ -2459,6 +2473,27 @@ export default function CapacityPlanning() {
       {/* Sprint Columns */}
       {viewMode !== 'matrix' && (
       <div className="flex-1">
+        {/* Sprint navigation for Staff View */}
+        {viewMode === 'team' && (
+          <div className="flex items-center gap-1 px-6 pt-4 pb-2">
+            <button onClick={() => setTeamSprintOffset(o => o - 3)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Previous 3 sprints">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
+            </button>
+            <button onClick={() => setTeamSprintOffset(o => o - 1)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Previous sprint">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <button onClick={() => setTeamSprintOffset(0)} className="px-2 py-1 rounded text-xs font-medium text-gray-700 hover:bg-gray-200" title="Go to current sprint">Today</button>
+            <button onClick={() => setTeamSprintOffset(o => o + 1)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Next sprint">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </button>
+            <button onClick={() => setTeamSprintOffset(o => o + 3)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Next 3 sprints">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+            </button>
+            {teamSprintOffset !== 0 && (
+              <span className="text-[10px] text-gray-400 ml-2">{teamSprintOffset > 0 ? `+${teamSprintOffset}` : teamSprintOffset} sprints from today</span>
+            )}
+          </div>
+        )}
         <div className={expandedSprint ? "p-6" : "flex gap-6 p-6 max-w-[1920px] mx-auto"}>
           {sprints.map((sprint) => {
             const sprintKey = `${sprint.year}-${sprint.month}-${sprint.sprint}`;
