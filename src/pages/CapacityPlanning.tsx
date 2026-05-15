@@ -2333,6 +2333,7 @@ export default function CapacityPlanning() {
                 <>
                   {/* Capacity Traffic Light Filter */}
                   <div className="flex items-center gap-1.5 border rounded-lg px-2 py-1 bg-gray-50">
+                    <span className="text-[10px] text-gray-500 font-medium mr-1">Staff Capacity</span>
                     <button onClick={() => setCapacityFilter('all')}
                       className={`text-[10px] px-2 py-0.5 rounded ${capacityFilter === 'all' ? 'bg-white shadow font-bold text-gray-800' : 'text-gray-500 hover:bg-white'}`}>All</button>
                     <button onClick={() => setCapacityFilter(capacityFilter === 'under' ? 'all' : 'under')}
