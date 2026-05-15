@@ -2213,6 +2213,16 @@ export default function CapacityPlanning() {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
+                Puzzle View
+              </button>
+              <button
+                onClick={() => setViewMode('projects')}
+                className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                  viewMode === 'projects'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
                 Projects View
               </button>
               <button
