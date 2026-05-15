@@ -337,6 +337,8 @@ export default function ProjectManagement() {
           />
         </div>
 
+        <div className="text-xs text-gray-500 mb-2">{filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''} listed</div>
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
