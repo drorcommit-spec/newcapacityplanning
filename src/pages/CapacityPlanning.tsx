@@ -2955,7 +2955,7 @@ export default function CapacityPlanning() {
                                     )}
                                   </div>
                                   {canWrite && (
-                                    <div className="flex gap-0.5 flex-shrink-0">
+                                    <div className="flex gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                       {isEditing ? (
                                         <>
                                           <button
@@ -3052,7 +3052,7 @@ export default function CapacityPlanning() {
                       </div>
                     ) : (
                       membersData.map(({ member, projects: memberProjects, total }) => (
-                        <div key={member.id} className={`border border-gray-100 rounded-xl bg-white hover:border-gray-200 hover:shadow-sm transition-all ${collapsedMembers.has(member.id) ? 'px-3 py-2' : 'p-3'}`}>
+                        <div key={member.id} className={`group border border-gray-100 rounded-xl bg-white hover:border-gray-200 hover:shadow-sm transition-all ${collapsedMembers.has(member.id) ? 'px-3 py-2' : 'p-3'}`}>
                           {/* Member Header - Always Visible */}
                           <div className="flex justify-between items-center cursor-pointer" onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; toggleMemberCollapse(member.id); }}>
                             <div className="flex-1">
@@ -3091,7 +3091,7 @@ export default function CapacityPlanning() {
                                 <div className={`h-1 rounded-full ${total > (member.capacity ?? 100) ? 'bg-red-400' : total < underCapacityThreshold ? 'bg-amber-400' : total === 0 ? 'bg-gray-200' : 'bg-green-400'}`} style={{width: `${Math.min(total, member.capacity ?? 100) / (member.capacity ?? 100) * 100}%`}}></div>
                               </div>
                                 {canWrite && (
-                                  <div className="flex gap-1 mb-2">
+                                  <div className="flex gap-1 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
                                       onClick={() => {
                                         setSelectedMember(member);
@@ -3208,7 +3208,7 @@ export default function CapacityPlanning() {
                                     ))}
                                   </div>
                                   {canWrite && (
-                                    <div className="flex gap-0.5 flex-shrink-0">
+                                    <div className="flex gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                       {isEditing ? (
                                         <>
                                           <button
