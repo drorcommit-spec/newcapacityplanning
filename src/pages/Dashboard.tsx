@@ -648,36 +648,6 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <h2 className="text-xl font-semibold mb-4">⚡ Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button
-            onClick={() => navigate('/projects')}
-            className="p-4 rounded-lg border-2 border-green-400 bg-green-50 hover:bg-green-100 text-left transition-all hover:shadow-md"
-          >
-            <div className="text-lg font-semibold text-green-900 mb-2">📁 Projects</div>
-            <div className="text-sm text-gray-600">View all projects</div>
-          </button>
-
-          <button
-            onClick={() => navigate('/teams')}
-            className="p-4 rounded-lg border-2 border-purple-400 bg-purple-50 hover:bg-purple-100 text-left transition-all hover:shadow-md"
-          >
-            <div className="text-lg font-semibold text-purple-900 mb-2">👥 Team</div>
-            <div className="text-sm text-gray-600">View members' teams</div>
-          </button>
-
-          <button
-            onClick={() => navigate('/roles')}
-            className="p-4 rounded-lg border-2 border-orange-400 bg-orange-50 hover:bg-orange-100 text-left transition-all hover:shadow-md"
-          >
-            <div className="text-lg font-semibold text-orange-900 mb-2">👔 Resource Type</div>
-            <div className="text-sm text-gray-600">View resource types</div>
-          </button>
-        </div>
-      </Card>
-
       {/* Unallocated Members Floating Panel */}
       {showUnallocatedMembersPanel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
