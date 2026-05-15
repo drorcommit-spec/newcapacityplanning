@@ -42,7 +42,7 @@ export default function CapacityPlanning() {
 
   // Filter state
   const [searchText, setSearchText] = useState('');
-  const [capacityFilter, setCapacityFilter] = useState<CapacityFilter>('all');
+  const [capacityFilter, setCapacityFilter] = useState<CapacityFilter>('under');
   const [missingAllocationRoles, setMissingAllocationRoles] = useState<string[]>([]);
   const [showRoleSelector, setShowRoleSelector] = useState(false);
   const [teamRoleFilter, setTeamRoleFilter] = useState<string[]>([]);
@@ -2331,20 +2331,25 @@ export default function CapacityPlanning() {
               
               {viewMode === 'team' ? (
                 <>
-                  {/* Capacity Filter */}
-                  <div className="flex items-center gap-1.5">
-                    <label className="text-xs font-medium text-gray-600 whitespace-nowrap">Capacity:</label>
-                    <select
-                      value={capacityFilter}
-                      onChange={(e) => setCapacityFilter(e.target.value as CapacityFilter)}
-                      className="w-28 px-2 py-1 border border-gray-300 rounded text-xs"
-                      title="Filter members by capacity utilization"
-                    >
-                      <option value="all">All</option>
-                      <option value="under">Under ({`<${underCapacityThreshold}%`})</option>
-                      <option value="good">Good ({underCapacityThreshold}-{overCapacityThreshold}%)</option>
-                      <option value="over">Over ({`>${overCapacityThreshold}%`})</option>
-                    </select>
+                  {/* Capacity Traffic Light Filter */}
+                  <div className="flex items-center gap-1.5 border rounded-lg px-2 py-1 bg-gray-50">
+                    <button onClick={() => setCapacityFilter('all')}
+                      className={`text-[10px] px-2 py-0.5 rounded ${capacityFilter === 'all' ? 'bg-white shadow font-bold text-gray-800' : 'text-gray-500 hover:bg-white'}`}>All</button>
+                    <button onClick={() => setCapacityFilter(capacityFilter === 'under' ? 'all' : 'under')}
+                      title={`Under capacity (<${underCapacityThreshold}%)`}
+                      className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${capacityFilter === 'under' ? 'bg-red-100 font-bold text-red-800 shadow' : 'text-gray-400 hover:bg-red-50'}`}>
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Under
+                    </button>
+                    <button onClick={() => setCapacityFilter(capacityFilter === 'good' ? 'all' : 'good')}
+                      title={`Good capacity (${underCapacityThreshold}-${overCapacityThreshold}%)`}
+                      className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${capacityFilter === 'good' ? 'bg-green-100 font-bold text-green-800 shadow' : 'text-gray-400 hover:bg-green-50'}`}>
+                      <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span> Good
+                    </button>
+                    <button onClick={() => setCapacityFilter(capacityFilter === 'over' ? 'all' : 'over')}
+                      title={`Over capacity (>${overCapacityThreshold}%)`}
+                      className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${capacityFilter === 'over' ? 'bg-amber-100 font-bold text-amber-800 shadow' : 'text-gray-400 hover:bg-amber-50'}`}>
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Over
+                    </button>
                   </div>
                   
                   {/* Manager multi-select dropdown */}
