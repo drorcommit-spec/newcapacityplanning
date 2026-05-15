@@ -23,7 +23,7 @@ export default function TeamManagement() {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchRole, setSearchRole] = useState('');
-  const [showInactive, setShowInactive] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -206,7 +206,8 @@ export default function TeamManagement() {
   const filteredMembers = teamMembers
     .filter(member => {
       // Active/Inactive filter
-      if (!showInactive && !member.isActive) return false;
+      if (statusFilter === 'active' && !member.isActive) return false;
+      if (statusFilter === 'inactive' && member.isActive) return false;
       
       // Role filter
       if (roleFilter !== 'all' && member.role !== roleFilter) return false;
@@ -278,12 +279,13 @@ export default function TeamManagement() {
           <label className="flex items-center gap-2">
             <span className="text-sm text-gray-700">Status:</span>
             <select
-              value={showInactive ? 'all' : 'active'}
-              onChange={(e) => setShowInactive(e.target.value !== 'active')}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
               className="px-2 py-1 border border-gray-300 rounded text-sm"
             >
+              <option value="all">All</option>
               <option value="active">Active</option>
-              <option value="all">All (incl. Inactive)</option>
+              <option value="inactive">Inactive</option>
             </select>
           </label>
         </div>
