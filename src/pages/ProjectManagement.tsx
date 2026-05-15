@@ -434,41 +434,29 @@ export default function ProjectManagement() {
             </div>
           )}
           
-          {isNewCustomer || editingId ? (
-            <div>
-              <Input
-                label="Customer Name"
-                value={formData.customerName}
-                onChange={(e) => {
-                  setFormData({ ...formData, customerName: e.target.value });
-                  setCustomerError('');
-                }}
-                required
-              />
-              {customerError && (
-                <p className="text-red-600 text-sm mt-1">{customerError}</p>
-              )}
-            </div>
-          ) : (
-            <div>
-              <Select
-                label="Customer Name"
-                options={[
-                  { value: '', label: 'Select Customer' },
-                  ...existingCustomers.map(c => ({ value: c, label: c })),
-                ]}
-                value={formData.customerName}
-                onChange={(e) => {
-                  setFormData({ ...formData, customerName: e.target.value });
-                  setCustomerError('');
-                }}
-                required
-              />
-              {customerError && (
-                <p className="text-red-600 text-sm mt-1">{customerError}</p>
-              )}
-            </div>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+            <input
+              type="text"
+              list="customer-list-mgmt"
+              value={formData.customerName}
+              onChange={(e) => {
+                setFormData({ ...formData, customerName: e.target.value });
+                setCustomerError('');
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              required
+              placeholder="Select existing or type new"
+            />
+            <datalist id="customer-list-mgmt">
+              {existingCustomers.map(c => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
+            {customerError && (
+              <p className="text-red-600 text-sm mt-1">{customerError}</p>
+            )}
+          </div>
           <Select
             label="Project Type"
             options={typeOptions}
