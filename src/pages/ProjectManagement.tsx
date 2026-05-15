@@ -92,6 +92,11 @@ export default function ProjectManagement() {
     latestStatus: '',
     activityCloseDate: '',
     region: '' as ProjectRegion | '',
+    requiredRoles: ['Product Manager', 'PMO'] as string[],
+    plannedStartMonth: new Date().getMonth() + 1,
+    plannedStartYear: new Date().getFullYear(),
+    plannedStartSprint: 1,
+    plannedSprintCount: '',
   });
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [showPMOModal, setShowPMOModal] = useState(false);
@@ -164,6 +169,11 @@ export default function ProjectManagement() {
       latestStatus: formData.latestStatus || undefined,
       activityCloseDate: formData.activityCloseDate || undefined,
       region: formData.region || undefined,
+      requiredRoles: formData.requiredRoles,
+      plannedStartMonth: formData.plannedStartMonth,
+      plannedStartYear: formData.plannedStartYear,
+      plannedStartSprint: formData.plannedStartSprint,
+      plannedSprintCount: formData.plannedSprintCount ? Number(formData.plannedSprintCount) : undefined,
       isArchived: false,
     };
 
@@ -185,6 +195,11 @@ export default function ProjectManagement() {
       latestStatus: '',
       activityCloseDate: '',
       region: '',
+      requiredRoles: ['Product Manager', 'PMO'],
+      plannedStartMonth: new Date().getMonth() + 1,
+      plannedStartYear: new Date().getFullYear(),
+      plannedStartSprint: 1,
+      plannedSprintCount: '',
     });
     setIsNewCustomer(false);
     setEditingId(null);
@@ -218,6 +233,11 @@ export default function ProjectManagement() {
       latestStatus: project.latestStatus || '',
       activityCloseDate: project.activityCloseDate || '',
       region: project.region || '',
+      requiredRoles: project.requiredRoles || ['Product Manager', 'PMO'],
+      plannedStartMonth: project.plannedStartMonth || new Date().getMonth() + 1,
+      plannedStartYear: project.plannedStartYear || new Date().getFullYear(),
+      plannedStartSprint: project.plannedStartSprint || 1,
+      plannedSprintCount: project.plannedSprintCount ? String(project.plannedSprintCount) : '',
     });
     setEditingId(project.id);
     setIsModalOpen(true);
@@ -504,6 +524,69 @@ export default function ProjectManagement() {
               )}
             </select>
           </div>
+
+          {/* Planning Section */}
+          <div className="border-t pt-3 mt-1">
+            <div className="text-sm font-semibold text-gray-600 mb-2">📋 Planning</div>
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Start Month</label>
+                <select value={formData.plannedStartMonth} onChange={e => setFormData({ ...formData, plannedStartMonth: Number(e.target.value) })}
+                  className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm">
+                  {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Year</label>
+                <select value={formData.plannedStartYear} onChange={e => setFormData({ ...formData, plannedStartYear: Number(e.target.value) })}
+                  className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm">
+                  {[new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1, new Date().getFullYear() + 2].map(y =>
+                    <option key={y} value={y}>{y}</option>
+                  )}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Sprint</label>
+                <select value={formData.plannedStartSprint} onChange={e => setFormData({ ...formData, plannedStartSprint: Number(e.target.value) })}
+                  className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm">
+                  <option value={1}>S1 (1-15)</option>
+                  <option value={2}>S2 (16-31)</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-2">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Number of Sprints</label>
+              <input type="number" min="1" max="24" value={formData.plannedSprintCount}
+                onChange={e => setFormData({ ...formData, plannedSprintCount: e.target.value })}
+                className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm" placeholder="1-24" />
+            </div>
+          </div>
+
+          {/* Required Resources */}
+          <div className="border-t pt-3 mt-1">
+            <label className="text-sm font-medium text-gray-700 block mb-2">Required Resources</label>
+            <div className="border rounded-lg p-2 space-y-1 max-h-32 overflow-y-auto bg-gray-50">
+              {[...new Set(teamMembers.filter(m => m.isActive && m.role).map(m => m.role!))].sort().map(role => (
+                <label key={role} className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-0.5 rounded text-sm">
+                  <input
+                    type="checkbox"
+                    checked={formData.requiredRoles.includes(role)}
+                    onChange={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        requiredRoles: prev.requiredRoles.includes(role)
+                          ? prev.requiredRoles.filter(r => r !== role)
+                          : [...prev.requiredRoles, role]
+                      }));
+                    }}
+                    className="w-3.5 h-3.5 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <span>{role}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Latest Status/Notes</label>
             <textarea

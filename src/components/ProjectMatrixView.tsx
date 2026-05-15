@@ -1445,12 +1445,6 @@ function EditProjectForm({ project, onSave, onCancel, teamMembers, allProjects }
         </div>
         <div className="grid grid-cols-2 gap-2 mt-2">
           <div>
-            <label className="block text-[10px] font-medium text-gray-600 mb-1">Required Capacity %</label>
-            <input type="number" min="0" max="100" step="5" value={form.requiredCapacity}
-              onChange={e => setForm({ ...form, requiredCapacity: e.target.value })}
-              className="w-full px-2 py-1.5 border rounded text-xs" placeholder="0-100" />
-          </div>
-          <div>
             <label className="block text-[10px] font-medium text-gray-600 mb-1">Number of Sprints</label>
             <input type="number" min="1" max="24" value={form.plannedSprintCount}
               onChange={e => setForm({ ...form, plannedSprintCount: e.target.value })}
