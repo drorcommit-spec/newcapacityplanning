@@ -322,11 +322,11 @@ export default function ProjectManagement() {
             <thead>
               <tr className="border-b">
                 <th className="text-left py-3 px-4">Customer</th>
-                <th className="text-left py-3 px-4">Project</th>
+                <th className="text-left py-3 px-4">Project/Activity</th>
                 <th className="text-left py-3 px-4">Type</th>
                 <th className="text-left py-3 px-4">Status</th>
                 <th className="text-left py-3 px-4">Region</th>
-                <th className="text-left py-3 px-4">Close Date</th>
+                <th className="text-left py-3 px-4">Activity Sign Off Date</th>
                 <th className="text-left py-3 px-4">PMO Contact</th>
                 <th className="text-left py-3 px-4">Actions</th>
               </tr>
@@ -527,7 +527,7 @@ export default function ProjectManagement() {
           </div>
           
           <Input
-            label="Activity Close Date"
+            label="Activity Sign Off Date"
             type="date"
             value={formData.activityCloseDate}
             onChange={(e) => setFormData({ ...formData, activityCloseDate: e.target.value })}

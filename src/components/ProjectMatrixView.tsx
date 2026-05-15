@@ -1174,7 +1174,7 @@ export default function ProjectMatrixView() {
                   </div>
                 )}
                 {p.activityCloseDate && (
-                  <div className="flex justify-between"><span className="text-gray-500">Close Date</span><span>{p.activityCloseDate}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Activity Sign Off Date</span><span>{p.activityCloseDate}</span></div>
                 )}
               </div>
             </div>
@@ -1403,7 +1403,7 @@ function EditProjectForm({ project, onSave, onCancel, teamMembers }: {
         </div>
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">Sign-off / Activity Close Date</label>
+        <label className="block text-xs font-medium text-gray-700 mb-1">Activity Sign Off Date</label>
         <input type="date" value={form.activityCloseDate} onChange={e => setForm({ ...form, activityCloseDate: e.target.value })}
           className="w-full px-3 py-2 border rounded text-sm" />
       </div>
