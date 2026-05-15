@@ -26,6 +26,7 @@ export default function TeamManagement() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [managerFilter, setManagerFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [searchTerm, setSearchTerm] = useState('');
   const [availableTeams, setAvailableTeams] = useState<string[]>([]);
   const [resourceTypes, setResourceTypes] = useState<ResourceType[]>([]);
@@ -200,6 +201,10 @@ export default function TeamManagement() {
 
   const filteredMembers = teamMembers
     .filter(member => {
+      // Status filter
+      if (statusFilter === 'active' && !member.isActive) return false;
+      if (statusFilter === 'inactive' && member.isActive) return false;
+      
       // Role filter
       if (roleFilter !== 'all' && member.role !== roleFilter) return false;
       
@@ -249,7 +254,7 @@ export default function TeamManagement() {
       </div>
 
       <Card>
-        <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
           <Input
             label="Search by Name"
             placeholder="Search member name..."
@@ -272,7 +277,18 @@ export default function TeamManagement() {
             value={managerFilter}
             onChange={(e) => setManagerFilter(e.target.value)}
           />
+          <Select
+            label="Status"
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+            ]}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
+          />
         </div>
+        <div className="text-xs text-gray-500 mb-2">{filteredMembers.length} member{filteredMembers.length !== 1 ? 's' : ''} listed</div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
