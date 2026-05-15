@@ -1403,7 +1403,7 @@ function EditProjectForm({ project, onSave, onCancel, teamMembers }: {
           <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
           <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
             className="w-full px-3 py-2 border rounded text-sm">
-            <option value="Active">Active</option><option value="Pending">Pending</option><option value="New Signed Off">New Signed Off</option>
+            <option value="Active">Active</option>
             <option value="Completed">Completed</option><option value="Inactive">Inactive</option>
           </select>
         </div>

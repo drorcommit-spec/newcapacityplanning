@@ -87,7 +87,7 @@ export default function ProjectManagement() {
     customerName: '',
     projectName: '',
     projectType: 'Software' as ProjectType,
-    status: 'Pending' as ProjectStatus,
+    status: 'Active' as ProjectStatus,
     pmoContact: '',
     latestStatus: '',
     activityCloseDate: '',
@@ -180,7 +180,7 @@ export default function ProjectManagement() {
       customerName: '',
       projectName: '',
       projectType: 'Software',
-      status: 'Pending',
+      status: 'Active',
       pmoContact: '',
       latestStatus: '',
       activityCloseDate: '',
@@ -260,8 +260,6 @@ export default function ProjectManagement() {
   ];
 
   const statusOptions = [
-    { value: 'Pending', label: 'Pending' },
-    { value: 'New Signed Off', label: 'New Signed Off' },
     { value: 'Active', label: 'Active' },
     { value: 'Inactive', label: 'Inactive' },
     { value: 'Completed', label: 'Completed' },
