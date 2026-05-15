@@ -583,7 +583,7 @@ export default function ProjectMatrixView() {
           {/* Hide unallocated projects toggle */}
           {/* Only Allocated toggle switch */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-gray-500">Only Allocated</span>
+            <span className="text-[10px] text-gray-500">Only Allocated Projects</span>
             <button
               onClick={() => setOnlyAllocated(!onlyAllocated)}
               className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${onlyAllocated ? 'bg-blue-500' : 'bg-gray-300'}`}
