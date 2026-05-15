@@ -321,7 +321,6 @@ export default function ProjectManagement() {
           <table className="w-full">
             <thead>
               <tr className="border-b">
-                <th className="text-left py-3 px-4">Alert</th>
                 <th className="text-left py-3 px-4">Customer</th>
                 <th className="text-left py-3 px-4">Project</th>
                 <th className="text-left py-3 px-4">Type</th>
@@ -335,16 +334,6 @@ export default function ProjectManagement() {
             <tbody>
               {filteredProjects.map(project => (
                 <tr key={project.id} className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4 text-center">
-                    {(project.status === 'Active' || project.status === 'New Signed Off') && isProjectUnallocated(project.id) && (
-                      <span 
-                        className="text-red-600 text-xl cursor-help" 
-                        title={`⚠️ ${project.status} project not assigned to any current or future sprint. This project needs capacity planning attention.`}
-                      >
-                        ❗
-                      </span>
-                    )}
-                  </td>
                   <td className="py-3 px-4">{project.customerName}</td>
                   <td className="py-3 px-4">
                     {project.projectName}
