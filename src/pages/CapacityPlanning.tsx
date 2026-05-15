@@ -2689,7 +2689,7 @@ export default function CapacityPlanning() {
 
                 {/* Sprint Content - Projects View */}
                 {viewMode === 'projects' && (
-                  <div className={isExpanded ? "p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" : "p-3 space-y-3"}>
+                  <div className={isExpanded ? "p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3" : "p-3 space-y-2.5"}>
                     {projectsData.length === 0 ? (
                       <div className="text-center text-gray-400 py-8 text-sm col-span-full">
                         No projects planned
@@ -2701,11 +2701,11 @@ export default function CapacityPlanning() {
                         <div 
                           key={project.id} 
                           ref={(el) => { projectRefs.current[project.id] = el; }}
-                          className={`border rounded-lg hover:shadow-md transition-all ${bgColor} ${
+                          className={`border rounded-xl hover:border-gray-200 hover:shadow-sm transition-all bg-white ${
                             highlightedProjectId === project.id 
                               ? 'border-blue-500 border-4 shadow-lg animate-pulse' 
-                              : 'border-gray-200'
-                          } ${collapsedProjects.has(project.id) ? 'p-2' : 'p-3'}`}
+                              : 'border-gray-100'
+                          } ${collapsedProjects.has(project.id) ? 'px-3 py-2' : 'p-3'}`}
                         >
                           {/* Project Header - Always Visible */}
                           <div className="flex justify-between items-center">
@@ -2816,7 +2816,7 @@ export default function CapacityPlanning() {
                                 )}
                               
                               {/* Members List */}
-                              <div className="space-y-1 mt-2 border-t pt-2">
+                              <div className="space-y-1 mt-2">
                             {members.sort((a, b) => b.percentage - a.percentage).map((member) => {
                               const alloc = allocations.find(a => a.id === member.allocationId);
                               const isEditing = editingAllocationId === member.allocationId;
@@ -2862,7 +2862,7 @@ export default function CapacityPlanning() {
                               }
                               
                               return (
-                                <div key={member.allocationId} className="flex justify-between items-center text-xs py-1 gap-2">
+                                <div key={member.allocationId} className="flex justify-between items-center text-xs py-1 px-2 gap-2 rounded-lg bg-gray-50 hover:bg-gray-100/60 transition-colors">
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1">
                                       {isOverAllocated && (
