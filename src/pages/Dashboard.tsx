@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
+import { usePermissions } from '../hooks/usePermissions';
 import { getCurrentSprint, getMonthName, getSprintDateRange } from '../utils/dateUtils';
 import { saveSprintProjects } from '../services/api';
 import Card from '../components/Card';
@@ -13,6 +14,8 @@ interface SprintInfo {
 
 export default function Dashboard() {
   const { teamMembers, projects, allocations, sprintProjects, sprintRoleRequirements, refreshData } = useData();
+  const { canManageMembers } = usePermissions();
+  const isAdmin = canManageMembers;
   const navigate = useNavigate();
   const currentSprint = getCurrentSprint();
   const [sprintCount] = useState(3);
@@ -304,7 +307,17 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="relative">
+      {!isAdmin && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-white/60 backdrop-blur-sm rounded-lg">
+          <div className="text-center p-8">
+            <div className="text-4xl mb-3">🔒</div>
+            <h2 className="text-xl font-semibold text-gray-700 mb-1">Coming Soon</h2>
+            <p className="text-sm text-gray-500">Dashboard analytics are available for administrators only.</p>
+          </div>
+        </div>
+      )}
+    <div className={`space-y-6 ${!isAdmin ? 'pointer-events-none select-none' : ''}`}>
       {/* Header */}
       <div>
         <div className="flex items-center gap-6">
@@ -893,6 +906,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }
