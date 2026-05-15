@@ -274,17 +274,20 @@ export default function TeamManagement() {
             onChange={(e) => setRoleFilter(e.target.value)}
           />
         </div>
-        <div className="mb-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showInactive}
-              onChange={(e) => setShowInactive(e.target.checked)}
-              className="rounded"
-            />
-            <span className="text-sm text-gray-700">Show inactive members</span>
+        <div className="mb-4 flex items-center gap-4">
+          <label className="flex items-center gap-2">
+            <span className="text-sm text-gray-700">Status:</span>
+            <select
+              value={showInactive ? 'all' : 'active'}
+              onChange={(e) => setShowInactive(e.target.value !== 'active')}
+              className="px-2 py-1 border border-gray-300 rounded text-sm"
+            >
+              <option value="active">Active</option>
+              <option value="all">All (incl. Inactive)</option>
+            </select>
           </label>
         </div>
+        <div className="text-xs text-gray-500 mb-2">{filteredMembers.length} member{filteredMembers.length !== 1 ? 's' : ''} listed</div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
