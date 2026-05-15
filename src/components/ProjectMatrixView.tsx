@@ -1128,7 +1128,7 @@ export default function ProjectMatrixView() {
                 <h3 className="text-lg font-bold text-gray-900">Edit Project</h3>
                 <button onClick={() => setEditProjectId(null)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
-              <EditProjectForm project={p} onSave={(updates) => { updateProject(p.id, updates); setEditProjectId(null); }} onCancel={() => setEditProjectId(null)} teamMembers={teamMembers} />
+              <EditProjectForm project={p} onSave={(updates) => { updateProject(p.id, updates); setEditProjectId(null); }} onCancel={() => setEditProjectId(null)} teamMembers={teamMembers} allProjects={projects} />
             </div>
           </div>
         );
@@ -1320,11 +1320,12 @@ export default function ProjectMatrixView() {
 }
 
 // Inline Edit Project Form
-function EditProjectForm({ project, onSave, onCancel, teamMembers }: {
+function EditProjectForm({ project, onSave, onCancel, teamMembers, allProjects }: {
   project: any;
   onSave: (updates: any) => void;
   onCancel: () => void;
   teamMembers: any[];
+  allProjects: any[];
 }) {
   const now = new Date();
   const [form, setForm] = useState({
@@ -1377,8 +1378,13 @@ function EditProjectForm({ project, onSave, onCancel, teamMembers }: {
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
         <label className="block text-xs font-medium text-gray-700 mb-1">Customer Name</label>
-        <input type="text" value={form.customerName} onChange={e => setForm({ ...form, customerName: e.target.value })}
-          className="w-full px-3 py-2 border rounded text-sm" required />
+        <input type="text" list="customer-list-edit" value={form.customerName} onChange={e => setForm({ ...form, customerName: e.target.value })}
+          className="w-full px-3 py-2 border rounded text-sm" required placeholder="Select existing or type new" />
+        <datalist id="customer-list-edit">
+          {[...new Set(allProjects.map((p: any) => p.customerName))].sort().map((name: string) => (
+            <option key={name} value={name} />
+          ))}
+        </datalist>
       </div>
       <div>
         <label className="block text-xs font-medium text-gray-700 mb-1">Project Name</label>
