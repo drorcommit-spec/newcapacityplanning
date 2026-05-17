@@ -84,10 +84,12 @@ export default function CapacityPlanning() {
   // Save thresholds to localStorage when they change
   useEffect(() => {
     localStorage.setItem('underCapacityThreshold', underCapacityThreshold.toString());
+    window.dispatchEvent(new Event('thresholdChanged'));
   }, [underCapacityThreshold]);
 
   useEffect(() => {
     localStorage.setItem('overCapacityThreshold', overCapacityThreshold.toString());
+    window.dispatchEvent(new Event('thresholdChanged'));
   }, [overCapacityThreshold]);
 
   useEffect(() => {

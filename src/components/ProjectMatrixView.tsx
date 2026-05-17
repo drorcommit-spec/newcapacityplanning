@@ -34,9 +34,22 @@ export default function ProjectMatrixView() {
   const [lightFilter, setLightFilter] = useState<Set<string>>(new Set(['green', 'yellow', 'red']));
   const [onlyAllocated, setOnlyAllocated] = useState(true);
 
-  // Read capacity thresholds from localStorage (synced with CapacityPlanning page)
-  const underCapacityThreshold = parseInt(localStorage.getItem('underCapacityThreshold') || '70');
-  const overCapacityThreshold = parseInt(localStorage.getItem('overCapacityThreshold') || '100');
+  // Reactive capacity thresholds (re-render when changed in CapacityPlanning toolbar)
+  const [underCapacityThreshold, setUnderCapacityThreshold] = useState(() => parseInt(localStorage.getItem('underCapacityThreshold') || '70'));
+  const [overCapacityThreshold, setOverCapacityThreshold] = useState(() => parseInt(localStorage.getItem('overCapacityThreshold') || '100'));
+
+  useEffect(() => {
+    const handleThresholdChange = () => {
+      setUnderCapacityThreshold(parseInt(localStorage.getItem('underCapacityThreshold') || '70'));
+      setOverCapacityThreshold(parseInt(localStorage.getItem('overCapacityThreshold') || '100'));
+    };
+    window.addEventListener('thresholdChanged', handleThresholdChange);
+    window.addEventListener('storage', handleThresholdChange);
+    return () => {
+      window.removeEventListener('thresholdChanged', handleThresholdChange);
+      window.removeEventListener('storage', handleThresholdChange);
+    };
+  }, []);
 
   const toggleLight = (key: string) => {
     setLightFilter(prev => {
