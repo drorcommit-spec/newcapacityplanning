@@ -539,7 +539,7 @@ export default function ProjectMatrixView() {
   const memberCount = displayedMembers.length;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 130px)' }}>
       {/* Toolbar */}
       <div className="flex items-center gap-3 px-4 py-2 bg-white border-b flex-wrap">
         {/* Sprint/Month toggle - hidden, always sprint for now */}
@@ -818,7 +818,7 @@ export default function ProjectMatrixView() {
       </div>
 
       {/* Matrix */}
-      <div className="flex-1 overflow-x-scroll overflow-y-auto" style={{ maxHeight: 'calc(100vh - 240px)' }}>
+      <div className="flex-1 overflow-x-scroll overflow-y-auto">
         <table className="border-collapse" style={{ minWidth: projW + (periods.length * memberCount * colW) }}>
           <thead className="sticky top-0 z-10">
             {displayedMembers.length === 1 ? (
