@@ -34,6 +34,10 @@ export default function ProjectMatrixView() {
   const [lightFilter, setLightFilter] = useState<Set<string>>(new Set(['green', 'yellow', 'red']));
   const [onlyAllocated, setOnlyAllocated] = useState(true);
 
+  // Read capacity thresholds from localStorage (synced with CapacityPlanning page)
+  const underCapacityThreshold = parseInt(localStorage.getItem('underCapacityThreshold') || '70');
+  const overCapacityThreshold = parseInt(localStorage.getItem('overCapacityThreshold') || '100');
+
   const toggleLight = (key: string) => {
     setLightFilter(prev => {
       const next = new Set(prev);
@@ -866,7 +870,7 @@ export default function ProjectMatrixView() {
                   {periods.map((period, pIdx) => {
                     const total = getMemberTotal(displayedMembers[0].id, period);
                     const cap = displayedMembers[0].capacity ?? 100;
-                    const color = total > cap ? 'text-red-600 bg-red-50' : total >= cap * 0.8 ? 'text-green-700 bg-green-50' : total > 0 ? 'text-yellow-700 bg-yellow-50' : 'text-gray-400 bg-gray-50';
+                    const color = total > (cap * overCapacityThreshold / 100) ? 'text-red-600 bg-red-50' : total >= (cap * underCapacityThreshold / 100) ? 'text-green-700 bg-green-50' : total > 0 ? 'text-yellow-700 bg-yellow-50' : 'text-gray-400 bg-gray-50';
                     return (
                       <th key={`${period.key}-tot`} className={`border-b border-r text-center px-0.5 py-0.5 ${color}`}
                         style={{ width: colW, minWidth: colW }}>
@@ -929,7 +933,7 @@ export default function ProjectMatrixView() {
                 displayedMembers.map((member, mIdx) => {
                   const total = getMemberTotal(member.id, period);
                   const cap = member.capacity ?? 100;
-                  const color = total > cap ? 'text-red-600 bg-red-50' : total >= cap * 0.8 ? 'text-green-700 bg-green-50' : total > 0 ? 'text-yellow-700 bg-yellow-50' : 'text-gray-400 bg-gray-50';
+                  const color = total > (cap * overCapacityThreshold / 100) ? 'text-red-600 bg-red-50' : total >= (cap * underCapacityThreshold / 100) ? 'text-green-700 bg-green-50' : total > 0 ? 'text-yellow-700 bg-yellow-50' : 'text-gray-400 bg-gray-50';
                   return (
                     <th key={`${period.key}-${member.id}-tot`} className={`border-b border-r text-center px-0.5 py-0.5 ${color} ${pIdx > 0 && mIdx === 0 ? 'border-l-2 border-l-gray-400' : ''}`}
                       style={{ width: colW, minWidth: colW }}>
