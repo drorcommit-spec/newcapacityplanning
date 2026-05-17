@@ -79,25 +79,6 @@ export default function TimelineView() {
       const q = searchText.toLowerCase();
       members = members.filter(m => m.fullName.toLowerCase().includes(q) || (m.role || '').toLowerCase().includes(q));
     }
-    if (capacityFilter !== 'all') {
-      // Filter based on current sprint (first period) total
-      const today = new Date();
-      const curYear = today.getFullYear();
-      const curMonth = today.getMonth() + 1;
-      const curSprint = today.getDate() <= 15 ? 1 : 2;
-      members = members.filter(m => {
-        const cap = m.capacity ?? 100;
-        const total = allocations
-          .filter(a => a.productManagerId === m.id && a.year === curYear && a.month === curMonth && a.sprint === curSprint)
-          .reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
-        const underLimit = cap * underThreshold / 100;
-        const overLimit = cap * overThreshold / 100;
-        if (capacityFilter === 'under') return total < underLimit;
-        if (capacityFilter === 'over') return total > overLimit;
-        if (capacityFilter === 'good') return total >= underLimit && total <= overLimit;
-        return true;
-      });
-    }
     return members;
   }, [activeMembers, managerFilter, searchText, capacityFilter, allocations, underThreshold, overThreshold]);
 
@@ -159,6 +140,17 @@ export default function TimelineView() {
     if (total > (capacity * overThreshold / 100)) return 'bg-amber-50';
     if (total < (capacity * underThreshold / 100)) return 'bg-red-50';
     return 'bg-green-50';
+  };
+
+  // Check if a cell matches the capacity filter
+  const cellMatchesFilter = (total: number, capacity: number) => {
+    if (capacityFilter === 'all') return true;
+    const underLimit = capacity * underThreshold / 100;
+    const overLimit = capacity * overThreshold / 100;
+    if (capacityFilter === 'under') return total < underLimit;
+    if (capacityFilter === 'over') return total > overLimit;
+    if (capacityFilter === 'good') return total >= underLimit && total <= overLimit;
+    return true;
   };
 
   return (
@@ -251,9 +243,12 @@ export default function TimelineView() {
                     const cellAllocs = getCellAllocations(member.id, period);
                     const total = getMemberTotal(member.id, period);
                     const bgColor = getTotalBgColor(total, cap);
+                    const matches = cellMatchesFilter(total, cap);
                     return (
-                      <td key={period.key} className={`px-1.5 py-1.5 border-r border-gray-100 align-top ${bgColor}`} onClick={e => e.stopPropagation()}>
-                        {isExpanded && cellAllocs.length > 0 ? (
+                      <td key={period.key} className={`px-1.5 py-1.5 border-r border-gray-100 align-top ${matches ? bgColor : ''}`} onClick={e => e.stopPropagation()}>
+                        {!matches ? (
+                          <div className="text-[10px] text-gray-200 text-center py-1">-</div>
+                        ) : isExpanded && cellAllocs.length > 0 ? (
                           <div className="space-y-0.5">
                             {cellAllocs.map(a => (
                               <div key={a.id} className="flex items-center justify-between px-1.5 py-0.5 rounded bg-white/70 text-[10px]">
