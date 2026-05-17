@@ -818,7 +818,7 @@ export default function ProjectMatrixView() {
       </div>
 
       {/* Matrix */}
-      <div className="flex-1 overflow-x-auto overflow-y-auto" style={{ maxHeight: 'calc(100vh - 160px)' }}>
+      <div className="flex-1 overflow-x-scroll overflow-y-auto" style={{ maxHeight: 'calc(100vh - 240px)' }}>
         <table className="border-collapse" style={{ minWidth: projW + (periods.length * memberCount * colW) }}>
           <thead className="sticky top-0 z-10">
             {displayedMembers.length === 1 ? (
