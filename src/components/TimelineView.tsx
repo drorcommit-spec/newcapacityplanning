@@ -22,6 +22,7 @@ export default function TimelineView() {
   const [periodOffset, setPeriodOffset] = useState(0);
   const [managerFilter, setManagerFilter] = useState<string>('all');
   const [searchText, setSearchText] = useState('');
+  const [capacityFilter, setCapacityFilter] = useState<'all' | 'under' | 'good' | 'over'>('all');
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
   const [allExpanded, setAllExpanded] = useState(false);
 
@@ -78,8 +79,27 @@ export default function TimelineView() {
       const q = searchText.toLowerCase();
       members = members.filter(m => m.fullName.toLowerCase().includes(q) || (m.role || '').toLowerCase().includes(q));
     }
+    if (capacityFilter !== 'all') {
+      // Filter based on current sprint (first period) total
+      const today = new Date();
+      const curYear = today.getFullYear();
+      const curMonth = today.getMonth() + 1;
+      const curSprint = today.getDate() <= 15 ? 1 : 2;
+      members = members.filter(m => {
+        const cap = m.capacity ?? 100;
+        const total = allocations
+          .filter(a => a.productManagerId === m.id && a.year === curYear && a.month === curMonth && a.sprint === curSprint)
+          .reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
+        const underLimit = cap * underThreshold / 100;
+        const overLimit = cap * overThreshold / 100;
+        if (capacityFilter === 'under') return total < underLimit;
+        if (capacityFilter === 'over') return total > overLimit;
+        if (capacityFilter === 'good') return total >= underLimit && total <= overLimit;
+        return true;
+      });
+    }
     return members;
-  }, [activeMembers, managerFilter, searchText]);
+  }, [activeMembers, managerFilter, searchText, capacityFilter, allocations, underThreshold, overThreshold]);
 
   // Generate sprint columns (8 sprints from current + offset)
   const periods: PeriodCol[] = useMemo(() => {
@@ -160,6 +180,24 @@ export default function TimelineView() {
           <button onClick={toggleAll} className="px-2 py-1 text-[11px] bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 text-gray-600">
             {allExpanded ? 'Collapse All' : 'Expand All'}
           </button>
+          {/* Staff Capacity Traffic Light */}
+          <div className="flex items-center gap-1.5 border rounded-lg px-2 py-1 bg-gray-50">
+            <span className="text-[10px] text-gray-500 font-medium mr-1">Staff Capacity</span>
+            <button onClick={() => setCapacityFilter('all')}
+              className={`text-[10px] px-2 py-0.5 rounded ${capacityFilter === 'all' ? 'bg-white shadow font-bold text-gray-800' : 'text-gray-500 hover:bg-white'}`}>All</button>
+            <button onClick={() => setCapacityFilter(capacityFilter === 'under' ? 'all' : 'under')}
+              className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${capacityFilter === 'under' ? 'bg-red-100 font-bold text-red-800 shadow' : 'text-gray-400 hover:bg-red-50'}`}>
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Under
+            </button>
+            <button onClick={() => setCapacityFilter(capacityFilter === 'good' ? 'all' : 'good')}
+              className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${capacityFilter === 'good' ? 'bg-green-100 font-bold text-green-800 shadow' : 'text-gray-400 hover:bg-green-50'}`}>
+              <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span> Good
+            </button>
+            <button onClick={() => setCapacityFilter(capacityFilter === 'over' ? 'all' : 'over')}
+              className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${capacityFilter === 'over' ? 'bg-amber-100 font-bold text-amber-800 shadow' : 'text-gray-400 hover:bg-amber-50'}`}>
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Over
+            </button>
+          </div>
         </div>
         <div className="flex items-center gap-1">
           <button onClick={() => setPeriodOffset(o => o - 3)} className="p-1 rounded hover:bg-gray-50 text-gray-400">
