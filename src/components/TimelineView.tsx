@@ -149,15 +149,15 @@ export default function TimelineView() {
 
   const getTotalColor = (total: number, capacity: number) => {
     if (total === 0) return 'text-gray-300';
-    if (total > (capacity * overThreshold / 100)) return 'text-red-500';
-    if (total < (capacity * underThreshold / 100)) return 'text-amber-500';
+    if (total > (capacity * overThreshold / 100)) return 'text-amber-500';
+    if (total < (capacity * underThreshold / 100)) return 'text-red-500';
     return 'text-green-600';
   };
 
   const getTotalBgColor = (total: number, capacity: number) => {
     if (total === 0) return '';
-    if (total > (capacity * overThreshold / 100)) return 'bg-red-50';
-    if (total < (capacity * underThreshold / 100)) return 'bg-amber-50';
+    if (total > (capacity * overThreshold / 100)) return 'bg-amber-50';
+    if (total < (capacity * underThreshold / 100)) return 'bg-red-50';
     return 'bg-green-50';
   };
 

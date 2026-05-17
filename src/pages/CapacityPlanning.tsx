@@ -3088,7 +3088,7 @@ export default function CapacityPlanning() {
                             </div>
                             <div className="flex items-center gap-1.5">
                               <div className="text-right">
-                                <div className={`text-xs font-bold ${total > (member.capacity ?? 100) ? 'text-red-500' : total < underCapacityThreshold ? 'text-amber-500' : total === 0 ? 'text-gray-300' : 'text-green-600'}`}>{total}%</div>
+                                <div className={`text-xs font-bold ${total > (member.capacity ?? 100) ? 'text-amber-500' : total < underCapacityThreshold ? 'text-red-500' : total === 0 ? 'text-gray-300' : 'text-green-600'}`}>{total}%</div>
                                 <div className="text-[9px] text-gray-400">of {member.capacity ?? 100}%</div>
                               </div>
                               {/* Collapse/Expand Toggle */}
@@ -3113,7 +3113,7 @@ export default function CapacityPlanning() {
                             <div className="mt-2">
                               {/* Capacity Progress Bar */}
                               <div className="w-full bg-gray-100 rounded-full h-1 mb-2.5">
-                                <div className={`h-1 rounded-full ${total > (member.capacity ?? 100) ? 'bg-red-400' : total < underCapacityThreshold ? 'bg-amber-400' : total === 0 ? 'bg-gray-200' : 'bg-green-400'}`} style={{width: `${Math.min(total, member.capacity ?? 100) / (member.capacity ?? 100) * 100}%`}}></div>
+                                <div className={`h-1 rounded-full ${total > (member.capacity ?? 100) ? 'bg-amber-400' : total < underCapacityThreshold ? 'bg-red-400' : total === 0 ? 'bg-gray-200' : 'bg-green-400'}`} style={{width: `${Math.min(total, member.capacity ?? 100) / (member.capacity ?? 100) * 100}%`}}></div>
                               </div>
                                 {canWrite && (
                                   <div className="flex gap-1 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
