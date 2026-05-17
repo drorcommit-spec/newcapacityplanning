@@ -9,9 +9,10 @@ import ProjectForm from '../components/ProjectForm';
 import DailyTaskView from '../components/DailyTaskView';
 import ImportProjects from '../components/ImportProjects';
 import ProjectMatrixView from '../components/ProjectMatrixView';
+import TimelineView from '../components/TimelineView';
 import { fetchAllData, saveSprintProjects, saveSprintRoleRequirements } from '../services/api';
 
-type ViewMode = 'projects' | 'team' | 'matrix';
+type ViewMode = 'projects' | 'team' | 'matrix' | 'timeline';
 type CapacityFilter = 'all' | 'under' | 'over' | 'good';
 
 interface SprintInfo {
@@ -2227,10 +2228,20 @@ export default function CapacityPlanning() {
               >
                 Staff View
               </button>
+              <button
+                onClick={() => setViewMode('timeline')}
+                className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                  viewMode === 'timeline'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Timeline View
+              </button>
             </div>
 
             {/* Sprint Controls - hidden in matrix/Project List view */}
-            {viewMode !== 'matrix' && (
+            {viewMode !== 'matrix' && viewMode !== 'timeline' && (
             <div className="flex items-center gap-1 border-l pl-2">
               <button
                 onClick={removeSprint}
@@ -2256,8 +2267,8 @@ export default function CapacityPlanning() {
             </div>
             )}
 
-            {/* Filter Toggle - hidden in matrix/Project List view */}
-            {viewMode !== 'matrix' && (
+            {/* Filter Toggle - hidden in matrix/timeline view */}
+            {viewMode !== 'matrix' && viewMode !== 'timeline' && (
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="p-1.5 rounded hover:bg-gray-100"
@@ -2271,8 +2282,8 @@ export default function CapacityPlanning() {
           </div>
         </div>
 
-        {/* Filters - hidden in matrix view (matrix has its own filters) */}
-        {showFilters && viewMode !== 'matrix' && (
+        {/* Filters - hidden in matrix/timeline view (they have their own filters) */}
+        {showFilters && viewMode !== 'matrix' && viewMode !== 'timeline' && (
           <div className="mt-1.5 pt-1.5 border-t border-gray-200">
             <div className="flex items-center gap-3">
               {/* Search Filter */}
@@ -2577,8 +2588,14 @@ export default function CapacityPlanning() {
         </div>
       )}
 
+      {viewMode === 'timeline' && (
+        <div className="flex-1">
+          <TimelineView />
+        </div>
+      )}
+
       {/* Sprint Columns */}
-      {viewMode !== 'matrix' && (
+      {viewMode !== 'matrix' && viewMode !== 'timeline' && (
       <div className="flex-1">
         {/* Sprint navigation for Staff View */}
         {viewMode === 'team' && (
