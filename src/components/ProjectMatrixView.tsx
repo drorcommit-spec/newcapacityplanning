@@ -32,7 +32,7 @@ export default function ProjectMatrixView() {
   const [projectFilter, setProjectFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
   const [lightFilter, setLightFilter] = useState<Set<string>>(new Set(['green', 'yellow', 'red']));
-  const [onlyAllocated, setOnlyAllocated] = useState(true);
+  const [onlyAllocated, setOnlyAllocated] = useState(false);
 
   // Reactive capacity thresholds (re-render when changed in CapacityPlanning toolbar)
   const [underCapacityThreshold, setUnderCapacityThreshold] = useState(() => parseInt(localStorage.getItem('underCapacityThreshold') || '70'));
