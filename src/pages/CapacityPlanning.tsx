@@ -1913,85 +1913,91 @@ export default function CapacityPlanning() {
 
   // Export capacity matrix to CSV
   const exportCapacityMatrix = () => {
-    const activeProjects = projects.filter(p => !p.isArchived);
-    const activeMembers = teamMembers.filter(m => m.isActive);
+    // Use the same filtered data that's currently visible
+    // For Puzzle View, we use the ProjectMatrixView's filtered projects
+    // For other views, we use the staff view's filtered members
+    const activeProjects = projects.filter(p => !p.isArchived && (p.status === 'Active' || p.status === 'Pending' || p.status === 'New Signed Off'));
+    const activeMembers = teamMembers.filter(m => m.isActive).sort((a, b) => a.fullName.localeCompare(b.fullName));
     
-    // Get all sprints (current + future)
-    const exportSprints = sprints.slice(0, sprintCount);
+    // Get sprints to export (current + next 7 = 8 total)
+    const today = new Date();
+    let year = today.getFullYear();
+    let month = today.getMonth() + 1;
+    let sprint = today.getDate() <= 15 ? 1 : 2;
+    const exportSprints: { year: number; month: number; sprint: number; label: string }[] = [];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
-    // Build header row
-    const headers = ['Project'];
-    exportSprints.forEach(sprint => {
-      const sprintLabel = `${sprint.year}-${sprint.month.toString().padStart(2, '0')}-S${sprint.sprint}`;
-      activeMembers.forEach(member => {
-        headers.push(`${sprintLabel} - ${member.fullName}`);
+    for (let i = 0; i < 8; i++) {
+      exportSprints.push({
+        year, month, sprint,
+        label: `${monthNames[month - 1]} ${String(year).slice(2)} Sprint ${sprint}`
       });
-      headers.push(`${sprintLabel} - Sum`);
+      sprint++;
+      if (sprint > 2) { sprint = 1; month++; }
+      if (month > 12) { month = 1; year++; }
+    }
+    
+    // Row 1: Sprint headers (merged across employee columns)
+    const row1 = [''];
+    exportSprints.forEach(s => {
+      row1.push(s.label);
+      for (let i = 1; i < activeMembers.length; i++) row1.push('');
     });
     
-    // Build data rows
-    const rows: string[][] = [headers];
+    // Row 2: Employee names repeated under each sprint
+    const row2 = ['Activity'];
+    exportSprints.forEach(() => {
+      activeMembers.forEach(m => row2.push(m.fullName));
+    });
     
-    activeProjects.forEach(project => {
-      const row = [`${project.customerName} - ${project.projectName}`];
-      
-      let projectTotalAcrossSprints = 0;
-      
-      exportSprints.forEach(sprint => {
-        const sprintAllocs = allocations.filter(
-          a => a.year === sprint.year && 
-               a.month === sprint.month && 
-               a.sprint === sprint.sprint &&
-               a.projectId === project.id
-        );
+    // Row 3: Total capacity per employee per sprint
+    const row3 = ['TOTAL EMPLOYEE CAPACITY PER SPRINT'];
+    exportSprints.forEach(s => {
+      activeMembers.forEach(m => {
+        const total = allocations
+          .filter(a => a.productManagerId === m.id && a.year === s.year && a.month === s.month && a.sprint === s.sprint)
+          .reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
+        row3.push(total > 0 ? `${total}%` : '');
+      });
+    });
+    
+    // Activity rows: one per project
+    const activityRows: string[][] = [];
+    activeProjects
+      .sort((a, b) => `${a.customerName} - ${a.projectName}`.localeCompare(`${b.customerName} - ${b.projectName}`))
+      .forEach(project => {
+        const row = [`${project.customerName} - ${project.projectName}`];
+        let hasAnyAllocation = false;
         
-        let sprintTotal = 0;
-        
-        activeMembers.forEach(member => {
-          const memberAlloc = sprintAllocs.find(a => a.productManagerId === member.id);
-          const percentage = memberAlloc?.allocationPercentage || 0;
-          row.push(`${percentage}%`);
-          sprintTotal += percentage;
+        exportSprints.forEach(s => {
+          activeMembers.forEach(m => {
+            const alloc = allocations.find(a => 
+              a.projectId === project.id && 
+              a.productManagerId === m.id && 
+              a.year === s.year && a.month === s.month && a.sprint === s.sprint
+            );
+            const pct = alloc?.allocationPercentage || 0;
+            row.push(pct > 0 ? `${pct}%` : '');
+            if (pct > 0) hasAnyAllocation = true;
+          });
         });
         
-        row.push(`${sprintTotal}%`);
-        projectTotalAcrossSprints += sprintTotal;
+        // Only include projects that have at least one allocation in the exported sprints
+        if (hasAnyAllocation) {
+          activityRows.push(row);
+        }
       });
-      
-      rows.push(row);
-    });
     
-    // Add member totals row
-    const totalsRow = ['MEMBER TOTALS'];
-    exportSprints.forEach(sprint => {
-      const sprintAllocs = allocations.filter(
-        a => a.year === sprint.year && 
-             a.month === sprint.month && 
-             a.sprint === sprint.sprint
-      );
-      
-      let sprintGrandTotal = 0;
-      
-      activeMembers.forEach(member => {
-        const memberTotal = sprintAllocs
-          .filter(a => a.productManagerId === member.id)
-          .reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
-        totalsRow.push(`${memberTotal}%`);
-        sprintGrandTotal += memberTotal;
-      });
-      
-      totalsRow.push(`${sprintGrandTotal}%`);
-    });
-    
-    rows.push(totalsRow);
+    // Combine all rows
+    const rows = [row1, row2, row3, ...activityRows];
     
     // Convert to CSV
     const csvContent = rows.map(row => 
-      row.map(cell => `"${cell}"`).join(',')
+      row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(',')
     ).join('\n');
     
     // Download CSV
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
