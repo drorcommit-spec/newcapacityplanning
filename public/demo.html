@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Puzzle - Capacity Planning Platform Demo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.screen{display:none}.screen.active{display:block}
+.nav-btn.active{background:#eff6ff;color:#1d4ed8;font-weight:600}
+</style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- Header -->
+<div class="bg-white border-b shadow-sm sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="text-2xl">&#129513;</span>
+<div><span class="text-xl font-bold text-gray-900">Puzzle</span><br><span class="text-[10px] text-gray-400">Capacity Planning Platform</span></div>
+</div>
+<div class="flex gap-2">
+<button onclick="showScreen('puzzle')" class="nav-btn active px-3 py-1.5 rounded-lg text-sm" id="btn-puzzle">Puzzle View</button>
+<button onclick="showScreen('staff')" class="nav-btn px-3 py-1.5 rounded-lg text-sm" id="btn-staff">Staff View</button>
+<button onclick="showScreen('timeline')" class="nav-btn px-3 py-1.5 rounded-lg text-sm" id="btn-timeline">Timeline View</button>
+<button onclick="showScreen('projects')" class="nav-btn px-3 py-1.5 rounded-lg text-sm" id="btn-projects">Project Management</button>
+<button onclick="showScreen('members')" class="nav-btn px-3 py-1.5 rounded-lg text-sm" id="btn-members">Members</button>
+</div>
+</div>
+</div>
+
+<!-- Screen 1: Puzzle View -->
+<div id="screen-puzzle" class="screen active max-w-7xl mx-auto p-6">
+<div class="bg-white rounded-xl border p-4 mb-4">
+<div class="flex items-center justify-between mb-3">
+<h2 class="text-lg font-bold text-gray-900">Puzzle View — Project x Employee Matrix</h2>
+<div class="flex items-center gap-2 text-xs text-gray-500">
+<span class="px-2 py-0.5 bg-green-100 text-green-700 rounded">Fully Staffed</span>
+<span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded">Pending Signoff</span>
+<span class="px-2 py-0.5 bg-red-100 text-red-700 rounded">Missing Staff</span>
+</div>
+</div>
+<p class="text-sm text-gray-500 mb-4">Projects as rows, team members as columns, sprints as time periods. Each cell shows allocation percentage. Color-coded capacity totals per member.</p>
+</div>
+<div class="bg-white rounded-xl border overflow-hidden">
+<table class="w-full text-xs border-collapse">
+<thead>
+<tr class="bg-gray-50 border-b">
+<th class="text-left px-3 py-2 w-44 border-r">Project</th>
+<th colspan="4" class="text-center px-2 py-1 border-r"><div class="font-semibold">Jun 2026 S1</div></th>
+<th colspan="4" class="text-center px-2 py-1"><div class="font-semibold">Jun 2026 S2</div></th>
+</tr>
+<tr class="bg-gray-50 border-b text-[10px] text-gray-500">
+<th class="border-r"></th>
+<th class="px-2 py-1 border-r">Alex</th><th class="px-2 py-1 border-r">Sarah</th><th class="px-2 py-1 border-r">David</th><th class="px-2 py-1 border-r">Noa</th>
+<th class="px-2 py-1 border-r">Alex</th><th class="px-2 py-1 border-r">Sarah</th><th class="px-2 py-1 border-r">David</th><th class="px-2 py-1">Noa</th>
+</tr>
+<tr class="border-b text-[10px]">
+<td class="px-3 py-1 border-r font-medium text-gray-500">TOTAL</td>
+<td class="px-2 py-1 border-r text-center text-green-600 font-bold bg-green-50">100%</td>
+<td class="px-2 py-1 border-r text-center text-red-500 font-bold bg-red-50">130%</td>
+<td class="px-2 py-1 border-r text-center text-amber-500 font-bold bg-amber-50">50%</td>
+<td class="px-2 py-1 border-r text-center text-green-600 font-bold bg-green-50">85%</td>
+<td class="px-2 py-1 border-r text-center text-green-600 font-bold bg-green-50">100%</td>
+<td class="px-2 py-1 border-r text-center text-green-600 font-bold bg-green-50">90%</td>
+<td class="px-2 py-1 border-r text-center text-amber-500 font-bold bg-amber-50">40%</td>
+<td class="px-2 py-1 text-center text-green-600 font-bold bg-green-50">85%</td>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b hover:bg-gray-50"><td class="px-3 py-2 border-r"><span class="w-2 h-2 rounded-full bg-green-500 inline-block mr-1"></span>Customer 1 - Project 1</td><td class="px-2 py-1 border-r text-center bg-blue-50 text-blue-700 font-medium">50%</td><td class="px-2 py-1 border-r text-center bg-blue-100 text-blue-700 font-medium">80%</td><td class="px-2 py-1 border-r text-center"></td><td class="px-2 py-1 border-r text-center bg-blue-50 text-blue-700 font-medium">35%</td><td class="px-2 py-1 border-r text-center bg-blue-50 text-blue-700 font-medium">50%</td><td class="px-2 py-1 border-r text-center bg-blue-50 text-blue-700 font-medium">40%</td><td class="px-2 py-1 border-r text-center"></td><td class="px-2 py-1 text-center bg-blue-50 text-blue-700 font-medium">35%</td></tr>
+<tr class="border-b hover:bg-gray-50"><td class="px-3 py-2 border-r"><span class="w-2 h-2 rounded-full bg-yellow-400 inline-block mr-1"></span>Customer 2 - Project 2</td><td class="px-2 py-1 border-r text-center bg-blue-50 text-blue-700 font-medium">30%</td><td class="px-2 py-1 border-r text-center bg-blue-50 text-blue-700 font-medium">50%</td><td class="px-2 py-1 border-r text-center bg-blue-50 text-blue-700 font-medium">50%</td><td class="px-2 py-1 border-r text-center bg-blue-50 text-blue-700 font-medium">50%</td><td class="px-2 py-1 border-r text-center bg-blue-50 text-blue-700 font-medium">30%</td><td class="px-2 py-1 border-r text-center bg-blue-50 text-blue-700 font-medium">50%</td><td class="px-2 py-1 border-r text-center bg-blue-50 text-blue-700 font-medium">40%</td><td class="px-2 py-1 text-center bg-blue-50 text-blue-700 font-medium">50%</td></tr>
+<tr class="border-b hover:bg-gray-50"><td class="px-3 py-2 border-r"><span class="w-2 h-2 rounded-full bg-red-500 inline-block mr-1"></span>Customer 3 - Project 3</td><td class="px-2 py-1 border-r text-center bg-blue-50 text-blue-700 font-medium">20%</td><td class="px-2 py-1 border-r text-center"></td><td class="px-2 py-1 border-r text-center"></td><td class="px-2 py-1 border-r text-center"></td><td class="px-2 py-1 border-r text-center bg-blue-50 text-blue-700 font-medium">20%</td><td class="px-2 py-1 border-r text-center"></td><td class="px-2 py-1 border-r text-center"></td><td class="px-2 py-1 text-center"></td></tr>
+<tr class="hover:bg-gray-50"><td class="px-3 py-2 border-r"><span class="w-2 h-2 rounded-full bg-green-500 inline-block mr-1"></span>Customer 4 - Project 4</td><td class="px-2 py-1 border-r text-center"></td><td class="px-2 py-1 border-r text-center"></td><td class="px-2 py-1 border-r text-center"></td><td class="px-2 py-1 border-r text-center"></td><td class="px-2 py-1 border-r text-center"></td><td class="px-2 py-1 border-r text-center"></td><td class="px-2 py-1 border-r text-center"></td><td class="px-2 py-1 text-center"></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- Screen 2: Staff View -->
+<div id="screen-staff" class="screen max-w-7xl mx-auto p-6">
+<div class="bg-white rounded-xl border p-4 mb-4">
+<h2 class="text-lg font-bold text-gray-900 mb-1">Staff View — Sprint Cards per Member</h2>
+<p class="text-sm text-gray-500">Each sprint shown as a column. Members displayed as cards with capacity bar, project allocations, and action icons on hover.</p>
+</div>
+<div class="flex gap-5">
+<!-- Sprint 1 -->
+<div class="flex-1 min-w-[340px]">
+<div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
+<div><h3 class="text-sm font-semibold text-gray-900">Jun 2026</h3><p class="text-xs text-gray-400">Sprint #1 (1-15)</p></div>
+<span class="text-xs text-gray-400">4 Members</span>
+</div>
+<div class="space-y-2.5">
+<div class="border border-gray-100 rounded-xl p-3">
+<div class="flex items-start justify-between"><div><div class="text-xs font-semibold text-gray-900">Alex Cohen</div><div class="text-[10px] text-gray-400">Product Manager</div></div><div class="text-right"><div class="text-xs font-bold text-green-600">100%</div><div class="text-[9px] text-gray-400">of 100%</div></div></div>
+<div class="w-full bg-gray-100 rounded-full h-1 mt-2 mb-2"><div class="h-1 rounded-full bg-green-400" style="width:100%"></div></div>
+<div class="space-y-1"><div class="flex items-center justify-between py-1 px-2 rounded-lg bg-gray-50"><span class="text-[11px] text-gray-700">Customer 1 - Project 1</span><span class="text-[11px] font-semibold text-blue-600">50%</span></div><div class="flex items-center justify-between py-1 px-2 rounded-lg bg-gray-50"><span class="text-[11px] text-gray-700">Customer 2 - Project 2</span><span class="text-[11px] font-semibold text-blue-600">30%</span></div><div class="flex items-center justify-between py-1 px-2 rounded-lg bg-gray-50"><span class="text-[11px] text-gray-700">Customer 3 - Project 3</span><span class="text-[11px] font-semibold text-blue-600">20%</span></div></div>
+</div>
+<div class="border border-gray-100 rounded-xl p-3">
+<div class="flex items-start justify-between"><div><div class="text-xs font-semibold text-gray-900">Sarah Levi</div><div class="text-[10px] text-gray-400">PMO</div></div><div class="text-right"><div class="text-xs font-bold text-amber-500">130%</div><div class="text-[9px] text-gray-400">of 100%</div></div></div>
+<div class="w-full bg-gray-100 rounded-full h-1 mt-2 mb-2"><div class="h-1 rounded-full bg-amber-400" style="width:100%"></div></div>
+<div class="space-y-1"><div class="flex items-center justify-between py-1 px-2 rounded-lg bg-gray-50"><span class="text-[11px] text-gray-700">Customer 1 - Project 1</span><span class="text-[11px] font-semibold text-blue-600">80%</span></div><div class="flex items-center justify-between py-1 px-2 rounded-lg bg-gray-50"><span class="text-[11px] text-gray-700">Customer 2 - Project 2</span><span class="text-[11px] font-semibold text-blue-600">50%</span></div></div>
+</div>
+<div class="border border-gray-100 rounded-xl px-3 py-2">
+<div class="flex items-center justify-between"><div><div class="text-xs font-semibold text-gray-900">David Stern</div><div class="text-[10px] text-gray-400">SW Architect</div></div><div class="text-right"><div class="text-xs font-bold text-red-500">50%</div><div class="text-[9px] text-gray-400">of 100%</div></div></div>
+</div>
+<div class="border border-gray-100 rounded-xl px-3 py-2">
+<div class="flex items-center justify-between"><div><div class="text-xs font-semibold text-gray-900">Noa Mizrahi</div><div class="text-[10px] text-gray-400">AI Architect</div></div><div class="text-right"><div class="text-xs font-bold text-green-600">85%</div><div class="text-[9px] text-gray-400">of 100%</div></div></div>
+</div>
+</div>
+</div>
+<!-- Sprint 2 -->
+<div class="flex-1 min-w-[340px]">
+<div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
+<div><h3 class="text-sm font-semibold text-gray-900">Jun 2026</h3><p class="text-xs text-gray-400">Sprint #2 (16-30)</p></div>
+<span class="text-xs text-gray-400">4 Members</span>
+</div>
+<div class="space-y-2.5">
+<div class="border border-gray-100 rounded-xl p-3">
+<div class="flex items-start justify-between"><div><div class="text-xs font-semibold text-gray-900">Alex Cohen</div><div class="text-[10px] text-gray-400">Product Manager</div></div><div class="text-right"><div class="text-xs font-bold text-green-600">100%</div><div class="text-[9px] text-gray-400">of 100%</div></div></div>
+<div class="w-full bg-gray-100 rounded-full h-1 mt-2 mb-2"><div class="h-1 rounded-full bg-green-400" style="width:100%"></div></div>
+<div class="space-y-1"><div class="flex items-center justify-between py-1 px-2 rounded-lg bg-gray-50"><span class="text-[11px] text-gray-700">Customer 1 - Project 1</span><span class="text-[11px] font-semibold text-blue-600">50%</span></div><div class="flex items-center justify-between py-1 px-2 rounded-lg bg-gray-50"><span class="text-[11px] text-gray-700">Customer 2 - Project 2</span><span class="text-[11px] font-semibold text-blue-600">30%</span></div><div class="flex items-center justify-between py-1 px-2 rounded-lg bg-gray-50"><span class="text-[11px] text-gray-700">Customer 3 - Project 3</span><span class="text-[11px] font-semibold text-blue-600">20%</span></div></div>
+</div>
+<div class="border border-gray-100 rounded-xl p-3">
+<div class="flex items-start justify-between"><div><div class="text-xs font-semibold text-gray-900">Sarah Levi</div><div class="text-[10px] text-gray-400">PMO</div></div><div class="text-right"><div class="text-xs font-bold text-green-600">90%</div><div class="text-[9px] text-gray-400">of 100%</div></div></div>
+<div class="w-full bg-gray-100 rounded-full h-1 mt-2 mb-2"><div class="h-1 rounded-full bg-green-400" style="width:90%"></div></div>
+<div class="space-y-1"><div class="flex items-center justify-between py-1 px-2 rounded-lg bg-gray-50"><span class="text-[11px] text-gray-700">Customer 1 - Project 1</span><span class="text-[11px] font-semibold text-blue-600">40%</span></div><div class="flex items-center justify-between py-1 px-2 rounded-lg bg-gray-50"><span class="text-[11px] text-gray-700">Customer 2 - Project 2</span><span class="text-[11px] font-semibold text-blue-600">50%</span></div></div>
+</div>
+<div class="border border-gray-100 rounded-xl px-3 py-2">
+<div class="flex items-center justify-between"><div><div class="text-xs font-semibold text-gray-900">David Stern</div><div class="text-[10px] text-gray-400">SW Architect</div></div><div class="text-right"><div class="text-xs font-bold text-red-500">40%</div><div class="text-[9px] text-gray-400">of 100%</div></div></div>
+</div>
+<div class="border border-gray-100 rounded-xl px-3 py-2">
+<div class="flex items-center justify-between"><div><div class="text-xs font-semibold text-gray-900">Noa Mizrahi</div><div class="text-[10px] text-gray-400">AI Architect</div></div><div class="text-right"><div class="text-xs font-bold text-green-600">85%</div><div class="text-[9px] text-gray-400">of 100%</div></div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Screen 3: Timeline View -->
+<div id="screen-timeline" class="screen max-w-7xl mx-auto p-6">
+<div class="bg-white rounded-xl border p-4 mb-4">
+<h2 class="text-lg font-bold text-gray-900 mb-1">Timeline View — Member Grid across Sprints</h2>
+<p class="text-sm text-gray-500">Members as rows (fixed left column), sprints as columns. Collapsed shows totals, click to expand project details. Color-coded by capacity thresholds.</p>
+</div>
+<div class="bg-white rounded-xl border overflow-hidden">
+<table class="w-full text-xs border-collapse">
+<thead><tr class="border-b bg-gray-50">
+<th class="text-left px-3 py-2 w-44 border-r">Member</th>
+<th class="text-center px-2 py-2 border-r min-w-[120px]"><div class="font-semibold text-gray-800">Jun S1</div><div class="text-[9px] text-gray-400">1-15</div></th>
+<th class="text-center px-2 py-2 border-r min-w-[120px]"><div class="font-semibold text-gray-800">Jun S2</div><div class="text-[9px] text-gray-400">16-30</div></th>
+<th class="text-center px-2 py-2 border-r min-w-[120px]"><div class="font-semibold text-gray-800">Jul S1</div><div class="text-[9px] text-gray-400">1-15</div></th>
+<th class="text-center px-2 py-2 border-r min-w-[120px]"><div class="font-semibold text-gray-800">Jul S2</div><div class="text-[9px] text-gray-400">16-31</div></th>
+<th class="text-center px-2 py-2 min-w-[120px]"><div class="font-semibold text-gray-800">Aug S1</div><div class="text-[9px] text-gray-400">1-15</div></th>
+</tr></thead>
+<tbody>
+<tr class="border-b hover:bg-gray-50/50"><td class="px-3 py-2 border-r"><div class="text-xs font-semibold text-gray-900">Alex Cohen</div><div class="text-[10px] text-gray-400">Product Manager</div></td>
+<td class="px-2 py-1.5 border-r text-center bg-green-50"><div class="text-[11px] font-bold text-green-600">100%</div></td>
+<td class="px-2 py-1.5 border-r text-center bg-green-50"><div class="text-[11px] font-bold text-green-600">100%</div></td>
+<td class="px-2 py-1.5 border-r text-center bg-green-50"><div class="text-[11px] font-bold text-green-600">80%</div></td>
+<td class="px-2 py-1.5 border-r text-center bg-amber-50"><div class="text-[11px] font-bold text-amber-500">50%</div></td>
+<td class="px-2 py-1.5 text-center"><div class="text-[11px] text-gray-300">-</div></td></tr>
+<tr class="border-b hover:bg-gray-50/50"><td class="px-3 py-2 border-r"><div class="text-xs font-semibold text-gray-900">Sarah Levi</div><div class="text-[10px] text-gray-400">PMO</div></td>
+<td class="px-2 py-1.5 border-r text-center bg-amber-50"><div class="text-[11px] font-bold text-amber-500">130%</div></td>
+<td class="px-2 py-1.5 border-r text-center bg-green-50"><div class="text-[11px] font-bold text-green-600">90%</div></td>
+<td class="px-2 py-1.5 border-r text-center bg-green-50"><div class="text-[11px] font-bold text-green-600">90%</div></td>
+<td class="px-2 py-1.5 border-r text-center bg-green-50"><div class="text-[11px] font-bold text-green-600">90%</div></td>
+<td class="px-2 py-1.5 text-center bg-green-50"><div class="text-[11px] font-bold text-green-600">90%</div></td></tr>
+<tr class="border-b hover:bg-gray-50/50"><td class="px-3 py-2 border-r"><div class="text-xs font-semibold text-gray-900">David Stern</div><div class="text-[10px] text-gray-400">SW Architect</div></td>
+<td class="px-2 py-1.5 border-r text-center bg-red-50"><div class="text-[11px] font-bold text-red-500">50%</div></td>
+<td class="px-2 py-1.5 border-r text-center bg-red-50"><div class="text-[11px] font-bold text-red-500">40%</div></td>
+<td class="px-2 py-1.5 border-r text-center"><div class="text-[11px] text-gray-300">-</div></td>
+<td class="px-2 py-1.5 border-r text-center"><div class="text-[11px] text-gray-300">-</div></td>
+<td class="px-2 py-1.5 text-center"><div class="text-[11px] text-gray-300">-</div></td></tr>
+<tr class="hover:bg-gray-50/50"><td class="px-3 py-2 border-r"><div class="text-xs font-semibold text-gray-900">Noa Mizrahi</div><div class="text-[10px] text-gray-400">AI Architect</div></td>
+<td class="px-2 py-1.5 border-r text-center bg-green-50"><div class="text-[11px] font-bold text-green-600">85%</div></td>
+<td class="px-2 py-1.5 border-r text-center bg-green-50"><div class="text-[11px] font-bold text-green-600">85%</div></td>
+<td class="px-2 py-1.5 border-r text-center bg-green-50"><div class="text-[11px] font-bold text-green-600">85%</div></td>
+<td class="px-2 py-1.5 border-r text-center bg-green-50"><div class="text-[11px] font-bold text-green-600">85%</div></td>
+<td class="px-2 py-1.5 text-center bg-green-50"><div class="text-[11px] font-bold text-green-600">85%</div></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- Screen 4: Project Management -->
+<div id="screen-projects" class="screen max-w-7xl mx-auto p-6">
+<div class="bg-white rounded-xl border p-4 mb-4">
+<h2 class="text-lg font-bold text-gray-900 mb-1">Project Management</h2>
+<p class="text-sm text-gray-500">Create, edit, and manage customer projects. Set required resources, planning sprints, PMO contacts, and activity sign-off dates.</p>
+</div>
+<div class="bg-white rounded-xl border overflow-hidden">
+<div class="px-4 py-2 border-b bg-gray-50 text-xs text-gray-500">42 projects listed</div>
+<table class="w-full text-xs">
+<thead><tr class="border-b"><th class="text-left px-4 py-2">Customer</th><th class="text-left px-4 py-2">Project/Activity</th><th class="text-left px-4 py-2">Type</th><th class="text-left px-4 py-2">Status</th><th class="text-left px-4 py-2">Region</th><th class="text-left px-4 py-2">Sign Off Date</th><th class="text-left px-4 py-2">Actions</th></tr></thead>
+<tbody>
+<tr class="border-b hover:bg-gray-50"><td class="px-4 py-2">Customer 1</td><td class="px-4 py-2">Project 1</td><td class="px-4 py-2">Software</td><td class="px-4 py-2"><span class="px-2 py-0.5 bg-green-100 text-green-800 rounded text-[10px]">Active</span></td><td class="px-4 py-2">Israel</td><td class="px-4 py-2">2026-03-15</td><td class="px-4 py-2 text-blue-600">Edit</td></tr>
+<tr class="border-b hover:bg-gray-50"><td class="px-4 py-2">Customer 2</td><td class="px-4 py-2">Project 2</td><td class="px-4 py-2">AI</td><td class="px-4 py-2"><span class="px-2 py-0.5 bg-green-100 text-green-800 rounded text-[10px]">Active</span></td><td class="px-4 py-2">US</td><td class="px-4 py-2">2026-04-01</td><td class="px-4 py-2 text-blue-600">Edit</td></tr>
+<tr class="border-b hover:bg-gray-50"><td class="px-4 py-2">Customer 3</td><td class="px-4 py-2">Project 3</td><td class="px-4 py-2">Hybrid</td><td class="px-4 py-2"><span class="px-2 py-0.5 bg-green-100 text-green-800 rounded text-[10px]">Active</span></td><td class="px-4 py-2">UK</td><td class="px-4 py-2">-</td><td class="px-4 py-2 text-blue-600">Edit</td></tr>
+<tr class="hover:bg-gray-50"><td class="px-4 py-2">Customer 4</td><td class="px-4 py-2">Project 4</td><td class="px-4 py-2">Software</td><td class="px-4 py-2"><span class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-[10px]">Inactive</span></td><td class="px-4 py-2">Canada</td><td class="px-4 py-2">2025-12-01</td><td class="px-4 py-2 text-blue-600">Edit</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- Screen 5: Members -->
+<div id="screen-members" class="screen max-w-7xl mx-auto p-6">
+<div class="bg-white rounded-xl border p-4 mb-4">
+<h2 class="text-lg font-bold text-gray-900 mb-1">Members Management</h2>
+<p class="text-sm text-gray-500">Manage team members, roles, managers, teams, and capacity. Filter by status, resource type, and manager.</p>
+</div>
+<div class="bg-white rounded-xl border overflow-hidden">
+<div class="px-4 py-2 border-b bg-gray-50 text-xs text-gray-500">26 members listed</div>
+<table class="w-full text-xs">
+<thead><tr class="border-b"><th class="text-left px-4 py-2">Name</th><th class="text-left px-4 py-2">Email</th><th class="text-left px-4 py-2">Resource Type</th><th class="text-left px-4 py-2">Manager</th><th class="text-left px-4 py-2">Team</th><th class="text-left px-4 py-2">Status</th></tr></thead>
+<tbody>
+<tr class="border-b hover:bg-gray-50"><td class="px-4 py-2 font-medium">Alex Cohen</td><td class="px-4 py-2 text-gray-500">alex@company.com</td><td class="px-4 py-2">Product Manager</td><td class="px-4 py-2">Dan Rosen</td><td class="px-4 py-2"><span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px]">Management</span></td><td class="px-4 py-2"><span class="text-green-600">Active</span></td></tr>
+<tr class="border-b hover:bg-gray-50"><td class="px-4 py-2 font-medium">Sarah Levi</td><td class="px-4 py-2 text-gray-500">sarah@company.com</td><td class="px-4 py-2">PMO</td><td class="px-4 py-2">Dan Rosen</td><td class="px-4 py-2"><span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px]">Operations</span></td><td class="px-4 py-2"><span class="text-green-600">Active</span></td></tr>
+<tr class="border-b hover:bg-gray-50"><td class="px-4 py-2 font-medium">David Stern</td><td class="px-4 py-2 text-gray-500">david@company.com</td><td class="px-4 py-2">SW Architect</td><td class="px-4 py-2">Dan Rosen</td><td class="px-4 py-2"><span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px]">Member</span></td><td class="px-4 py-2"><span class="text-green-600">Active</span></td></tr>
+<tr class="hover:bg-gray-50"><td class="px-4 py-2 font-medium">Noa Mizrahi</td><td class="px-4 py-2 text-gray-500">noa@company.com</td><td class="px-4 py-2">AI Architect</td><td class="px-4 py-2">Dan Rosen</td><td class="px-4 py-2"><span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px]">Member</span></td><td class="px-4 py-2"><span class="text-green-600">Active</span></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- Footer -->
+<div class="max-w-7xl mx-auto px-6 py-8 text-center text-xs text-gray-400">
+<p>Puzzle — Capacity Planning Platform | Internal Demo</p>
+</div>
+
+<script>
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.getElementById('btn-' + name).classList.add('active');
+}
+</script>
+</body>
+</html>
