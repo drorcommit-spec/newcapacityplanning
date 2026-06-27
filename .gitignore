@@ -36,3 +36,8 @@ server/migrate-config.json
 *.njsproj
 *.sln
 *.sw?
+
+# Anonymization mapping (sensitive - local only)
+project-name-mapping.json
+anonymize-projects-RUN.sql
+revert-projects-RUN.sql
