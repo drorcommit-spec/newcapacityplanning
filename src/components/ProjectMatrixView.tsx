@@ -557,6 +557,7 @@ export default function ProjectMatrixView() {
         <div className="flex items-center gap-2">
           {/* Traffic light filter - multi-select toggles */}
           <div className="flex items-center gap-1.5 border rounded-lg px-2 py-1 bg-gray-50">
+            <span className="text-[10px] text-gray-500 font-medium mr-1">Project Staffing</span>
             <button onClick={() => setLightFilter(new Set(['green', 'yellow', 'red']))}
               className={`text-[10px] px-2 py-0.5 rounded ${lightFilter.size === 3 && !lightFilter.has('gray') ? 'bg-white shadow font-bold text-gray-800' : 'text-gray-500 hover:bg-white'}`}>Active</button>
             <button onClick={() => toggleLight('green')}
