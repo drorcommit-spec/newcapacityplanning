@@ -1,4 +1,4 @@
--- Update Dror Shem-Tov to have Admin team
+i -- Update Dror Shem-Tov to have Admin team
 -- This gives full admin access to the system
 
 UPDATE team_members 

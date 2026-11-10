@@ -2,14 +2,36 @@ import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { usePermissions } from '../hooks/usePermissions';
-import { getCurrentSprint, getMonthName, getSprintDateRange } from '../utils/dateUtils';
 import { saveSprintProjects } from '../services/api';
+import { getWeeksInRange, WeekInfo, formatDDMM } from '../utils/weekUtils';
 import Card from '../components/Card';
 
+const DB_MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// A Dashboard period is an ISO week. `sprint`/`year` carry ISO week/year so existing
+// `${year}-${month}-${sprint}`-keyed collections stay unique per week.
 interface SprintInfo {
   year: number;
   month: number;
   sprint: number;
+  isoYear: number;
+  isoWeek: number;
+  weekStartDate: string;
+  weekLabel: string;
+  monthLabel: string;
+}
+
+function dbWeekToPeriod(w: WeekInfo): SprintInfo {
+  return {
+    year: w.isoYear,
+    month: w.month,
+    sprint: w.isoWeek,
+    isoYear: w.isoYear,
+    isoWeek: w.isoWeek,
+    weekStartDate: w.startDate,
+    weekLabel: `W${w.weekOfMonth}`,
+    monthLabel: `${DB_MONTH_ABBR[w.month - 1]} ${w.year}`,
+  };
 }
 
 export default function Dashboard() {
@@ -17,7 +39,6 @@ export default function Dashboard() {
   const { canManageMembers } = usePermissions();
   const isAdmin = canManageMembers;
   const navigate = useNavigate();
-  const currentSprint = getCurrentSprint();
   const [sprintCount] = useState(3);
   const [expandedSprints, setExpandedSprints] = useState<Record<string, { projects: boolean; members: boolean }>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -45,25 +66,15 @@ export default function Dashboard() {
     localStorage.setItem('overCapacityThreshold', overCapacityThreshold.toString());
   }, [overCapacityThreshold]);
 
-  // Generate sprint list
+  // Generate the weekly horizon (each period is an ISO week).
   const sprints = useMemo(() => {
-    const result: SprintInfo[] = [];
-    let { year, month, sprint } = currentSprint;
-    
-    for (let i = 0; i < sprintCount; i++) {
-      result.push({ year, month, sprint });
-      sprint++;
-      if (sprint > 2) {
-        sprint = 1;
-        month++;
-        if (month > 12) {
-          month = 1;
-          year++;
-        }
-      }
-    }
-    return result;
-  }, [currentSprint, sprintCount]);
+    const start = new Date();
+    const end = new Date(start);
+    end.setDate(end.getDate() + (sprintCount - 1) * 7);
+    return getWeeksInRange(start, end).slice(0, sprintCount).map(dbWeekToPeriod);
+  }, [sprintCount]);
+
+  const currentSprint = sprints[0];
 
   // Calculate overall summary
   const overallSummary = useMemo(() => {
@@ -71,9 +82,7 @@ export default function Dashboard() {
     const activeMembers = teamMembers.filter(m => m.isActive);
     
     const currentSprintAllocs = allocations.filter(
-      a => a.year === currentSprint.year && 
-           a.month === currentSprint.month && 
-           a.sprint === currentSprint.sprint
+      a => a.isoYear === currentSprint.isoYear && a.isoWeek === currentSprint.isoWeek
     );
     
     const totalCapacity = currentSprintAllocs.reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
@@ -83,7 +92,7 @@ export default function Dashboard() {
     const projectsInAnySprint = new Set<string>();
     sprints.forEach(sprint => {
       const sprintAllocs = allocations.filter(
-        a => a.year === sprint.year && a.month === sprint.month && a.sprint === sprint.sprint
+        a => a.isoYear === sprint.isoYear && a.isoWeek === sprint.isoWeek
       );
       sprintAllocs.forEach(a => projectsInAnySprint.add(a.projectId));
       
@@ -99,7 +108,7 @@ export default function Dashboard() {
     const membersInAnySprint = new Set<string>();
     sprints.forEach(sprint => {
       const sprintAllocs = allocations.filter(
-        a => a.year === sprint.year && a.month === sprint.month && a.sprint === sprint.sprint
+        a => a.isoYear === sprint.isoYear && a.isoWeek === sprint.isoWeek
       );
       sprintAllocs.forEach(a => membersInAnySprint.add(a.productManagerId));
     });
@@ -124,9 +133,7 @@ export default function Dashboard() {
       const activeMembers = teamMembers.filter(m => m.isActive);
       
       const sprintAllocations = allocations.filter(
-        a => a.year === sprint.year && 
-             a.month === sprint.month && 
-             a.sprint === sprint.sprint
+        a => a.isoYear === sprint.isoYear && a.isoWeek === sprint.isoWeek
       );
 
       const allocatedProjectIds = new Set(sprintAllocations.map(a => a.projectId));
@@ -342,7 +349,7 @@ export default function Dashboard() {
               </button>
             </div>
             <p className="text-gray-600 mt-1">
-              Current Sprint: {currentSprint.year} {getMonthName(currentSprint.month)} Sprint {currentSprint.sprint}
+              Current Week: {currentSprint.monthLabel} {currentSprint.weekLabel} ({formatDDMM(currentSprint.weekStartDate)})
             </p>
           </div>
           
@@ -462,7 +469,7 @@ export default function Dashboard() {
           <div className="p-4 rounded-lg border-2 border-purple-200 bg-purple-50">
             <div className="text-sm font-semibold text-gray-700 mb-1">📈 Avg Utilization</div>
             <div className="text-3xl font-bold text-purple-600">{overallSummary.avgUtilization}%</div>
-            <div className="text-xs text-gray-600 mt-1">Current sprint average</div>
+            <div className="text-xs text-gray-600 mt-1">Current week average</div>
           </div>
 
           <button
@@ -513,11 +520,14 @@ export default function Dashboard() {
       {/* Sprint Swimlanes */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {sprintKPIs.map((kpi, index) => {
-          const sprintLabel = index === 0 ? 'Current Sprint' : index === 1 ? 'Next Sprint' : '2 Sprints Ahead';
+          const sprintLabel = index === 0 ? 'Current Week' : index === 1 ? 'Next Week' : '2 Weeks Ahead';
           const sprintKey = `${kpi.sprint.year}-${kpi.sprint.month}-${kpi.sprint.sprint}`;
           const projectsExpanded = expandedSprints[sprintKey]?.projects || false;
           const membersExpanded = expandedSprints[sprintKey]?.members || false;
-          const { startDate, endDate } = getSprintDateRange(kpi.sprint.year, kpi.sprint.month, kpi.sprint.sprint);
+          const weekEnd = new Date(kpi.sprint.weekStartDate + 'T00:00:00Z');
+          weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+          const startDate = formatDDMM(kpi.sprint.weekStartDate);
+          const endDate = `${String(weekEnd.getUTCDate()).padStart(2, '0')}/${String(weekEnd.getUTCMonth() + 1).padStart(2, '0')}`;
           
           return (
             <Card key={sprintKey}>
@@ -525,7 +535,7 @@ export default function Dashboard() {
               <div className="mb-4 pb-3 border-b-2 border-blue-200">
                 <h2 className="text-lg font-bold text-blue-900">{sprintLabel}</h2>
                 <p className="text-sm text-gray-600">
-                  {getMonthName(kpi.sprint.month)} {kpi.sprint.year} - Sprint {kpi.sprint.sprint}
+                  {kpi.sprint.monthLabel} · {kpi.sprint.weekLabel}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   {startDate} - {endDate}
@@ -732,7 +742,7 @@ export default function Dashboard() {
                       <div className="flex gap-2 mt-3 pt-3 border-t border-red-200">
                         <div className="text-sm font-medium text-gray-700 mr-2">Add to:</div>
                         {sprints.slice(0, 3).map((sprint, index) => {
-                          const sprintLabel = index === 0 ? 'Current Sprint' : index === 1 ? 'Next Sprint' : '2 Sprints Ahead';
+                          const sprintLabel = index === 0 ? 'Current Week' : index === 1 ? 'Next Week' : '2 Weeks Ahead';
                           return (
                             <button
                               key={`${sprint.year}-${sprint.month}-${sprint.sprint}`}
@@ -751,7 +761,7 @@ export default function Dashboard() {
                             >
                               {sprintLabel}
                               <div className="text-xs opacity-90">
-                                {getMonthName(sprint.month)} {sprint.year} S{sprint.sprint}
+                                {sprint.monthLabel} {sprint.weekLabel}
                               </div>
                             </button>
                           );
@@ -842,7 +852,7 @@ export default function Dashboard() {
                       <div className="flex gap-2 mt-3 pt-3 border-t border-orange-200">
                         <div className="text-sm font-medium text-gray-700 mr-2">Allocate to:</div>
                         {sprints.slice(0, 3).map((sprint, index) => {
-                          const sprintLabel = index === 0 ? 'Current Sprint' : index === 1 ? 'Next Sprint' : '2 Sprints Ahead';
+                          const sprintLabel = index === 0 ? 'Current Week' : index === 1 ? 'Next Week' : '2 Weeks Ahead';
                           return (
                             <button
                               key={`${sprint.year}-${sprint.month}-${sprint.sprint}`}
@@ -877,7 +887,7 @@ export default function Dashboard() {
                             >
                               {sprintLabel}
                               <div className="text-xs opacity-90">
-                                {getMonthName(sprint.month)} {sprint.year} S{sprint.sprint}
+                                {sprint.monthLabel} {sprint.weekLabel}
                               </div>
                             </button>
                           );

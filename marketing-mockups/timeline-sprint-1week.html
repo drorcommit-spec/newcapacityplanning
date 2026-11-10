@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Puzzle - Timeline (Sprint = 1 week)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}</style>
+</head>
+<body class="bg-white min-h-screen">
+<nav class="bg-white border-b px-6 py-2.5 flex items-center justify-between">
+<div class="flex items-center gap-6"><div class="flex items-center gap-2"><span class="text-xl">&#129513;</span><div><span class="text-lg font-bold">Puzzle</span><br><span class="text-[9px] text-gray-400">Capacity Planning Platform</span></div></div>
+<div class="flex gap-1 text-xs"><span class="px-2.5 py-1.5 rounded text-gray-600">Dashboard</span><span class="px-2.5 py-1.5 rounded bg-blue-50 text-blue-700 font-semibold">Capacity Planning</span><span class="px-2.5 py-1.5 rounded text-gray-600">History</span></div></div>
+<div class="text-right text-xs"><div class="font-medium">John Smith</div><div class="text-gray-400">john@company.com</div></div>
+</nav>
+<div class="px-6 py-2 border-b flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="text-xs font-semibold text-gray-700">Project Beacon</span>
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">Sprint length: 1 week</span>
+<span class="text-xs text-gray-400">12 members</span>
+<label class="flex items-center gap-1.5 border rounded-lg px-2 py-1 bg-gray-50 text-[10px] cursor-pointer select-none"><input type="checkbox" id="sprintToggle" checked onchange="toggleSprint()" class="accent-blue-600"><span class="text-gray-600 font-medium">Sprint row</span></label>
+</div>
+<div class="flex items-center gap-1 text-gray-400 text-xs"><span>&#171;</span><span>&#8249;</span><span class="mx-2 text-gray-600 font-medium">Today</span><span>&#8250;</span><span>&#187;</span></div>
+</div>
+<div class="flex bg-gray-100 rounded-md p-0.5 text-[11px] mx-6 mt-2 w-fit"><button class="px-2.5 py-1 rounded text-gray-500">Puzzle View</button><button class="px-2.5 py-1 rounded text-gray-500">Staff View</button><button class="px-2.5 py-1 rounded bg-white text-blue-600 shadow-sm font-medium">Timeline View</button></div>
+<div class="px-6 pt-3">
+<div class="border rounded-lg overflow-hidden">
+<table class="w-full text-xs border-collapse">
+<thead>
+<!-- MONTH LEVEL -->
+<tr class="bg-gray-100 border-b">
+<th rowspan="3" class="text-left px-3 py-2 w-44 border-r align-bottom">Member</th>
+<th colspan="4" class="text-center px-2 py-1.5 border-r border-l-2 border-l-gray-300 text-[11px] font-bold text-gray-700">August</th>
+<th colspan="4" class="text-center px-2 py-1.5 border-l-2 border-l-gray-300 text-[11px] font-bold text-gray-700">September</th>
+</tr>
+<!-- WEEK LEVEL -->
+<tr class="bg-gray-50 border-b text-[10px]">
+<th class="text-center px-1 py-1.5 border-r"><div class="font-semibold">W1</div><div class="text-[9px] text-gray-400">04-10</div></th>
+<th class="text-center px-1 py-1.5 border-r"><div class="font-semibold">W2</div><div class="text-[9px] text-gray-400">11-17</div></th>
+<th class="text-center px-1 py-1.5 border-r"><div class="font-semibold">W3</div><div class="text-[9px] text-gray-400">18-24</div></th>
+<th class="text-center px-1 py-1.5 border-r"><div class="font-semibold">W4</div><div class="text-[9px] text-gray-400">25-31</div></th>
+<th class="text-center px-1 py-1.5 border-r"><div class="font-semibold">W1</div><div class="text-[9px] text-gray-400">01-07</div></th>
+<th class="text-center px-1 py-1.5 border-r"><div class="font-semibold">W2</div><div class="text-[9px] text-gray-400">08-14</div></th>
+<th class="text-center px-1 py-1.5 border-r"><div class="font-semibold">W3</div><div class="text-[9px] text-gray-400">15-21</div></th>
+<th class="text-center px-1 py-1.5"><div class="font-semibold">W4</div><div class="text-[9px] text-gray-400">22-28</div></th>
+</tr>
+<!-- SPRINT LEVEL: 1 week => S1..S4 per month, resets each month -->
+<tr class="sprint-row bg-blue-50/50 border-b text-[10px]">
+<th class="text-center px-1 py-1 border-r border-l-2 border-l-blue-200 font-semibold text-blue-600">S1</th>
+<th class="text-center px-1 py-1 border-r font-semibold text-blue-600">S2</th>
+<th class="text-center px-1 py-1 border-r font-semibold text-blue-600">S3</th>
+<th class="text-center px-1 py-1 border-r font-semibold text-blue-600">S4</th>
+<th class="text-center px-1 py-1 border-r border-l-2 border-l-blue-200 font-semibold text-blue-600">S1</th>
+<th class="text-center px-1 py-1 border-r font-semibold text-blue-600">S2</th>
+<th class="text-center px-1 py-1 border-r font-semibold text-blue-600">S3</th>
+<th class="text-center px-1 py-1 font-semibold text-blue-600">S4</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table></div>
+<p class="text-[11px] text-gray-400 mt-2">Levels: <b>Month</b> &rsaquo; <b>Week</b> &rsaquo; <b>Sprint</b> (optional). With a 1-week sprint each week is its own sprint. Numbering resets every month, so each month shows S1&ndash;S4.</p>
+</div>
+<script>
+var members=[
+ {n:"Alex Cohen",r:"Product Manager",v:[100,100,90,80,50,50,80,80]},
+ {n:"Sarah Levi",r:"PMO",v:[130,120,90,90,90,90,90,90]},
+ {n:"David Stern",r:"SW Architect",v:[50,50,40,40,60,60,null,null]},
+ {n:"Noa Mizrahi",r:"AI Architect",v:[90,90,90,85,85,85,85,85]},
+ {n:"Tom Katz",r:"Product Manager",v:[100,100,100,100,100,100,100,100]},
+ {n:"Maya Gold",r:"PMO",v:[85,85,85,60,60,80,null,null]}
+];
+function cell(val,last){
+ var b=last?"":"border-r";
+ if(val===null) return '<td class="px-1 py-1.5 '+b+' text-center"><div class="text-gray-300">-</div></td>';
+ var bg="bg-green-50",tx="text-green-600";
+ if(val>110){bg="bg-amber-50";tx="text-amber-500";}
+ else if(val<70){bg="bg-red-50";tx="text-red-500";}
+ return '<td class="px-1 py-1.5 '+b+' text-center '+bg+'"><div class="font-bold '+tx+'">'+val+'%</div></td>';
+}
+function render(){
+ var h="";
+ members.forEach(function(m){
+  h+='<tr class="border-b hover:bg-gray-50/50"><td class="px-3 py-2 border-r"><div class="flex items-center gap-1.5"><span class="text-gray-300">&#9656;</span><div><div class="font-semibold">'+m.n+'</div><div class="text-[10px] text-gray-400">'+m.r+'</div></div></div></td>';
+  m.v.forEach(function(val,i){ h+=cell(val,i===m.v.length-1); });
+  h+='</tr>';
+ });
+ document.getElementById('tbody').innerHTML=h;
+}
+function toggleSprint(){
+ var on=document.getElementById('sprintToggle').checked;
+ document.querySelectorAll('.sprint-row').forEach(function(r){ r.style.display=on?'':'none'; });
+}
+render();
+</script>
+</body></html>

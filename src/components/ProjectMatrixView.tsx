@@ -5,30 +5,67 @@ import { usePermissions } from '../hooks/usePermissions';
 import Modal from './Modal';
 import ProjectForm from './ProjectForm';
 import PuzzleMe, { Suggestion } from './PuzzleMe';
+import WeekSpanEditor from './WeekSpanEditor';
+import {
+  getWeeksInRange,
+  buildWeek,
+  groupWeeksIntoSprints,
+  firstWeekOfCurrentSprint,
+  getSprintTitleLabel,
+  getSprintDayRangeLabel,
+  getSprintDateLabel,
+  getSprintYearLabel,
+  getMonthWeekLabel,
+  getWeekDayRangeLabel,
+  formatDDMM,
+  weekKey,
+  weekFromLegacySprint,
+  aggregateWeeklyValues,
+  workingDaysInWeek,
+  WeekInfo,
+  Sprint,
+  SprintLengthWeeks,
+} from '../utils/weekUtils';
+import { getMemberCompanyGroup } from '../utils/memberUtils';
 
-type TimeMode = 'sprint' | 'month';
+interface ProjectMatrixViewProps {
+  companyGroupFilter?: string;
+}
+
 type StatusFilter = 'active' | 'all' | 'inactive';
+type ViewLevel = 'week' | 'sprint';
+// Week/Sprint toggle is temporarily disabled — Sprint view is the only mode for now.
+// Flip back to true to re-expose the toggle once ready.
+const VIEW_LEVEL_TOGGLE_ENABLED = false;
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const UNASSIGNED_MANAGER_ID = '__unassigned__';
+// Sprint view always spans one year (52 weeks) forward from the current sprint.
+const WEEKS_VISIBLE = 52;
 
-interface PeriodCol {
-  key: string;
-  label: string;
-  sublabel: string;
-  year: number;
-  month: number;
-  sprint: number;
-}
-
-export default function ProjectMatrixView() {
+export default function ProjectMatrixView({ companyGroupFilter = 'all' }: ProjectMatrixViewProps) {
   const { projects, allocations, teamMembers, addAllocation, updateAllocation, deleteAllocation, addProject, updateProject } = useData();
   const { user } = useAuth();
   const { canWrite, canManageProjects, isMemberTeam } = usePermissions();
   const currentUser = user || { email: 'unknown' };
 
-  const [timeMode, setTimeMode] = useState<TimeMode>('sprint');
-  const [periodOffset, setPeriodOffset] = useState(0);
+  // Shared with Staff View and Timeline View (same localStorage keys) so the visible
+  // week/sprint period stays in sync no matter which of the 3 Capacity Planning views the
+  // user navigates to, instead of each view tracking its own independent position.
+  const [periodOffset, setPeriodOffset] = useState(
+    () => parseInt(localStorage.getItem('capacityPeriodOffset') || '0', 10)
+  );
+  const [showSprintRow, setShowSprintRow] = useState(() => localStorage.getItem('puzzleShowSprintRow') !== 'false');
+  const [overlaySprintLength, setOverlaySprintLength] = useState<SprintLengthWeeks>(
+    () => (parseInt(localStorage.getItem('capacitySprintLength') || '2') as SprintLengthWeeks)
+  );
+  // Week vs Sprint display level. Sprint level shows one averaged column per sprint;
+  // editing a sprint cell opens a per-week sub-editor instead of overwriting uniformly.
+  // Toggle is temporarily disabled (VIEW_LEVEL_TOGGLE_ENABLED) — Sprint is always shown.
+  const [viewLevel, setViewLevel] = useState<ViewLevel>(
+    () => (VIEW_LEVEL_TOGGLE_ENABLED ? (localStorage.getItem('puzzleViewLevel') as ViewLevel) || 'week' : 'sprint')
+  );
+  const [spanEditor, setSpanEditor] = useState<{ projectId: string; memberId: string; sprintIndex: number } | null>(null);
   const [projectFilter, setProjectFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
   const [lightFilter, setLightFilter] = useState<Set<string>>(new Set(['green', 'yellow', 'red']));
@@ -51,6 +88,34 @@ export default function ProjectMatrixView() {
     };
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem('capacityPeriodOffset', String(periodOffset));
+    window.dispatchEvent(new Event('capacityPeriodOffsetChanged'));
+  }, [periodOffset]);
+  useEffect(() => {
+    localStorage.setItem('puzzleShowSprintRow', String(showSprintRow));
+  }, [showSprintRow]);
+  useEffect(() => {
+    localStorage.setItem('capacitySprintLength', String(overlaySprintLength));
+    window.dispatchEvent(new Event('capacitySprintLengthChanged'));
+  }, [overlaySprintLength]);
+  useEffect(() => {
+    if (VIEW_LEVEL_TOGGLE_ENABLED) localStorage.setItem('puzzleViewLevel', viewLevel);
+  }, [viewLevel]);
+
+  // Stay in sync with the Staff View / Timeline View when they change the shared period or
+  // sprint length (all 3 Capacity Planning views read/write the same localStorage keys).
+  useEffect(() => {
+    const syncPeriod = () => setPeriodOffset(parseInt(localStorage.getItem('capacityPeriodOffset') || '0', 10));
+    const syncLength = () => setOverlaySprintLength(parseInt(localStorage.getItem('capacitySprintLength') || '2') as SprintLengthWeeks);
+    window.addEventListener('capacityPeriodOffsetChanged', syncPeriod);
+    window.addEventListener('capacitySprintLengthChanged', syncLength);
+    return () => {
+      window.removeEventListener('capacityPeriodOffsetChanged', syncPeriod);
+      window.removeEventListener('capacitySprintLengthChanged', syncLength);
+    };
+  }, []);
+
   const toggleLight = (key: string) => {
     setLightFilter(prev => {
       const next = new Set(prev);
@@ -62,17 +127,23 @@ export default function ProjectMatrixView() {
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
   const [memberSearch, setMemberSearch] = useState('');
   const memberDropdownRef = useRef<HTMLDivElement>(null);
+  // Member (column) pagination — bounds how many members render at once so a large team
+  // doesn't blow up the matrix width (members x sprints columns). One shared page applies
+  // across every sprint so each project row shows the same members left-to-right.
+  const MEMBERS_PER_PAGE = 15;
+  const [memberPage, setMemberPage] = useState(0);
   const [selectedManagerIds, setSelectedManagerIds] = useState<Set<string>>(new Set());
   const [showManagerDropdown, setShowManagerDropdown] = useState(false);
   const [managerSearch, setManagerSearch] = useState('');
   const managerDropdownRef = useRef<HTMLDivElement>(null);
 
-  // All active members (no role filter)
+  // All active members (no role filter), optionally scoped to a company group
   const allActiveMembers = useMemo(() =>
     teamMembers
       .filter(m => m.isActive)
+      .filter(m => companyGroupFilter === 'all' || getMemberCompanyGroup(m) === companyGroupFilter)
       .sort((a, b) => a.fullName.localeCompare(b.fullName)),
-    [teamMembers]
+    [teamMembers, companyGroupFilter]
   );
 
   // Managers: active members who are defined as managerId of at least one other active member
@@ -152,6 +223,13 @@ export default function ProjectMatrixView() {
   const [editCell, setEditCell] = useState<{ projectId: string; memberId: string; periodKey: string } | null>(null);
   const [editPercentage, setEditPercentage] = useState('');
   const [editAllocId, setEditAllocId] = useState<string | null>(null);
+  const [editSprintCount, setEditSprintCount] = useState(1); // number of sprints to span, starting at this week
+  // How a new allocation spans forward: a count of sprints, or up to a chosen end date.
+  const [spanMode, setSpanMode] = useState<'sprints' | 'endDate'>('sprints');
+  const [spanEndDate, setSpanEndDate] = useState(''); // YYYY-MM-DD, inclusive, used when spanMode==='endDate'
+  // For editing/removing an existing allocation: apply to this week only, or this + all
+  // future weeks for the same member+project.
+  const [editScope, setEditScope] = useState<'current' | 'future'>('current');
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [infoProjectId, setInfoProjectId] = useState<string | null>(null);
   const [editProjectId, setEditProjectId] = useState<string | null>(null);
@@ -180,6 +258,17 @@ export default function ProjectMatrixView() {
       : eligibleMembers.filter(m => selectedMemberIds.has(m.id));
   }, [eligibleMembers, selectedMemberIds, focusedProjectId, allocations, allActiveMembers]);
 
+  // Paginate the members that actually render as columns. The full `displayedMembers` list
+  // still drives filtering/counly; only the rendered slice is bounded for performance.
+  const memberPageCount = Math.max(1, Math.ceil(displayedMembers.length / MEMBERS_PER_PAGE));
+  const safeMemberPage = Math.min(memberPage, memberPageCount - 1);
+  const pagedMembers = useMemo(
+    () => displayedMembers.slice(safeMemberPage * MEMBERS_PER_PAGE, safeMemberPage * MEMBERS_PER_PAGE + MEMBERS_PER_PAGE),
+    [displayedMembers, safeMemberPage]
+  );
+  // Reset to the first page whenever the underlying member set changes size.
+  useEffect(() => { setMemberPage(0); }, [displayedMembers.length]);
+
   const toggleMember = (id: string) => {
     setSelectedMemberIds(prev => {
       const next = new Set(prev);
@@ -191,93 +280,32 @@ export default function ProjectMatrixView() {
   const selectAllMembers = () => setSelectedMemberIds(new Set());
   const selectNoMembers = () => setSelectedMemberIds(new Set(['__none__'])); // special: shows 0 columns
 
-  // Generate visible periods - dynamic based on employee filter and screen space
-  const periods: PeriodCol[] = useMemo(() => {
-    const cols: PeriodCol[] = [];
-    const today = new Date();
-    const nowYear = today.getFullYear();
-    const nowMonth = today.getMonth() + 1;
-    const nowSprint = today.getDate() <= 15 ? 1 : 2;
-    const nowVal = nowYear * 24 + (nowMonth - 1) * 2 + nowSprint;
+  // Generate visible week columns. Anchor the window to the first week of the *current
+  // sprint* (not the current calendar week) so the leading column is always the current
+  // sprint rather than a partially-elapsed previous one. periodOffset then shifts by weeks.
+  const weeks: WeekInfo[] = useMemo(() => {
+    const anchor = firstWeekOfCurrentSprint(overlaySprintLength);
+    const start = new Date(anchor.startDate + 'T00:00:00Z');
+    start.setUTCDate(start.getUTCDate() + periodOffset * 7);
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + (WEEKS_VISIBLE - 1) * 7);
+    return getWeeksInRange(start, end).slice(0, WEEKS_VISIBLE);
+  }, [periodOffset, overlaySprintLength]);
 
-    const hasEmployeeFilter = selectedMemberIds.size > 0 && !selectedMemberIds.has('__none__');
-    const memberCount = displayedMembers.length || 1;
-
-    // Calculate how many periods fit on screen based on member count
-    // Use window width dynamically, fallback to 1920 for wide screens
-    const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
-    const availableWidth = screenWidth - 200; // subtract project column + padding
-    const periodWidth = memberCount * 58;
-    const fitOnScreen = Math.max(3, Math.floor(availableWidth / periodWidth));
-
-    let startVal = nowVal + periodOffset;
-    // Default: 1 year ahead (24 sprints or 12 months)
-    let periodCount = timeMode === 'sprint' ? 24 : 12;
-
-    if (hasEmployeeFilter) {
-      const memberIds = displayedMembers.map(m => m.id);
-      const memberAllocs = allocations.filter(a => memberIds.includes(a.productManagerId));
-
-      if (memberAllocs.length > 0) {
-        let minVal = Infinity;
-        let maxVal = 0;
-        for (const a of memberAllocs) {
-          const val = a.year * 24 + (a.month - 1) * 2 + a.sprint;
-          if (val < minVal) minVal = val;
-          if (val > maxVal) maxVal = val;
-        }
-
-        if (periodOffset === 0) {
-          // Auto-range: from earliest allocation to latest, minimum 1 year
-          startVal = Math.min(minVal, nowVal);
-          const endVal = Math.max(maxVal, nowVal + (timeMode === 'sprint' ? 24 : 24));
-          const needed = timeMode === 'sprint'
-            ? endVal - startVal + 1
-            : Math.ceil((endVal - startVal + 1) / 2);
-          periodCount = Math.max(periodCount, Math.min(needed, 30));
-        }
-        // When navigating with offset, use fitOnScreen count
-      }
+  // When a single project is focused, use its sprint length for the overlay; else the view default.
+  const effectiveSprintLength: SprintLengthWeeks = useMemo(() => {
+    if (focusedProjectId) {
+      const p = projects.find(pr => pr.id === focusedProjectId);
+      if (p?.sprintLengthWeeks) return p.sprintLengthWeeks;
     }
+    return overlaySprintLength;
+  }, [focusedProjectId, projects, overlaySprintLength]);
 
-    // Convert startVal back to year/month/sprint
-    let year = Math.floor((startVal - 1) / 24);
-    let rem = startVal - (year * 24);
-    let month = Math.floor((rem - 1) / 2) + 1;
-    let sprint = ((rem - 1) % 2) + 1;
-
-    if (timeMode === 'sprint') {
-      for (let i = 0; i < periodCount; i++) {
-        cols.push({
-          key: `${year}-${month}-${sprint}`,
-          label: `${MONTH_NAMES[month - 1]} ${year}`,
-          sublabel: `S${sprint} (${sprint === 1 ? '1-15' : '16-31'})`,
-          year, month, sprint,
-        });
-        sprint++;
-        if (sprint > 2) { sprint = 1; month++; }
-        if (month > 12) { month = 1; year++; }
-      }
-    } else {
-      // For month mode with offset
-      if (!hasEmployeeFilter || periodOffset !== 0) {
-        month += periodOffset;
-        while (month > 12) { month -= 12; year++; }
-        while (month < 1) { month += 12; year--; }
-      }
-      for (let i = 0; i < periodCount; i++) {
-        cols.push({
-          key: `${year}-${month}`,
-          label: `${MONTH_NAMES[month - 1]} ${year}`,
-          sublabel: '',
-          year, month, sprint: 0,
-        });
-        month++;
-        if (month > 12) { month = 1; year++; }
-      }
-    }
-    return cols;
-  }, [timeMode, periodOffset, selectedMemberIds, displayedMembers, allocations]);
+  // Sprint groups for the header band (Month is combined into the Week label to save a row).
+  const sprintGroups = useMemo(
+    () => groupWeeksIntoSprints(weeks, effectiveSprintLength),
+    [weeks, effectiveSprintLength]
+  );
 
   // Key roles for traffic light evaluation (only these determine red/green)
   const KEY_ROLES = ['Product Manager', 'PMO'];
@@ -410,45 +438,185 @@ export default function ProjectMatrixView() {
     });
   }, [projects, projectFilter, statusFilter, lightFilter, onlyAllocated, allocations, selectedMemberIds, displayedMembers, focusedProjectId, missingRoleFilter]);
 
-  // Get allocation(s) for a cell - returns both sprints info for month view
-  const getCellData = (projectId: string, memberId: string, period: PeriodCol) => {
-    if (period.sprint === 0) {
-      // Month view: get both sprints
-      const s1 = allocations.find(a => a.projectId === projectId && a.productManagerId === memberId && a.year === period.year && a.month === period.month && a.sprint === 1);
-      const s2 = allocations.find(a => a.projectId === projectId && a.productManagerId === memberId && a.year === period.year && a.month === period.month && a.sprint === 2);
-      const p1 = s1?.allocationPercentage || 0;
-      const p2 = s2?.allocationPercentage || 0;
-      const hasAny = !!s1 || !!s2;
-      let display = '';
-      if (p1 === p2 && hasAny) display = `${p1}%`;
-      else if (p1 > 0 && p2 === 0) display = `${p1}% ½`;
-      else if (p1 === 0 && p2 > 0) display = `${p2}% ½`;
-      else if (p1 > 0 && p2 > 0) display = `${p1}/${p2}%`;
-      return { hasAny, display, pct: Math.max(p1, p2), s1, s2, editPct: p1 || p2 };
+  // Performance: index allocations once so per-cell lookups are O(1) instead of scanning
+  // the whole array for every project × member × week cell (52 weeks * many members).
+  const allocByCell = useMemo(() => {
+    const m = new Map<string, typeof allocations[number]>();
+    for (const a of allocations) {
+      m.set(`${a.projectId}|${a.productManagerId}|${a.isoYear}|${a.isoWeek}`, a);
     }
-    const alloc = allocations.find(a => a.projectId === projectId && a.productManagerId === memberId && a.year === period.year && a.month === period.month && a.sprint === period.sprint);
+    return m;
+  }, [allocations]);
+
+  // getProjectLightKey scans ALL allocations per call. It was previously called once per
+  // cell (projects × members × sprints), which is the main cause of the multi-second freeze
+  // on sprint navigation. Compute each project's light key ONCE per render instead.
+  const projectLightById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const p of projects) {
+      m.set(p.id, getProjectLightKey(p.id, p.status, p.activityCloseDate));
+    }
+    return m;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projects, allocations, teamMembers]);
+
+  // Suggestions were looked up with Array.find per cell. Index them for O(1) lookups.
+  const suggestionByCell = useMemo(() => {
+    const m = new Map<string, Suggestion>();
+    for (const s of suggestions) {
+      const sw = weekFromLegacySprint(s.year, s.month, s.sprint);
+      m.set(`${s.projectId}|${s.memberId}|${sw.isoYear}|${sw.isoWeek}`, s);
+    }
+    return m;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suggestions]);
+
+  // member|isoYear|isoWeek -> summed allocation percentage across all projects.
+  const memberWeekTotal = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const a of allocations) {
+      const key = `${a.productManagerId}|${a.isoYear}|${a.isoWeek}`;
+      m.set(key, (m.get(key) || 0) + (a.allocationPercentage || 0));
+    }
+    return m;
+  }, [allocations]);
+
+  // Get allocation for a cell (project × member × week) — O(1) map lookup.
+  const getCellData = (projectId: string, memberId: string, week: WeekInfo) => {
+    const alloc = allocByCell.get(`${projectId}|${memberId}|${week.isoYear}|${week.isoWeek}`);
     const pct = alloc?.allocationPercentage || 0;
-    return { hasAny: !!alloc, display: pct > 0 ? `${pct}%` : '', pct, s1: alloc, s2: null, editPct: pct };
+    return { hasAny: !!alloc, display: pct > 0 ? `${pct}%` : '', pct, alloc, editPct: pct };
   };
 
-  // Member total for a period
-  const getMemberTotal = (memberId: string, period: PeriodCol) => {
-    if (period.sprint === 0) {
-      // Month view: average of both sprints
-      const s1Total = allocations.filter(a => a.productManagerId === memberId && a.year === period.year && a.month === period.month && a.sprint === 1).reduce((s, a) => s + (a.allocationPercentage || 0), 0);
-      const s2Total = allocations.filter(a => a.productManagerId === memberId && a.year === period.year && a.month === period.month && a.sprint === 2).reduce((s, a) => s + (a.allocationPercentage || 0), 0);
-      return Math.round((s1Total + s2Total) / 2);
+  // Sprint-level aggregation for a cell (project × member × sprint): average across its weeks
+  // plus a "varies" flag when the weeks don't all share the same percentage.
+  const getSprintCellData = (projectId: string, memberId: string, sprint: Sprint) => {
+    const weeklyPcts = sprint.weeks.map(w => getCellData(projectId, memberId, w).pct);
+    const { average, varies } = aggregateWeeklyValues(weeklyPcts);
+    const hasAny = weeklyPcts.some(p => p > 0);
+    return { hasAny, average, varies, weeklyPcts };
+  };
+
+  // Save per-week values from the sprint sub-editor (creates/updates/removes each week
+  // independently so unedited weeks with existing data are preserved as-is).
+  const saveSpanEditor = (projectId: string, memberId: string, sprint: Sprint, valuesPerWeek: number[], scope: 'current' | 'future' = 'current') => {
+    sprint.weeks.forEach((week, i) => {
+      const pct = valuesPerWeek[i];
+      const existing = allocations.find(a =>
+        a.projectId === projectId && a.productManagerId === memberId &&
+        a.isoYear === week.isoYear && a.isoWeek === week.isoWeek
+      );
+      if (pct > 0) {
+        if (existing) {
+          updateAllocation(existing.id, { allocationPercentage: pct, allocationDays: Math.round((pct / 100) * workingDaysInWeek(week)) }, currentUser.email);
+        } else {
+          const legacy = { year: week.year, month: week.month, sprint: parseInt(week.startDate.slice(8, 10), 10) <= 15 ? 1 : 2 };
+          addAllocation({
+            projectId, productManagerId: memberId,
+            isoYear: week.isoYear, isoWeek: week.isoWeek, weekStartDate: week.startDate,
+            year: legacy.year, month: legacy.month, sprint: legacy.sprint,
+            allocationPercentage: pct, allocationDays: Math.round((pct / 100) * workingDaysInWeek(week)), isPlanned: true,
+          }, currentUser.email);
+        }
+      } else if (existing) {
+        deleteAllocation(existing.id, currentUser.email);
+      }
+    });
+
+    // "Future" scope: also apply this sprint's uniform % to every later existing allocation
+    // for the same member+project (weeks strictly after this sprint's last week).
+    if (scope === 'future' && sprint.weeks.length > 0) {
+      const pct = valuesPerWeek[0] || 0;
+      const afterDate = sprint.weeks[sprint.weeks.length - 1].startDate;
+      allocations
+        .filter(a =>
+          a.projectId === projectId && a.productManagerId === memberId &&
+          (a.weekStartDate || '') > afterDate
+        )
+        .forEach(a => {
+          const wk = buildWeek(new Date((a.weekStartDate || '') + 'T00:00:00Z'));
+          if (pct > 0) {
+            updateAllocation(a.id, { allocationPercentage: pct, allocationDays: Math.round((pct / 100) * workingDaysInWeek(wk)) }, currentUser.email);
+          } else {
+            deleteAllocation(a.id, currentUser.email);
+          }
+        });
     }
-    return allocations.filter(a => a.productManagerId === memberId && a.year === period.year && a.month === period.month && a.sprint === period.sprint).reduce((s, a) => s + (a.allocationPercentage || 0), 0);
+    setSpanEditor(null);
   };
 
-  const openCell = (projectId: string, memberId: string, period: PeriodCol) => {
+  // Save this sprint's per-week values, then also fill the spanned future weeks with a
+  // uniform % (used when adding a new allocation and the user opts to span forward).
+  const saveSpanEditorWithSpan = (
+    projectId: string,
+    memberId: string,
+    sprint: Sprint,
+    valuesPerWeek: number[],
+    extraWeeks: WeekInfo[],
+    pct: number
+  ) => {
+    saveSpanEditor(projectId, memberId, sprint, valuesPerWeek);
+    if (pct > 0) {
+      extraWeeks.forEach(week => {
+        const existing = allocations.find(a =>
+          a.projectId === projectId && a.productManagerId === memberId &&
+          a.isoYear === week.isoYear && a.isoWeek === week.isoWeek
+        );
+        const legacy = { year: week.year, month: week.month, sprint: parseInt(week.startDate.slice(8, 10), 10) <= 15 ? 1 : 2 };
+        if (existing) {
+          updateAllocation(existing.id, { allocationPercentage: pct, allocationDays: Math.round((pct / 100) * workingDaysInWeek(week)) }, currentUser.email);
+        } else {
+          addAllocation({
+            projectId, productManagerId: memberId,
+            isoYear: week.isoYear, isoWeek: week.isoWeek, weekStartDate: week.startDate,
+            year: legacy.year, month: legacy.month, sprint: legacy.sprint,
+            allocationPercentage: pct, allocationDays: Math.round((pct / 100) * workingDaysInWeek(week)), isPlanned: true,
+          }, currentUser.email);
+        }
+      });
+    }
+    setSpanEditor(null);
+  };
+
+  const clearSpanEditor = (projectId: string, memberId: string, sprint: Sprint, scope: 'current' | 'future' = 'current') => {
+    if (scope === 'future' && sprint.weeks.length > 0) {
+      // Remove this sprint's allocations plus every later one for this member+project.
+      const fromDate = sprint.weeks[0].startDate;
+      const toDelete = allocations.filter(a =>
+        a.projectId === projectId && a.productManagerId === memberId &&
+        (a.weekStartDate || '') >= fromDate
+      );
+      if (!confirm(`Remove ${toDelete.length} allocation${toDelete.length !== 1 ? 's' : ''} for this member on this project, from this sprint onward?`)) return;
+      toDelete.forEach(a => deleteAllocation(a.id, currentUser.email));
+      setSpanEditor(null);
+      return;
+    }
+    if (!confirm(`Clear all allocations for this sprint (${sprint.weeks.length} week${sprint.weeks.length > 1 ? 's' : ''})?`)) return;
+    sprint.weeks.forEach(week => {
+      const existing = allocations.find(a =>
+        a.projectId === projectId && a.productManagerId === memberId &&
+        a.isoYear === week.isoYear && a.isoWeek === week.isoWeek
+      );
+      if (existing) deleteAllocation(existing.id, currentUser.email);
+    });
+    setSpanEditor(null);
+  };
+
+  // Member total for a week — O(1) map lookup.
+  const getMemberTotal = (memberId: string, week: WeekInfo) => {
+    return memberWeekTotal.get(`${memberId}|${week.isoYear}|${week.isoWeek}`) || 0;
+  };
+
+  const openCell = (projectId: string, memberId: string, week: WeekInfo) => {
     if (!canWrite) return;
-    const data = getCellData(projectId, memberId, period);
-    setEditCell({ projectId, memberId, periodKey: period.key });
+    const data = getCellData(projectId, memberId, week);
+    setEditCell({ projectId, memberId, periodKey: weekKey(week) });
+    setEditSprintCount(1);
+    setSpanMode('sprints');
+    setSpanEndDate('');
+    setEditScope('current');
     if (data.hasAny) {
-      // For month view, use s1 id if available, else s2
-      setEditAllocId(data.s1?.id || data.s2?.id || null);
+      setEditAllocId(data.alloc?.id || null);
       setEditPercentage(data.editPct.toString());
     } else {
       setEditAllocId(null);
@@ -456,68 +624,111 @@ export default function ProjectMatrixView() {
     }
   };
 
+  // Weeks covered by the current edit, starting at the clicked week, spanning
+  // editSprintCount sprints (each sprint = the project's sprintLengthWeeks in actual weeks).
+  const editSpanWeeks = useMemo((): WeekInfo[] => {
+    if (!editCell) return [];
+    const startWeek = weeks.find(w => weekKey(w) === editCell.periodKey);
+    if (!startWeek) return [];
+    const start = new Date(startWeek.startDate + 'T00:00:00Z');
+
+    // Editing an existing allocation: scope drives the span, not the sprint count.
+    if (editAllocId) {
+      if (editScope === 'future') {
+        // Every week for this member+project from this week onward that already has an
+        // allocation (edit = change what exists, don't create new future weeks).
+        return allocations
+          .filter(a =>
+            a.projectId === editCell.projectId && a.productManagerId === editCell.memberId &&
+            (a.weekStartDate || '') >= startWeek.startDate
+          )
+          .map(a => buildWeek(new Date((a.weekStartDate || '') + 'T00:00:00Z')))
+          .sort((x, y) => x.startDate.localeCompare(y.startDate));
+      }
+      return [startWeek];
+    }
+
+    // Adding: span by end date or by a number of sprints.
+    if (spanMode === 'endDate') {
+      if (!spanEndDate || spanEndDate < startWeek.startDate) return [startWeek];
+      const end = new Date(spanEndDate + 'T00:00:00Z');
+      return getWeeksInRange(start, end);
+    }
+    const project = projects.find(p => p.id === editCell.projectId);
+    const sprintLengthWeeks = project?.sprintLengthWeeks ?? 2;
+    const totalWeeks = editSprintCount * sprintLengthWeeks;
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + (totalWeeks - 1) * 7);
+    return getWeeksInRange(start, end).slice(0, totalWeeks);
+  }, [editCell, editAllocId, editScope, spanMode, spanEndDate, editSprintCount, weeks, projects, allocations]);
+
+  // How many of the spanned weeks already have an allocation for this member+project
+  // (used to warn about overwriting existing data).
+  const editOverlapCount = useMemo(() => {
+    if (!editCell) return 0;
+    return editSpanWeeks.filter(w =>
+      allocations.some(a =>
+        a.projectId === editCell.projectId && a.productManagerId === editCell.memberId &&
+        a.isoYear === w.isoYear && a.isoWeek === w.isoWeek
+      )
+    ).length;
+  }, [editCell, editSpanWeeks, allocations]);
+
   const handleSave = () => {
     if (!editCell || !editPercentage) return;
     const pct = parseInt(editPercentage);
     if (isNaN(pct) || pct < 0 || pct > 100) { alert('Enter 0-100'); return; }
-    const period = periods.find(p => p.key === editCell.periodKey);
-    if (!period) return;
+    if (editSpanWeeks.length === 0) return;
 
-    if (period.sprint === 0) {
-      // Month view: write to BOTH sprints
-      for (const s of [1, 2]) {
-        const existing = allocations.find(a =>
-          a.projectId === editCell.projectId && a.productManagerId === editCell.memberId &&
-          a.year === period.year && a.month === period.month && a.sprint === s
-        );
-        if (existing) {
-          updateAllocation(existing.id, { allocationPercentage: pct, allocationDays: (pct / 100) * 10 }, currentUser.email);
-        } else {
-          addAllocation({
-            projectId: editCell.projectId, productManagerId: editCell.memberId,
-            year: period.year, month: period.month, sprint: s,
-            allocationPercentage: pct, allocationDays: (pct / 100) * 10, isPlanned: true,
-          }, currentUser.email);
-        }
-      }
-    } else {
-      // Sprint view: write to single sprint
-      if (editAllocId) {
-        updateAllocation(editAllocId, { allocationPercentage: pct, allocationDays: (pct / 100) * 10 }, currentUser.email);
+    // When editing an existing allocation the scope radio already communicates intent, so
+    // skip the "overwrite" prompt. Only warn when adding a new span over existing weeks.
+    if (!editAllocId && editOverlapCount > 0 && !confirm(
+      `${editOverlapCount} of the ${editSpanWeeks.length} week(s) in this span already ${editOverlapCount === 1 ? 'has' : 'have'} an allocation for this member on this project. ` +
+      `Continuing will overwrite ${editOverlapCount === 1 ? 'it' : 'them'} with ${pct}%. Continue?`
+    )) {
+      return;
+    }
+
+    editSpanWeeks.forEach(week => {
+      const existing = allocations.find(a =>
+        a.projectId === editCell.projectId && a.productManagerId === editCell.memberId &&
+        a.isoYear === week.isoYear && a.isoWeek === week.isoWeek
+      );
+      const legacy = { year: week.year, month: week.month, sprint: parseInt(week.startDate.slice(8, 10), 10) <= 15 ? 1 : 2 };
+      if (existing) {
+        updateAllocation(existing.id, { allocationPercentage: pct, allocationDays: Math.round((pct / 100) * workingDaysInWeek(week)) }, currentUser.email);
       } else {
         addAllocation({
           projectId: editCell.projectId, productManagerId: editCell.memberId,
-          year: period.year, month: period.month, sprint: period.sprint,
-          allocationPercentage: pct, allocationDays: (pct / 100) * 10, isPlanned: true,
+          isoYear: week.isoYear, isoWeek: week.isoWeek, weekStartDate: week.startDate,
+          year: legacy.year, month: legacy.month, sprint: legacy.sprint,
+          allocationPercentage: pct, allocationDays: Math.round((pct / 100) * workingDaysInWeek(week)), isPlanned: true,
         }, currentUser.email);
       }
-    }
+    });
     closeEdit();
   };
 
   const handleDelete = () => {
-    if (!editCell) return;
-    const period = periods.find(p => p.key === editCell.periodKey);
-    if (!period) return;
-
-    if (!confirm('Remove this allocation?')) return;
-
-    if (period.sprint === 0) {
-      // Month view: delete BOTH sprints
-      for (const s of [1, 2]) {
-        const existing = allocations.find(a =>
-          a.projectId === editCell.projectId && a.productManagerId === editCell.memberId &&
-          a.year === period.year && a.month === period.month && a.sprint === s
-        );
-        if (existing) deleteAllocation(existing.id, currentUser.email);
-      }
+    if (!editCell || !editAllocId) return;
+    const startWeek = weeks.find(w => weekKey(w) === editCell.periodKey);
+    if (editScope === 'future' && startWeek) {
+      // Remove this and every later allocation for the same member+project.
+      const toDelete = allocations.filter(a =>
+        a.projectId === editCell.projectId && a.productManagerId === editCell.memberId &&
+        (a.weekStartDate || '') >= startWeek.startDate
+      );
+      toDelete.forEach(a => deleteAllocation(a.id, currentUser.email));
     } else {
-      if (editAllocId) deleteAllocation(editAllocId, currentUser.email);
+      deleteAllocation(editAllocId, currentUser.email);
     }
     closeEdit();
   };
 
-  const closeEdit = () => { setEditCell(null); setEditAllocId(null); setEditPercentage(''); };
+  const closeEdit = () => {
+    setEditCell(null); setEditAllocId(null); setEditPercentage(''); setEditSprintCount(1);
+    setSpanMode('sprints'); setSpanEndDate(''); setEditScope('current');
+  };
 
   // Focus on a project: show only that project's allocated members
   const handleFocusProject = (projectId: string) => {
@@ -536,22 +747,12 @@ export default function ProjectMatrixView() {
 
   const colW = 58;
   const projW = 160;
-  const memberCount = displayedMembers.length;
+  const memberCount = pagedMembers.length;
 
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 130px)' }}>
       {/* Toolbar */}
       <div className="flex items-center gap-3 px-4 py-2 bg-white border-b flex-wrap">
-        {/* Sprint/Month toggle - hidden, always sprint for now */}
-        {false && (
-        <div className="flex bg-gray-100 rounded p-0.5">
-          <button onClick={() => { setTimeMode('sprint'); setPeriodOffset(0); }}
-            className={`px-3 py-1 rounded text-xs font-medium ${timeMode === 'sprint' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}>Sprint</button>
-          <button onClick={() => { setTimeMode('month'); setPeriodOffset(0); }}
-            className={`px-3 py-1 rounded text-xs font-medium ${timeMode === 'month' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}>Month</button>
-        </div>
-        )}
-
         {/* Filters - hidden for member users */}
         {!isMemberTeam && (
         <div className="flex items-center gap-2">
@@ -633,7 +834,8 @@ export default function ProjectMatrixView() {
                     className="w-full px-2 py-1 border rounded text-xs" autoFocus />
                 </div>
                 <div className="px-2 py-1 border-b flex gap-2 bg-gray-50">
-                  <button onClick={() => setSelectedManagerIds(new Set(availableManagers.managers.map(m => m.id)))} className="text-[10px] text-blue-600 hover:underline font-medium">Select All</button>
+                  <button onClick={() => { setSelectedManagerIds(new Set(availableManagers.managers.map(m => m.id))); setSelectedMemberIds(new Set()); }} className="text-[10px] text-blue-600 hover:underline font-medium">Select All</button>
+                  <button onClick={() => { setSelectedManagerIds(new Set()); setSelectedMemberIds(new Set()); }} className="text-[10px] text-blue-600 hover:underline font-medium">Deselect All</button>
                   <button onClick={() => setShowManagerDropdown(false)} className="text-[10px] text-gray-500 hover:underline ml-auto">Close</button>
                 </div>
                 <div className="max-h-52 overflow-y-auto">
@@ -750,7 +952,9 @@ export default function ProjectMatrixView() {
         </div>
         )}
         {!isMemberTeam && (
-        <span className="text-xs text-gray-500">{filteredProjects.length} projects · {displayedMembers.length} members</span>
+        <span className="text-xs text-gray-500 flex items-center gap-2">
+          <span>{filteredProjects.length} projects · {displayedMembers.length} members</span>
+        </span>
         )}
         {!isMemberTeam && (projectFilter || lightFilter.has('gray') || lightFilter.size !== 3 || onlyAllocated || selectedMemberIds.size > 0 || focusedProjectId || missingRoleFilter !== 'none') && (
           <button onClick={() => {
@@ -784,10 +988,11 @@ export default function ProjectMatrixView() {
             <span className="text-xs text-purple-600 font-medium animate-pulse">✨ {suggestions.length} suggestions</span>
             <button onClick={() => {
               suggestions.forEach(s => {
+                const sw = weekFromLegacySprint(s.year, s.month, s.sprint);
                 addAllocation({
                   projectId: s.projectId, productManagerId: s.memberId,
                   year: s.year, month: s.month, sprint: s.sprint,
-                  allocationPercentage: s.percentage, allocationDays: (s.percentage / 100) * 10, isPlanned: true,
+                  allocationPercentage: s.percentage, allocationDays: Math.round((s.percentage / 100) * workingDaysInWeek(sw)), isPlanned: true,
                 }, currentUser.email);
               });
               setSuggestions([]);
@@ -803,30 +1008,79 @@ export default function ProjectMatrixView() {
 
       {/* Period navigation - above the matrix */}
       <div className="flex items-center gap-1 px-4 py-1.5 bg-gray-50 border-b">
-        <button onClick={() => setPeriodOffset(o => o - 3)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Previous periods">
+        <button onClick={() => setPeriodOffset(o => o - 4)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Back 4 weeks">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
         </button>
-        <button onClick={() => setPeriodOffset(o => o - 1)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Previous">
+        <button onClick={() => setPeriodOffset(o => o - 1)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Back 1 week">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
         </button>
         <button onClick={() => setPeriodOffset(0)} className="px-2 py-1 rounded text-xs font-medium text-gray-700 hover:bg-gray-200" title="Go to current">Today</button>
-        <button onClick={() => setPeriodOffset(o => o + 1)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Next">
+        <button onClick={() => setPeriodOffset(o => o + 1)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Forward 1 week">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </button>
-        <button onClick={() => setPeriodOffset(o => o + 3)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Next periods">
+        <button onClick={() => setPeriodOffset(o => o + 4)} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Forward 4 weeks">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
         </button>
+
+        {/* Employee pager — shown in-context next to the time navigation when there are more
+            members than fit one page. One shared page applies to all sprints so each project
+            row stays consistent. */}
+        {!isMemberTeam && memberPageCount > 1 && (
+          <div className="flex items-center gap-1 ml-3 px-2 py-0.5 bg-blue-50 border border-blue-200 rounded-md">
+            <span className="text-[10px] font-semibold text-blue-700 mr-1">Employees</span>
+            <button onClick={() => setMemberPage(0)} disabled={safeMemberPage === 0}
+              className="px-1 text-blue-600 disabled:opacity-30 hover:bg-blue-100 rounded" title="First">«</button>
+            <button onClick={() => setMemberPage(p => Math.max(0, p - 1))} disabled={safeMemberPage === 0}
+              className="px-1 text-blue-600 disabled:opacity-30 hover:bg-blue-100 rounded" title="Previous employees">‹</button>
+            <span className="text-[11px] font-medium text-blue-800 whitespace-nowrap">
+              {safeMemberPage * MEMBERS_PER_PAGE + 1}–{Math.min((safeMemberPage + 1) * MEMBERS_PER_PAGE, displayedMembers.length)} of {displayedMembers.length}
+            </span>
+            <button onClick={() => setMemberPage(p => Math.min(memberPageCount - 1, p + 1))} disabled={safeMemberPage >= memberPageCount - 1}
+              className="px-1 text-blue-600 disabled:opacity-30 hover:bg-blue-100 rounded" title="Next employees">›</button>
+            <button onClick={() => setMemberPage(memberPageCount - 1)} disabled={safeMemberPage >= memberPageCount - 1}
+              className="px-1 text-blue-600 disabled:opacity-30 hover:bg-blue-100 rounded" title="Last">»</button>
+          </div>
+        )}
+        {/* Week / Sprint display level — toggle temporarily disabled, Sprint is always shown */}
+        {VIEW_LEVEL_TOGGLE_ENABLED && (
+          <div className="flex items-center border rounded-lg overflow-hidden ml-3">
+            <button onClick={() => setViewLevel('week')}
+              className={`px-2.5 py-1 text-[11px] font-medium ${viewLevel === 'week' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+              Week
+            </button>
+            <button onClick={() => setViewLevel('sprint')}
+              className={`px-2.5 py-1 text-[11px] font-medium ${viewLevel === 'sprint' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+              Sprint
+            </button>
+          </div>
+        )}
+        {/* Sprint overlay controls — only rendered when there's something to show (the
+            Week-level "Sprint row" toggle, or a focused project's sprint length). Otherwise
+            the container would render as an empty white pill next to the nav arrows. */}
+        {(viewLevel === 'week' || ((viewLevel === 'sprint' || showSprintRow) && focusedProjectId)) && (
+          <div className="flex items-center gap-1.5 border rounded-lg px-2 py-1 bg-white">
+            {viewLevel === 'week' && (
+              <label className="flex items-center gap-1 text-[10px] text-gray-600 font-medium cursor-pointer select-none">
+                <input type="checkbox" checked={showSprintRow} onChange={e => setShowSprintRow(e.target.checked)} className="accent-blue-600" />
+                Sprint row
+              </label>
+            )}
+            {(viewLevel === 'sprint' || showSprintRow) && focusedProjectId && (
+              <span className="text-[9px] text-blue-500">project: {effectiveSprintLength}w</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Matrix */}
       <div className="flex-1 overflow-x-scroll overflow-y-auto">
-        <table className="border-collapse" style={{ minWidth: projW + (periods.length * memberCount * colW) }}>
+        <table className="border-collapse" style={{ minWidth: projW + ((viewLevel === 'week' ? weeks.length : sprintGroups.length) * memberCount * colW) }}>
           <thead className="sticky top-0 z-10">
-            {displayedMembers.length === 1 ? (
+            {pagedMembers.length === 1 ? (
               <>
                 {/* Single employee: clean header */}
                 <tr className="bg-blue-50">
-                  <th rowSpan={4} className="border-b border-r bg-gray-100 text-left px-2 py-1 sticky left-0 z-20 align-top"
+                  <th rowSpan={showSprintRow ? 4 : 3} className="border-b border-r bg-gray-100 text-left px-2 py-1 sticky left-0 z-20 align-top"
                     style={{ width: projW, minWidth: projW }}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-semibold text-gray-700">Active Projects</span>
@@ -843,62 +1097,81 @@ export default function ProjectMatrixView() {
                       onChange={e => setProjectFilter(e.target.value)}
                       className="w-full px-1.5 py-1 border rounded text-[10px] bg-white" />
                   </th>
-                  <th colSpan={periods.length} className="border-b px-3 py-1.5 text-left">
-                    <span className="text-xs font-bold text-blue-700">{displayedMembers[0].fullName}</span>
-                    <span className="text-[10px] text-gray-400 ml-2">{displayedMembers[0].role}</span>
+                  <th colSpan={viewLevel === 'week' ? weeks.length : sprintGroups.length} className="border-b px-3 py-1.5 text-left">
+                    <span className="text-xs font-bold text-blue-700">{pagedMembers[0].fullName}</span>
+                    <span className="text-[10px] text-gray-400 ml-2">{pagedMembers[0].role}</span>
                     {!isMemberTeam && <button onClick={() => setSelectedMemberIds(new Set())} className="ml-3 text-[9px] text-blue-500 hover:underline">[Show all]</button>}
                   </th>
                 </tr>
-                {/* Month row: group periods by month */}
-                <tr className="bg-gray-50">
-                  {(() => {
-                    const monthGroups: { label: string; count: number }[] = [];
-                    let prev = '';
-                    for (const p of periods) {
-                      const key = `${p.label}`;
-                      if (key === prev) {
-                        monthGroups[monthGroups.length - 1].count++;
-                      } else {
-                        monthGroups.push({ label: key, count: 1 });
-                        prev = key;
-                      }
-                    }
-                    return monthGroups.map((g, i) => (
-                      <th key={i} colSpan={g.count} className={`border-b border-r text-center py-1 text-[10px] font-bold text-gray-800 ${i > 0 ? 'border-l' : ''}`}>
-                        {g.label}
-                      </th>
-                    ));
-                  })()}
-                </tr>
-                {/* Sprint row */}
-                <tr className="bg-gray-50">
-                  {periods.map((period, pIdx) => (
-                    <th key={period.key} className={`border-b border-r text-center py-0.5 text-[9px] text-gray-500 ${pIdx > 0 ? '' : ''}`}
-                      style={{ width: colW, minWidth: colW }}>
-                      {period.sublabel || `S${period.sprint}`}
-                    </th>
-                  ))}
-                </tr>
-                {/* Capacity row */}
-                <tr className="bg-gray-50">
-                  {periods.map((period, pIdx) => {
-                    const total = getMemberTotal(displayedMembers[0].id, period);
-                    const cap = displayedMembers[0].capacity ?? 100;
-                    const color = total > (cap * overCapacityThreshold / 100) ? 'text-red-600 bg-red-50' : total >= (cap * underCapacityThreshold / 100) ? 'text-green-700 bg-green-50' : total > 0 ? 'text-yellow-700 bg-yellow-50' : 'text-gray-400 bg-gray-50';
-                    return (
-                      <th key={`${period.key}-tot`} className={`border-b border-r text-center px-0.5 py-0.5 ${color}`}
-                        style={{ width: colW, minWidth: colW }}>
-                        <span className="text-[9px] font-bold">{total}%</span>
-                      </th>
-                    );
-                  })}
-                </tr>
+                {viewLevel === 'week' ? (
+                  <>
+                    {/* Month + Week row (combined: "Aug 2026 · W2" / "09-13") */}
+                    <tr className="bg-gray-50">
+                      {weeks.map(w => (
+                        <th key={weekKey(w)} className="border-b border-r border-l-2 border-l-gray-300 text-center py-1 text-[9px] text-gray-600" style={{ width: colW, minWidth: colW }}>
+                          <div className="font-semibold">{getMonthWeekLabel(w)}</div>
+                          <div className="text-[8px] text-gray-400">{getWeekDayRangeLabel(w)}</div>
+                        </th>
+                      ))}
+                    </tr>
+                    {/* Sprint row (optional) */}
+                    {showSprintRow && (
+                      <tr className="bg-blue-100 border-b-2 border-blue-300">
+                        {sprintGroups.map((s, i) => (
+                          <th key={i} colSpan={s.weeks.length} className="border-b border-r border-l-2 border-l-blue-300 text-center py-1 text-[10px] font-bold text-blue-800">
+                            <div>{getSprintDateLabel(s)} <span className="text-[8px] font-semibold text-blue-600">{getSprintYearLabel(s)}</span></div>
+                            <div>{getSprintDayRangeLabel(s)}</div>
+                          </th>
+                        ))}
+                      </tr>
+                    )}
+                    {/* Capacity row */}
+                    <tr className="bg-gray-50">
+                      {weeks.map(w => {
+                        const total = getMemberTotal(pagedMembers[0].id, w);
+                        const cap = pagedMembers[0].capacity ?? 100;
+                        const color = total > (cap * overCapacityThreshold / 100) ? 'text-red-600 bg-red-50' : total >= (cap * underCapacityThreshold / 100) ? 'text-green-700 bg-green-50' : total > 0 ? 'text-yellow-700 bg-yellow-50' : 'text-gray-400 bg-gray-50';
+                        return (
+                          <th key={`${weekKey(w)}-tot`} className={`border-b border-r text-center px-0.5 py-0.5 ${color}`} style={{ width: colW, minWidth: colW }}>
+                            <span className="text-[9px] font-bold">{total}%</span>
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </>
+                ) : (
+                  <>
+                    {/* Sprint row (one column per sprint), dominant styling */}
+                    <tr className="bg-blue-100 border-b-2 border-blue-300">
+                      {sprintGroups.map((s, i) => (
+                        <th key={i} className="border-b border-r border-l-2 border-l-blue-300 text-center py-1.5 text-[11px] font-bold text-blue-800" style={{ width: colW, minWidth: colW }}>
+                          <div>{getSprintDateLabel(s)} <span className="text-[9px] font-semibold text-blue-600">{getSprintYearLabel(s)}</span></div>
+                          <div>{getSprintDayRangeLabel(s)}</div>
+                        </th>
+                      ))}
+                    </tr>
+                    {/* Capacity row */}
+                    <tr className="bg-gray-50">
+                      {sprintGroups.map((s, i) => {
+                        const weeklyTotals = s.weeks.map(w => getMemberTotal(pagedMembers[0].id, w));
+                        const { average } = aggregateWeeklyValues(weeklyTotals);
+                        const cap = pagedMembers[0].capacity ?? 100;
+                        const color = average > (cap * overCapacityThreshold / 100) ? 'text-red-600 bg-red-50' : average >= (cap * underCapacityThreshold / 100) ? 'text-green-700 bg-green-50' : average > 0 ? 'text-yellow-700 bg-yellow-50' : 'text-gray-400 bg-gray-50';
+                        return (
+                          <th key={i} className={`border-b border-r text-center px-0.5 py-0.5 ${color}`} style={{ width: colW, minWidth: colW }}>
+                            <span className="text-[9px] font-bold">{average}%</span>
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </>
+                )}
               </>
             ) : (
               <>
-            {/* Row 1: Period headers spanning all members */}
+            {/* Row 1: Month+Week (or Sprint) band spanning all members */}
             <tr className="bg-gray-100">
-              <th rowSpan={3} className="border-b border-r bg-gray-100 text-left px-2 py-1 sticky left-0 z-20 align-top"
+              <th rowSpan={viewLevel === 'week' ? (showSprintRow ? 4 : 3) : 3} className="border-b border-r bg-gray-100 text-left px-2 py-1 sticky left-0 z-20 align-bottom"
                 style={{ width: projW, minWidth: projW }}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-semibold text-gray-700">Active Projects</span>
@@ -915,18 +1188,34 @@ export default function ProjectMatrixView() {
                   onChange={e => setProjectFilter(e.target.value)}
                   className="w-full px-1.5 py-1 border rounded text-[10px] bg-white" />
               </th>
-              {periods.map((period, pIdx) => (
-                <th key={period.key} colSpan={memberCount} className={`border-b text-center py-1.5 bg-gray-100 ${pIdx > 0 ? 'border-l-2 border-l-gray-400' : ''} border-r`}>
-                  <span className="text-[10px] font-bold text-gray-800">{period.label}</span>
-                  {period.sublabel && <span className="text-[9px] text-gray-500 ml-1">{period.sublabel}</span>}
+              {viewLevel === 'week' ? weeks.map(w => (
+                <th key={weekKey(w)} colSpan={memberCount} className="border-b border-r border-l-2 border-l-gray-400 text-center py-1 bg-gray-100 text-[10px] font-bold text-gray-800">
+                  <div>{getMonthWeekLabel(w)}</div>
+                  <div className="text-[9px] font-normal text-gray-500">{getWeekDayRangeLabel(w)}</div>
+                </th>
+              )) : sprintGroups.map((s, i) => (
+                <th key={i} colSpan={memberCount} className="border-b border-r border-l-2 border-l-blue-300 text-center py-1.5 bg-blue-100 text-[11px] font-bold text-blue-800">
+                  <div>{getSprintDateLabel(s)} <span className="text-[9px] font-semibold text-blue-600">{getSprintYearLabel(s)}</span></div>
+                  <div>{getSprintDayRangeLabel(s)}</div>
                 </th>
               ))}
             </tr>
-            {/* Row 2: Employee names under each period */}
+            {/* Row 2: Sprint band (week mode only, optional) */}
+            {viewLevel === 'week' && showSprintRow && (
+              <tr className="bg-blue-100 border-b-2 border-blue-300">
+                {sprintGroups.map((s, i) => (
+                  <th key={i} colSpan={s.weeks.length * memberCount} className="border-b border-r border-l-2 border-l-blue-300 text-center py-1 text-[10px] font-bold text-blue-800">
+                    <div>{getSprintDateLabel(s)} <span className="text-[8px] font-semibold text-blue-600">{getSprintYearLabel(s)}</span></div>
+                    <div>{getSprintDayRangeLabel(s)}</div>
+                  </th>
+                ))}
+              </tr>
+            )}
+            {/* Member names */}
             <tr className="bg-gray-50">
-              {periods.map((period, pIdx) =>
-                displayedMembers.map((member, mIdx) => (
-                  <th key={`${period.key}-${member.id}`} className={`border-b border-r text-center px-0.5 py-1 cursor-pointer hover:bg-blue-50 ${pIdx > 0 && mIdx === 0 ? 'border-l-2 border-l-gray-400' : ''} ${selectedMemberIds.size === 1 && selectedMemberIds.has(member.id) ? 'bg-blue-100' : ''}`}
+              {(viewLevel === 'week' ? weeks : sprintGroups).map((period, wIdx) =>
+                pagedMembers.map((member, mIdx) => (
+                  <th key={`${viewLevel === 'week' ? weekKey(period as WeekInfo) : wIdx}-${member.id}`} className={`border-b border-r text-center px-0.5 py-1 cursor-pointer hover:bg-blue-50 ${wIdx > 0 && mIdx === 0 ? 'border-l-2 border-l-gray-400' : ''} ${selectedMemberIds.size === 1 && selectedMemberIds.has(member.id) ? 'bg-blue-100' : ''}`}
                     style={{ width: colW, minWidth: colW }} title={`${member.fullName} (${member.role}) — Click to filter`}
                     onClick={() => {
                       if (selectedMemberIds.size === 1 && selectedMemberIds.has(member.id)) {
@@ -941,17 +1230,30 @@ export default function ProjectMatrixView() {
                 ))
               )}
             </tr>
-            {/* Row 3: Capacity totals */}
+            {/* Capacity totals per member per period (leaf row above data) */}
             <tr className="bg-gray-50">
-              {periods.map((period, pIdx) =>
-                displayedMembers.map((member, mIdx) => {
-                  const total = getMemberTotal(member.id, period);
+              {viewLevel === 'week' ? weeks.map((w, wIdx) =>
+                pagedMembers.map((member, mIdx) => {
+                  const total = getMemberTotal(member.id, w);
                   const cap = member.capacity ?? 100;
                   const color = total > (cap * overCapacityThreshold / 100) ? 'text-red-600 bg-red-50' : total >= (cap * underCapacityThreshold / 100) ? 'text-green-700 bg-green-50' : total > 0 ? 'text-yellow-700 bg-yellow-50' : 'text-gray-400 bg-gray-50';
                   return (
-                    <th key={`${period.key}-${member.id}-tot`} className={`border-b border-r text-center px-0.5 py-0.5 ${color} ${pIdx > 0 && mIdx === 0 ? 'border-l-2 border-l-gray-400' : ''}`}
-                      style={{ width: colW, minWidth: colW }}>
+                    <th key={`${weekKey(w)}-${member.id}-tot`} className={`border-b border-r text-center px-0.5 py-0.5 ${color} ${wIdx > 0 && mIdx === 0 ? 'border-l-2 border-l-gray-400' : ''}`}
+                      style={{ width: colW, minWidth: colW }} title={`${member.fullName} total this week`}>
                       <span className="text-[9px] font-bold">{total}%</span>
+                    </th>
+                  );
+                })
+              ) : sprintGroups.map((s, sIdx) =>
+                pagedMembers.map((member, mIdx) => {
+                  const weeklyTotals = s.weeks.map(w => getMemberTotal(member.id, w));
+                  const { average } = aggregateWeeklyValues(weeklyTotals);
+                  const cap = member.capacity ?? 100;
+                  const color = average > (cap * overCapacityThreshold / 100) ? 'text-red-600 bg-red-50' : average >= (cap * underCapacityThreshold / 100) ? 'text-green-700 bg-green-50' : average > 0 ? 'text-yellow-700 bg-yellow-50' : 'text-gray-400 bg-gray-50';
+                  return (
+                    <th key={`${sIdx}-${member.id}-tot`} className={`border-b border-r text-center px-0.5 py-0.5 ${color} ${sIdx > 0 && mIdx === 0 ? 'border-l-2 border-l-gray-400' : ''}`}
+                      style={{ width: colW, minWidth: colW }} title={`${member.fullName} average this sprint`}>
+                      <span className="text-[9px] font-bold">{average}%</span>
                     </th>
                   );
                 })
@@ -968,8 +1270,9 @@ export default function ProjectMatrixView() {
                   <div className="flex items-center gap-1">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1">
-                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getProjectLight(project.id, project.status, project.activityCloseDate).color}`}
-                          title={getProjectLight(project.id, project.status, project.activityCloseDate).label} />
+                        {(() => { const lk = projectLightById.get(project.id) || 'gray'; const light = LIGHT_MAP[lk] || LIGHT_MAP.gray; return (
+                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${light.color}`} title={light.label} />
+                        ); })()}
                         {isMemberTeam ? (
                           <span className="text-[10px] font-semibold text-gray-900 truncate">{project.customerName}</span>
                         ) : (
@@ -1036,19 +1339,15 @@ export default function ProjectMatrixView() {
                     )}
                   </div>
                 </td>
-                {periods.map((period, pIdx) =>
-                  displayedMembers.map((member, mIdx) => {
-                    const data = getCellData(project.id, member.id, period);
-                    const isYellowProject = getProjectLightKey(project.id, project.status, project.activityCloseDate) === 'yellow';
-                    // Check for suggestion
-                    const suggestion = suggestions.find(s =>
-                      s.projectId === project.id && s.memberId === member.id &&
-                      s.year === period.year && s.month === period.month &&
-                      (period.sprint === 0 || s.sprint === period.sprint)
-                    );
+                {viewLevel === 'week' ? weeks.map((week, wIdx) =>
+                  pagedMembers.map((member, mIdx) => {
+                    const data = getCellData(project.id, member.id, week);
+                    const isYellowProject = projectLightById.get(project.id) === 'yellow';
+                    // Suggestions are sprint-keyed; match to the week that represents that sprint.
+                    const suggestion = suggestionByCell.get(`${project.id}|${member.id}|${week.isoYear}|${week.isoWeek}`);
                     return (
-                      <td key={`${period.key}-${member.id}`}
-                        className={`border-b border-r text-center ${isMemberTeam ? '' : 'cursor-pointer'} transition-colors ${pIdx > 0 && mIdx === 0 ? 'border-l-2 border-l-gray-400' : ''} ${
+                      <td key={`${weekKey(week)}-${member.id}`}
+                        className={`border-b border-r text-center ${isMemberTeam ? '' : 'cursor-pointer'} transition-colors ${wIdx > 0 && mIdx === 0 ? 'border-l-2 border-l-gray-400' : ''} ${
                           suggestion
                             ? 'bg-purple-100 animate-pulse border-2 border-purple-400'
                             : data.hasAny
@@ -1061,14 +1360,16 @@ export default function ProjectMatrixView() {
                         onClick={() => {
                           if (isMemberTeam) return;
                           if (suggestion) {
+                            const sw = weekFromLegacySprint(suggestion.year, suggestion.month, suggestion.sprint);
                             addAllocation({
                               projectId: suggestion.projectId, productManagerId: suggestion.memberId,
+                              isoYear: sw.isoYear, isoWeek: sw.isoWeek, weekStartDate: sw.startDate,
                               year: suggestion.year, month: suggestion.month, sprint: suggestion.sprint,
-                              allocationPercentage: suggestion.percentage, allocationDays: (suggestion.percentage / 100) * 10, isPlanned: true,
+                              allocationPercentage: suggestion.percentage, allocationDays: Math.round((suggestion.percentage / 100) * workingDaysInWeek(sw)), isPlanned: true,
                             }, currentUser.email);
                             setSuggestions(prev => prev.filter(s => s !== suggestion));
                           } else {
-                            openCell(project.id, member.id, period);
+                            openCell(project.id, member.id, week);
                           }
                         }}
                         title={suggestion
@@ -1079,11 +1380,41 @@ export default function ProjectMatrixView() {
                       </td>
                     );
                   })
+                ) : sprintGroups.map((sprint, sIdx) =>
+                  pagedMembers.map((member, mIdx) => {
+                    const data = getSprintCellData(project.id, member.id, sprint);
+                    const isYellowProject = projectLightById.get(project.id) === 'yellow';
+                    return (
+                      <td key={`${sIdx}-${member.id}`}
+                        className={`border-b border-r text-center ${isMemberTeam ? '' : 'cursor-pointer'} transition-colors ${sIdx > 0 && mIdx === 0 ? 'border-l-2 border-l-gray-400' : ''} ${
+                          data.hasAny
+                            ? isYellowProject
+                              ? (data.average >= 80 ? 'bg-yellow-200 hover:bg-yellow-300' : data.average >= 40 ? 'bg-yellow-100 hover:bg-yellow-200' : 'bg-yellow-50 hover:bg-yellow-100')
+                              : (data.average >= 80 ? 'bg-blue-200 hover:bg-blue-300' : data.average >= 40 ? 'bg-blue-100 hover:bg-blue-200' : 'bg-blue-50 hover:bg-blue-100')
+                            : 'hover:bg-gray-100'
+                        }`}
+                        style={{ width: colW, minWidth: colW, height: 32 }}
+                        onClick={() => {
+                          if (isMemberTeam) return;
+                          setSpanEditor({ projectId: project.id, memberId: member.id, sprintIndex: sIdx });
+                        }}
+                        title={data.hasAny
+                          ? `${member.fullName} avg ${data.average}%${data.varies ? ' (varies by week — click to edit per week)' : ''}${isYellowProject ? ' ⚠️ Not signed off' : ''} (click to edit)`
+                          : `Assign ${member.fullName}`}>
+                        {data.hasAny && (
+                          <span className={`text-[10px] font-semibold inline-flex items-center gap-1 ${isYellowProject ? 'text-yellow-800' : 'text-blue-800'}`}>
+                            {data.average}%
+                            {data.varies && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" title="Varies by week" />}
+                          </span>
+                        )}
+                      </td>
+                    );
+                  })
                 )}
               </tr>
             ))}
             {filteredProjects.length === 0 && (
-              <tr><td colSpan={1 + periods.length * memberCount} className="text-center py-8 text-gray-400 text-sm">No projects found</td></tr>
+              <tr><td colSpan={1 + (viewLevel === 'week' ? weeks.length : sprintGroups.length) * memberCount} className="text-center py-8 text-gray-400 text-sm">No projects found</td></tr>
             )}
           </tbody>
         </table>
@@ -1098,18 +1429,92 @@ export default function ProjectMatrixView() {
               {(() => {
                 const p = projects.find(pr => pr.id === editCell.projectId);
                 const m = displayedMembers.find(mm => mm.id === editCell.memberId);
-                const per = periods.find(pp => pp.key === editCell.periodKey);
-                return `${p?.customerName} - ${p?.projectName} → ${m?.fullName} | ${per?.label} ${per?.sublabel}`;
+                const w = weeks.find(ww => weekKey(ww) === editCell.periodKey);
+                return `${p?.customerName} - ${p?.projectName} → ${m?.fullName} | ${w ? `${getMonthWeekLabel(w)} (${getWeekDayRangeLabel(w)})` : ''}`;
               })()}
             </div>
             <div className="mb-4">
               <label className="block text-xs font-medium text-gray-700 mb-1">Allocation %</label>
               <input type="number" min="0" max="100" value={editPercentage} onChange={e => setEditPercentage(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') closeEdit(); }}
+                onKeyDown={e => { if (e.key === 'Enter' && editSprintCount === 1 && editScope === 'current' && spanMode === 'sprints') handleSave(); if (e.key === 'Escape') closeEdit(); }}
                 className="w-full px-3 py-2 border rounded text-sm" placeholder="0-100" autoFocus />
             </div>
+
+            {editAllocId ? (
+              /* Editing an existing allocation: choose scope (this only vs this + future). */
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Apply changes to</label>
+                <div className="space-y-1.5">
+                  <label className="flex items-start gap-2 p-2 border border-gray-200 rounded cursor-pointer hover:bg-gray-50">
+                    <input type="radio" name="editScope" value="current" checked={editScope === 'current'}
+                      onChange={() => setEditScope('current')} className="mt-0.5" />
+                    <div>
+                      <div className="text-xs font-medium text-gray-900">This allocation only</div>
+                      <div className="text-[11px] text-gray-500">Update just this week</div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-2 p-2 border border-gray-200 rounded cursor-pointer hover:bg-gray-50">
+                    <input type="radio" name="editScope" value="future" checked={editScope === 'future'}
+                      onChange={() => setEditScope('future')} className="mt-0.5" />
+                    <div>
+                      <div className="text-xs font-medium text-gray-900">This and all future allocations</div>
+                      <div className="text-[11px] text-gray-500">
+                        Update this and every later week for this member on this project
+                        {editScope === 'future' && ` (${editSpanWeeks.length} week${editSpanWeeks.length !== 1 ? 's' : ''})`}
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            ) : (
+              /* Adding a new allocation: span by number of sprints or up to an end date. */
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                  Span
+                  {(() => {
+                    const project = projects.find(p => p.id === editCell.projectId);
+                    const len = project?.sprintLengthWeeks ?? 2;
+                    return (
+                      <span className="ml-1.5 text-[11px] font-normal text-blue-600 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5">
+                        {len}-week sprint
+                      </span>
+                    );
+                  })()}
+                </label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="spanMode" value="sprints" checked={spanMode === 'sprints'}
+                      onChange={() => setSpanMode('sprints')} />
+                    <span className="text-xs text-gray-700">Number of sprints</span>
+                    <input type="number" min="1" max="52" value={editSprintCount}
+                      disabled={spanMode !== 'sprints'}
+                      onChange={e => setEditSprintCount(Math.max(1, Math.min(52, parseInt(e.target.value) || 1)))}
+                      className="w-16 px-2 py-1 border rounded text-sm disabled:bg-gray-100 disabled:text-gray-400" />
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="spanMode" value="endDate" checked={spanMode === 'endDate'}
+                      onChange={() => setSpanMode('endDate')} />
+                    <span className="text-xs text-gray-700">Until end date</span>
+                    <input type="date" value={spanEndDate}
+                      disabled={spanMode !== 'endDate'}
+                      min={(weeks.find(w => weekKey(w) === editCell.periodKey)?.startDate) || undefined}
+                      onChange={e => setSpanEndDate(e.target.value)}
+                      className="px-2 py-1 border rounded text-sm disabled:bg-gray-100 disabled:text-gray-400" />
+                  </label>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-1.5">
+                  Spans {editSpanWeeks.length} week{editSpanWeeks.length !== 1 ? 's' : ''} starting this week
+                  {editSpanWeeks.length > 0 && ` (through ${formatDDMM(editSpanWeeks[editSpanWeeks.length - 1].startDate)})`}.
+                </p>
+                {editOverlapCount > 0 && (
+                  <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-1.5">
+                    ⚠️ {editOverlapCount} of {editSpanWeeks.length} week(s) already {editOverlapCount === 1 ? 'has' : 'have'} an allocation for this member — saving will overwrite {editOverlapCount === 1 ? 'it' : 'them'}.
+                  </p>
+                )}
+              </div>
+            )}
             <div className="flex justify-between">
-              <div>{editAllocId && <button onClick={handleDelete} className="px-3 py-1.5 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200">Delete</button>}</div>
+              <div>{editAllocId && <button onClick={handleDelete} className="px-3 py-1.5 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200">{editScope === 'future' ? 'Delete + future' : 'Delete'}</button>}</div>
               <div className="flex gap-2">
                 <button onClick={closeEdit} className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded text-xs">Cancel</button>
                 <button onClick={handleSave} disabled={!editPercentage} className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 disabled:opacity-50">{editAllocId ? 'Save' : 'Add'}</button>
@@ -1118,6 +1523,29 @@ export default function ProjectMatrixView() {
           </div>
         </div>
       )}
+
+      {/* Sprint-level cell sub-editor (per-week breakdown) */}
+      {spanEditor && (() => {
+        const project = projects.find(p => p.id === spanEditor.projectId);
+        const member = displayedMembers.find(m => m.id === spanEditor.memberId);
+        const sprint = sprintGroups[spanEditor.sprintIndex];
+        if (!project || !member || !sprint) return null;
+        const initialValues = sprint.weeks.map(w => getCellData(spanEditor.projectId, spanEditor.memberId, w).pct);
+        const isNew = initialValues.every(v => !v || v <= 0);
+        return (
+          <WeekSpanEditor
+            title={`${project.customerName} - ${project.projectName} → ${member.fullName} | ${getSprintTitleLabel(sprint)}`}
+            weeks={sprint.weeks}
+            initialValues={initialValues}
+            isNew={isNew}
+            sprintLengthWeeks={project.sprintLengthWeeks ?? effectiveSprintLength}
+            onSave={(values, scope) => saveSpanEditor(spanEditor.projectId, spanEditor.memberId, sprint, values, scope)}
+            onSaveWithSpan={(values, extraWeeks, pct) => saveSpanEditorWithSpan(spanEditor.projectId, spanEditor.memberId, sprint, values, extraWeeks, pct)}
+            onDelete={(scope) => clearSpanEditor(spanEditor.projectId, spanEditor.memberId, sprint, scope)}
+            onClose={() => setSpanEditor(null)}
+          />
+        );
+      })()}
 
       {/* Puzzle Me */}
       {showPuzzleMe && (
@@ -1355,6 +1783,7 @@ function EditProjectForm({ project, onSave, onCancel, teamMembers, allProjects }
     activityCloseDate: project.activityCloseDate || '',
     latestStatus: project.latestStatus || '',
     region: project.region || '',
+    sprintLengthWeeks: (project.sprintLengthWeeks ?? 2) as 1 | 2 | 3,
     plannedStartMonth: project.plannedStartMonth || (now.getMonth() + 1),
     plannedStartYear: project.plannedStartYear || now.getFullYear(),
     plannedStartSprint: project.plannedStartSprint || 1,
@@ -1379,6 +1808,7 @@ function EditProjectForm({ project, onSave, onCancel, teamMembers, allProjects }
       activityCloseDate: form.activityCloseDate || undefined,
       latestStatus: form.latestStatus || undefined,
       region: form.region || undefined,
+      sprintLengthWeeks: form.sprintLengthWeeks,
       plannedStartMonth: form.plannedStartMonth || undefined,
       plannedStartYear: form.plannedStartYear || undefined,
       plannedStartSprint: form.plannedStartSprint || undefined,
@@ -1430,6 +1860,37 @@ function EditProjectForm({ project, onSave, onCancel, teamMembers, allProjects }
         <label className="block text-xs font-medium text-gray-700 mb-1">Activity Sign Off Date</label>
         <input type="date" value={form.activityCloseDate} onChange={e => setForm({ ...form, activityCloseDate: e.target.value })}
           className="w-full px-3 py-2 border rounded text-sm" />
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-gray-700 mb-1">Sprint Length</label>
+        <div className="flex gap-2">
+          {([1, 2, 3] as const).map(len => (
+            <button
+              key={len}
+              type="button"
+              onClick={() => {
+                if (len !== form.sprintLengthWeeks) {
+                  const ok = confirm(
+                    `Change sprint length to ${len} ${len === 1 ? 'week' : 'weeks'}?\n\n` +
+                    `This only changes the default allocation span for new assignments. ` +
+                    `Existing weekly allocations are not affected.`
+                  );
+                  if (!ok) return;
+                }
+                setForm({ ...form, sprintLengthWeeks: len });
+              }}
+              className={`flex-1 px-3 py-2 rounded-lg text-sm border transition-colors ${
+                form.sprintLengthWeeks === len
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {len} {len === 1 ? 'week' : 'weeks'}
+            </button>
+          ))}
+        </div>
+        <p className="text-[10px] text-gray-400 mt-1">Default span pre-selected when allocating. Existing allocations are unaffected.</p>
       </div>
 
       {/* Planning fields */}

@@ -7,6 +7,7 @@ import { APP_VERSION } from '../version';
 import { supabase, isSupabaseEnabled } from '../services/supabase';
 import bcrypt from 'bcryptjs';
 import Chatbot from './Chatbot';
+import SprintPeriodModal from './SprintPeriodModal';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3002';
 
@@ -21,6 +22,7 @@ export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
+  const [showSprintPeriod, setShowSprintPeriod] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [pwdCurrent, setPwdCurrent] = useState('');
   const [pwdNew, setPwdNew] = useState('');
@@ -67,6 +69,18 @@ export default function Layout({ children }: LayoutProps) {
                   }`}
                 >
                   Dashboard
+                </Link>
+                )}
+                {!isMemberTeam && (
+                <Link 
+                  to="/executive-dashboard" 
+                  className={`px-3 py-2 rounded-md transition-colors ${
+                    isActive('/executive-dashboard') 
+                      ? 'bg-blue-100 text-blue-700 font-semibold' 
+                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
+                  }`}
+                >
+                  Executive Dashboard
                 </Link>
                 )}
                 <Link 
@@ -155,6 +169,14 @@ export default function Layout({ children }: LayoutProps) {
                         >
                           Team Permissions
                         </Link>
+                        <div className="border-t border-gray-100 my-1" />
+                        <button
+                          type="button"
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                          onClick={() => { setShowSettingsDropdown(false); setShowSprintPeriod(true); }}
+                        >
+                          Sprint Period
+                        </button>
                       </div>
                     )}
                   </div>
@@ -201,6 +223,9 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </footer>
       <Chatbot />
+
+      {/* Sprint Period Modal */}
+      <SprintPeriodModal isOpen={showSprintPeriod} onClose={() => setShowSprintPeriod(false)} />
 
       {/* Change Password Modal */}
       {showChangePassword && (

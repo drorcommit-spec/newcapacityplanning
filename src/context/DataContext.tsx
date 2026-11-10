@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { TeamMember, Project, SprintAllocation, AllocationHistory } from '../types';
-import { fetchAllData, saveTeamMembers, saveProjects, saveAllocations, deleteAllocationById, saveHistory } from '../services/api';
+import { fetchAllData, saveTeamMembers, saveProjects, saveAllocation, deleteAllocationById, saveHistoryEntry } from '../services/api';
 
 interface DataContextType {
   teamMembers: TeamMember[];
@@ -30,9 +30,21 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [sprintProjects, setSprintProjects] = useState<Record<string, string[]>>({});
   const [sprintRoleRequirements, setSprintRoleRequirements] = useState<Record<string, Record<string, number>>>({});
   const [isLoading, setIsLoading] = useState(true);
-  const [hasLoaded, setHasLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Retained for cancellation guards in legacy member/project flows; allocation persistence
+  // no longer uses a bulk debounced save.
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Refs mirroring allocations/history, mutated synchronously on every add/update/delete.
+  // This avoids a stale-closure bug: several flows (multi-week allocation spans) call
+  // addAllocation multiple times in a synchronous loop. If those calls read `allocations`
+  // from React state (captured at render time), each call overwrites the previous one's
+  // optimistic update instead of building on it — only the last item in the loop would show
+  // up locally until a manual refresh, even though every item was saved to the server.
+  // Reading/writing via a ref instead means each call in the loop sees the previous call's
+  // result immediately, regardless of when React re-renders.
+  const allocationsRef = useRef<SprintAllocation[]>([]);
+  const historyRef = useRef<AllocationHistory[]>([]);
 
   // Load data from server on mount
   useEffect(() => {
@@ -44,11 +56,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setProjects(data.projects);
         setAllocations(data.allocations);
         setHistory(data.history);
+        allocationsRef.current = data.allocations;
+        historyRef.current = data.history;
         setSprintProjects(data.sprintProjects || {});
         setSprintRoleRequirements(data.sprintRoleRequirements || {});
         setIsLoading(false);
-        // Set hasLoaded after a small delay to ensure all state is set
-        setTimeout(() => setHasLoaded(true), 100);
       })
       .catch(error => {
         console.error('Failed to load data from server:', error);
@@ -56,48 +68,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
       });
   }, []);
-
-  // Debounced save - saves all data together to prevent partial saves
-  useEffect(() => {
-    if (!hasLoaded) return;
-
-    // Clear existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    // Reduced debounce to 200ms for faster saves
-    setIsSaving(true);
-    saveTimeoutRef.current = setTimeout(() => {
-      console.log('💾 Saving all data to server...', {
-        teamMembers: teamMembers.length,
-        projects: projects.length,
-        allocations: allocations.length,
-        history: history.length,
-      });
-      Promise.all([
-        saveTeamMembers(teamMembers),
-        saveProjects(projects),
-        saveAllocations(allocations),
-        saveHistory(history),
-      ])
-        .then(() => {
-          console.log('✅ All data saved successfully');
-          setIsSaving(false);
-        })
-        .catch(err => {
-          console.error('❌ Error saving data:', err);
-          alert(`Failed to save data: ${err.message}. Your changes may not be persisted.`);
-          setIsSaving(false);
-        });
-    }, 200);
-
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, [teamMembers, projects, allocations, history, hasLoaded]);
 
   const addTeamMember = (member: Omit<TeamMember, 'id' | 'createdAt'>) => {
     const newMember: TeamMember = {
@@ -243,9 +213,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       newValue: newAllocation,
     };
     
-    // Update state
-    const updatedHistory = [...history, historyEntry];
-    const updated = [...allocations, newAllocation];
+    // Read/write via the ref so consecutive calls within the same synchronous loop
+    // (multi-week allocation spans) build on each other instead of racing.
+    const updated = [...allocationsRef.current, newAllocation];
+    const updatedHistory = [...historyRef.current, historyEntry];
+    allocationsRef.current = updated;
+    historyRef.current = updatedHistory;
     
     // Cancel any pending debounced save to prevent race condition
     if (saveTimeoutRef.current) {
@@ -253,53 +226,57 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       console.log('🚫 Cancelled pending debounced save');
     }
     
-    // IMMEDIATE SAVE for additions (save allocations first, then history)
+    // Persist only the new rows, not the complete allocation/history tables.
     console.log('💾 Saving new allocation immediately...');
     setIsSaving(true);
-    
-    // Save allocations first (critical)
-    saveAllocations(updated)
-      .then(() => {
-        console.log('✅ Allocations saved successfully');
-        // Then try to save history (non-critical)
-        return saveHistory(updatedHistory);
-      })
-      .then(() => {
-        console.log('✅ History saved successfully');
-        setIsSaving(false);
-      })
+    saveAllocation(newAllocation, updated)
+      .then(() => saveHistoryEntry(historyEntry, updatedHistory))
+      .then(() => setIsSaving(false))
       .catch(err => {
         console.error('❌ Failed to save:', err);
-        // Show error but don't block the addition
-        alert(`Warning: Allocation saved but history may not be recorded: ${err.message}`);
+        alert(`Failed to save allocation: ${err.message}`);
         setIsSaving(false);
       });
     
-    // Update state after initiating save
+    // Reflect the ref's current value in React state so the UI re-renders immediately.
     setAllocations(updated);
     setHistory(updatedHistory);
   };
 
   const updateAllocation = (id: string, updates: Partial<SprintAllocation>, changedBy: string) => {
-    const oldAllocation = allocations.find(a => a.id === id);
-    setAllocations(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
-    
-    if (oldAllocation) {
-      const historyEntry: AllocationHistory = {
-        id: crypto.randomUUID(),
-        allocationId: id,
-        changedBy,
-        changedAt: new Date().toISOString(),
-        changeType: 'updated',
-        oldValue: oldAllocation,
-        newValue: { ...oldAllocation, ...updates },
-      };
-      setHistory(prev => [...prev, historyEntry]);
-    }
+    const oldAllocation = allocationsRef.current.find(a => a.id === id);
+    if (!oldAllocation) return;
+    const changedAllocation = { ...oldAllocation, ...updates };
+    const updated = allocationsRef.current.map(a => a.id === id ? changedAllocation : a);
+    allocationsRef.current = updated;
+    setAllocations(updated);
+
+    const historyEntry: AllocationHistory = {
+      id: crypto.randomUUID(),
+      allocationId: id,
+      changedBy,
+      changedAt: new Date().toISOString(),
+      changeType: 'updated',
+      oldValue: oldAllocation,
+      newValue: changedAllocation,
+    };
+    const updatedHistory = [...historyRef.current, historyEntry];
+    historyRef.current = updatedHistory;
+    setHistory(updatedHistory);
+
+    setIsSaving(true);
+    Promise.all([
+      saveAllocation(changedAllocation, updated),
+      saveHistoryEntry(historyEntry, updatedHistory),
+    ]).then(() => setIsSaving(false)).catch(err => {
+      console.error('❌ Failed to update allocation:', err);
+      alert(`Failed to update allocation: ${err.message}`);
+      setIsSaving(false);
+    });
   };
 
   const deleteAllocation = (id: string, deletedBy: string) => {
-    const oldAllocation = allocations.find(a => a.id === id);
+    const oldAllocation = allocationsRef.current.find(a => a.id === id);
     if (!oldAllocation) {
       console.warn(`⚠️ Allocation ${id} not found for deletion`);
       return;
@@ -316,11 +293,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       oldValue: oldAllocation,
     };
     
-    // Update state
-    const updatedHistory = [...history, historyEntry];
-    const filtered = allocations.filter(a => a.id !== id);
+    const previousAllocations = allocationsRef.current;
+    const previousHistory = historyRef.current;
+    const updatedHistory = [...previousHistory, historyEntry];
+    const filtered = previousAllocations.filter(a => a.id !== id);
+    allocationsRef.current = filtered;
+    historyRef.current = updatedHistory;
     
-    console.log(`📊 Allocations after delete: ${filtered.length} (was ${allocations.length})`);
+    console.log(`📊 Allocations after delete: ${filtered.length} (was ${previousAllocations.length})`);
     
     // Cancel any pending debounced save to prevent race condition
     if (saveTimeoutRef.current) {
@@ -332,15 +312,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     console.log('💾 Deleting allocation from database immediately...');
     setIsSaving(true);
     
-    // Delete from database first (critical)
-    deleteAllocationById(id)
+    // Delete the allocation, then persist only this audit entry.
+    deleteAllocationById(id, filtered)
+      .then(() => saveHistoryEntry(historyEntry, updatedHistory))
       .then(() => {
         console.log('✅ Allocation deleted from database');
-        // Then try to save history (non-critical)
-        return saveHistory(updatedHistory);
-      })
-      .then(() => {
-        console.log('✅ History saved successfully');
         setIsSaving(false);
       })
       .catch(err => {
@@ -348,9 +324,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         // Show error and revert state
         alert(`Failed to delete allocation: ${err.message}`);
         setIsSaving(false);
-        // Revert the deletion in state
-        setAllocations(allocations);
-        setHistory(history);
+        // Revert the deletion
+        allocationsRef.current = previousAllocations;
+        historyRef.current = previousHistory;
+        setAllocations(previousAllocations);
+        setHistory(previousHistory);
       });
     
     // Update state optimistically
@@ -367,6 +345,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setProjects(data.projects);
       setAllocations(data.allocations);
       setHistory(data.history);
+      allocationsRef.current = data.allocations;
+      historyRef.current = data.history;
       setSprintProjects(data.sprintProjects || {});
       setSprintRoleRequirements(data.sprintRoleRequirements || {});
     } catch (error) {

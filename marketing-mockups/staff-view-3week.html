@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Puzzle - Staff View (Sprint = 3 weeks)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}</style>
+</head>
+<body class="bg-white min-h-screen">
+<nav class="bg-white border-b px-6 py-2.5 flex items-center justify-between">
+<div class="flex items-center gap-6"><div class="flex items-center gap-2"><span class="text-xl">&#129513;</span><div><span class="text-lg font-bold">Puzzle</span><br><span class="text-[9px] text-gray-400">Capacity Planning Platform</span></div></div>
+<div class="flex gap-1 text-xs"><span class="px-2.5 py-1.5 rounded text-gray-600">Dashboard</span><span class="px-2.5 py-1.5 rounded bg-blue-50 text-blue-700 font-semibold">Capacity Planning</span><span class="px-2.5 py-1.5 rounded text-gray-600">History</span></div></div>
+<div class="text-right text-xs"><div class="font-medium">John Smith</div><div class="text-gray-400">john@company.com</div></div>
+</nav>
+<div class="px-6 py-2 border-b flex items-center justify-between">
+<div class="flex items-center gap-3"><h1 class="text-sm font-bold">Capacity Planning</h1>
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">Project Cascade · Sprint length: 3 weeks</span>
+<label class="flex items-center gap-1.5 border rounded-lg px-2 py-1 bg-gray-50 text-[10px] cursor-pointer select-none"><input type="checkbox" id="sprintToggle" checked onchange="render()" class="accent-blue-600"><span class="text-gray-600 font-medium">Sprint bracket</span></label></div>
+<div class="flex bg-gray-100 rounded-md p-0.5 text-[11px]"><button class="px-2.5 py-1 rounded text-gray-500">Puzzle View</button><button class="px-2.5 py-1 rounded bg-white text-blue-600 shadow-sm font-medium">Staff View</button><button class="px-2.5 py-1 rounded text-gray-500">Timeline View</button></div>
+</div>
+<div class="px-6 py-1.5 border-b flex items-center gap-1 text-gray-400 text-xs"><span>&#171;</span><span>&#8249;</span><span class="mx-2 text-gray-600 font-medium">Today</span><span>&#8250;</span><span>&#187;</span></div>
+<main class="p-6 overflow-x-auto">
+<div id="sprintBar" class="flex gap-4 mb-2"></div>
+<div class="flex gap-4" id="cols"></div>
+<p class="text-[11px] text-gray-400 mt-4 max-w-3xl">Staff View shows one column per <b>week</b> (capacity is always weekly). With a 3-week sprint the blue bracket above spans three week-columns and is numbered consecutively across months &mdash; <b>S2</b> here runs Aug W4 &rarr; Sep W2, crossing the month boundary. Toggle the bracket off for a pure weekly view.</p>
+</main>
+<script>
+var COLW=300, GAP=16;
+var weeks=[
+ {mo:"Aug",w:"W1",d:"04-10"},{mo:"Aug",w:"W2",d:"11-17"},{mo:"Aug",w:"W3",d:"18-24"},
+ {mo:"Aug",w:"W4",d:"25-31"},{mo:"Sep",w:"W1",d:"01-07"},{mo:"Sep",w:"W2",d:"08-14"}
+];
+var data=[
+ [["Alex Cohen","Product Manager",100,"green",[["Acme Corp - CRM",50],["TechFlow - AI",30],["BioSense - Data",20]]],["Sarah Levi","PMO",130,"amber",[["Acme Corp - CRM",80],["TechFlow - AI",50]]],["David Stern","SW Architect",50,"red",[]],["Noa Mizrahi","AI Architect",90,"green",[]]],
+ [["Alex Cohen","Product Manager",100,"green",[["Acme Corp - CRM",50],["TechFlow - AI",30],["BioSense - Data",20]]],["Sarah Levi","PMO",120,"amber",[["Acme Corp - CRM",70],["TechFlow - AI",50]]],["David Stern","SW Architect",50,"red",[]],["Noa Mizrahi","AI Architect",90,"green",[]]],
+ [["Alex Cohen","Product Manager",90,"green",[["Acme Corp - CRM",40],["TechFlow - AI",30],["BioSense - Data",20]]],["Sarah Levi","PMO",90,"green",[["Acme Corp - CRM",40],["TechFlow - AI",50]]],["David Stern","SW Architect",40,"red",[]],["Noa Mizrahi","AI Architect",85,"green",[]]],
+ [["Alex Cohen","Product Manager",80,"green",[["Acme Corp - CRM",40],["TechFlow - AI",40]]],["Sarah Levi","PMO",90,"green",[["Acme Corp - CRM",40],["TechFlow - AI",50]]],["David Stern","SW Architect",40,"red",[]],["Noa Mizrahi","AI Architect",85,"green",[]]],
+ [["Alex Cohen","Product Manager",50,"red",[["Acme Corp - CRM",30],["TechFlow - AI",20]]],["Sarah Levi","PMO",90,"green",[["Acme Corp - CRM",40],["TechFlow - AI",50]]],["David Stern","SW Architect",60,"red",[]],["Noa Mizrahi","AI Architect",85,"green",[]]],
+ [["Alex Cohen","Product Manager",80,"green",[["Acme Corp - CRM",40],["TechFlow - AI",40]]],["Sarah Levi","PMO",90,"green",[["Acme Corp - CRM",40],["TechFlow - AI",50]]],["David Stern","SW Architect",60,"red",[]],["Noa Mizrahi","AI Architect",85,"green",[]]]
+];
+var barColor={green:"bg-green-400",amber:"bg-amber-400",red:"bg-red-400"};
+var txColor={green:"text-green-600",amber:"text-amber-500",red:"text-red-500"};
+function card(m){
+ var rows="";
+ m[4].forEach(function(p){ rows+='<div class="flex items-center justify-between py-1 px-2 rounded-lg bg-gray-50"><span class="text-[11px] text-gray-700 truncate">'+p[0]+'</span><span class="text-[11px] font-semibold text-blue-600">'+p[1]+'%</span></div>'; });
+ var body = rows? '<div class="w-full bg-gray-100 rounded-full h-1 mt-2 mb-2"><div class="h-1 rounded-full '+barColor[m[3]]+'" style="width:'+Math.min(m[2],100)+'%"></div></div><div class="space-y-1">'+rows+'</div>':'';
+ return '<div class="border border-gray-100 rounded-xl p-3 mb-2.5"><div class="flex items-start justify-between"><div><div class="text-xs font-semibold">'+m[0]+'</div><div class="text-[10px] text-gray-400">'+m[1]+'</div></div><div class="text-right"><div class="text-xs font-bold '+txColor[m[3]]+'">'+m[2]+'%</div><div class="text-[9px] text-gray-400">of 100%</div></div></div>'+body+'</div>';
+}
+function render(){
+ var showSprint=document.getElementById('sprintToggle').checked;
+ // sprint bracket bar: each sprint spans 3 week columns
+ var bar="";
+ if(showSprint){
+  var sprints=[["S1","Aug 04 - 24",3],["S2","Aug 25 - Sep 14",3]];
+  sprints.forEach(function(s){
+   var wpx = s[2]*COLW + (s[2]-1)*GAP;
+   bar+='<div style="width:'+wpx+'px" class="flex-shrink-0"><div class="bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 text-center"><span class="text-[11px] font-bold text-blue-600">'+s[0]+'</span> <span class="text-[10px] text-blue-400">'+s[1]+'</span></div></div>';
+  });
+ }
+ document.getElementById('sprintBar').innerHTML=bar;
+ // week columns
+ var h="";
+ weeks.forEach(function(wk,i){
+  h+='<div class="flex-shrink-0" style="width:'+COLW+'px">';
+  h+='<div class="mb-3 pb-2 border-b border-gray-100"><h3 class="text-sm font-semibold text-gray-900">'+wk.mo+' '+wk.w+'</h3><p class="text-xs text-gray-400">'+wk.d+'</p></div>';
+  data[i].forEach(function(m){ h+=card(m); });
+  h+='</div>';
+ });
+ document.getElementById('cols').innerHTML=h;
+}
+render();
+</script>
+</body></html>

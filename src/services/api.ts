@@ -4,8 +4,10 @@ import {
   saveTeamMembersToSupabase,
   saveProjectsToSupabase,
   saveAllocationsToSupabase,
+  saveAllocationToSupabase,
   deleteAllocationFromSupabase,
   saveHistoryToSupabase,
+  saveHistoryEntryToSupabase,
   createSupabaseBackup,
 } from './supabaseApi';
 
@@ -102,16 +104,31 @@ export async function saveAllocations(allocations: any[]): Promise<void> {
   if (!response.ok) throw new Error('Failed to save allocations');
 }
 
-export async function deleteAllocationById(allocationId: string): Promise<void> {
+export async function saveAllocation(allocation: any, allAllocations: any[]): Promise<void> {
+  if (isSupabaseEnabled()) {
+    await saveAllocationToSupabase(allocation);
+    return;
+  }
+  await saveAllocations(allAllocations);
+}
+
+export async function saveHistoryEntry(entry: any, allHistory: any[]): Promise<void> {
+  if (isSupabaseEnabled()) {
+    await saveHistoryEntryToSupabase(entry);
+    return;
+  }
+  await saveHistory(allHistory);
+}
+
+export async function deleteAllocationById(allocationId: string, remainingAllocations?: any[]): Promise<void> {
   // Use Supabase if enabled (production)
   if (isSupabaseEnabled()) {
     await deleteAllocationFromSupabase(allocationId);
     return;
   }
 
-  // Local development: deletion is handled by saving the filtered array
-  // No separate delete endpoint needed for JSON file storage
-  console.log('Local dev: Allocation deletion handled by saveAllocations');
+  // Local JSON backend has no row-delete endpoint; persist the filtered collection.
+  if (remainingAllocations) await saveAllocations(remainingAllocations);
 }
 
 export async function saveHistory(history: any[]): Promise<void> {

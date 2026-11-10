@@ -3,22 +3,59 @@ import { useSearchParams } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
-import { Project, TeamMember, SprintAllocation } from '../types';
+import { Project, TeamMember, SprintAllocation, COMPANY_GROUPS } from '../types';
+import { getMemberCompanyGroup } from '../utils/memberUtils';
 import Modal from '../components/Modal';
 import ProjectForm from '../components/ProjectForm';
 import DailyTaskView from '../components/DailyTaskView';
 import ImportProjects from '../components/ImportProjects';
 import ProjectMatrixView from '../components/ProjectMatrixView';
 import TimelineView from '../components/TimelineView';
+import WeekSpanEditor from '../components/WeekSpanEditor';
 import { fetchAllData, saveSprintProjects, saveSprintRoleRequirements } from '../services/api';
+import { getWeeksInRange, buildWeek, WeekInfo, groupWeeksIntoSprints, firstWeekOfCurrentSprint, getSprintTitleLabel, getSprintDayRangeLabel, getSprintDateLabel, getSprintYearLabel, getWeekLabel, getWeekDayRangeLabel, SprintLengthWeeks, formatDDMM, aggregateWeeklyValues, workingDaysInWeek } from '../utils/weekUtils';
+
+// Week/Sprint toggle is temporarily disabled — Sprint view is the only mode for now.
+// Flip back to true to re-expose the toggle once ready.
+const VIEW_LEVEL_TOGGLE_ENABLED = false;
+
+const CP_MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// Fixed pixel width/gap shared by the Staff View header bands (Month/Week/Sprint) and the
+// week-tile row below, so both always line up regardless of how many weeks are visible.
+const STAFF_COL_WIDTH = 300;
+const STAFF_COL_GAP = 24;
+
+// Build a Staff-view period (SprintInfo) from a week.
+function weekToPeriod(w: WeekInfo) {
+  return {
+    year: w.isoYear,
+    month: w.month,
+    sprint: w.isoWeek,
+    isoYear: w.isoYear,
+    isoWeek: w.isoWeek,
+    weekStartDate: w.startDate,
+    weekLabel: `W${w.weekOfMonth}`,
+    monthLabel: `${CP_MONTH_ABBR[w.month - 1]} ${w.year}`,
+  };
+}
 
 type ViewMode = 'projects' | 'team' | 'matrix' | 'timeline';
 type CapacityFilter = 'all' | 'under' | 'over' | 'good';
 
+// A "period" in the Staff view is now an ISO week. To keep the existing
+// `${year}-${month}-${sprint}`-keyed features (role requirements, comments, copy-forward,
+// removed/added members) working per-week without churn, `sprint` carries the ISO week number
+// and `year` carries the ISO year, so every key is unique per week. Allocation lookups use
+// isoYear/isoWeek directly.
 interface SprintInfo {
-  year: number;
-  month: number;
-  sprint: number;
+  year: number;        // ISO year (for unique keys)
+  month: number;       // calendar month of the week's Monday
+  sprint: number;      // ISO week number (for unique keys)
+  isoYear: number;
+  isoWeek: number;
+  weekStartDate: string;
+  weekLabel: string;   // e.g. "W3"
+  monthLabel: string;  // e.g. "Aug 2026"
 }
 
 export default function CapacityPlanning() {
@@ -31,11 +68,30 @@ export default function CapacityPlanning() {
   // View state
   const [viewMode, setViewMode] = useState<ViewMode>('matrix');
   const [showFilters, setShowFilters] = useState(true);
-  const [sprintCount, setSprintCount] = useState(() => {
-    const saved = localStorage.getItem('sprintCount');
-    return saved ? parseInt(saved) : 3;
-  });
-  const [teamSprintOffset, setTeamSprintOffset] = useState(0); // offset for staff view navigation
+  // Company group filter (applies to the member-driven views). 'all' = no filtering.
+  const [companyGroupFilter, setCompanyGroupFilter] = useState<string>('all');
+  // Staff View always displays a fixed one-year (52-week) future period starting from the
+  // current week. Add/remove sprint controls were removed, so this stays constant.
+  const [sprintCount] = useState(52);
+  // Offset for Staff View navigation. Shared with Puzzle View and Timeline View (same
+  // localStorage keys + change events) so the visible week/sprint period stays in sync no
+  // matter which of the 3 Capacity Planning views the user navigates to.
+  const [teamSprintOffset, setTeamSprintOffset] = useState(
+    () => parseInt(localStorage.getItem('capacityPeriodOffset') || '0', 10)
+  );
+  // Sprint row is always shown for the Staff View (no visibility toggle).
+  const [staffOverlaySprintLength, setStaffOverlaySprintLength] = useState<SprintLengthWeeks>(
+    () => (parseInt(localStorage.getItem('capacitySprintLength') || '2') as SprintLengthWeeks)
+  );
+  // Week vs Sprint display level for the Staff View. Sprint level shows averaged, read-only
+  // tiles grouping several weeks; clicking one switches back to Week level to edit.
+  // Toggle is temporarily disabled (VIEW_LEVEL_TOGGLE_ENABLED) — Sprint is always shown.
+  const [staffViewLevel, setStaffViewLevel] = useState<'week' | 'sprint'>(
+    () => (VIEW_LEVEL_TOGGLE_ENABLED ? (localStorage.getItem('staffViewLevel') as 'week' | 'sprint') || 'week' : 'sprint')
+  );
+  useEffect(() => {
+    if (VIEW_LEVEL_TOGGLE_ENABLED) localStorage.setItem('staffViewLevel', staffViewLevel);
+  }, [staffViewLevel]);
   const [teamExpandedMode, setTeamExpandedMode] = useState(false); // track if user wants expanded view
   const [expandedSprint, setExpandedSprint] = useState<string | null>(null);
   const [showDailyView, setShowDailyView] = useState(false);
@@ -43,7 +99,7 @@ export default function CapacityPlanning() {
 
   // Filter state
   const [searchText, setSearchText] = useState('');
-  const [capacityFilter, setCapacityFilter] = useState<CapacityFilter>('under');
+  const [capacityFilter, setCapacityFilter] = useState<CapacityFilter>('all');
   const [missingAllocationRoles, setMissingAllocationRoles] = useState<string[]>([]);
   const [showRoleSelector, setShowRoleSelector] = useState(false);
   const [teamRoleFilter, setTeamRoleFilter] = useState<string[]>([]);
@@ -94,8 +150,27 @@ export default function CapacityPlanning() {
   }, [overCapacityThreshold]);
 
   useEffect(() => {
-    localStorage.setItem('sprintCount', sprintCount.toString());
-  }, [sprintCount]);
+    localStorage.setItem('capacitySprintLength', String(staffOverlaySprintLength));
+    window.dispatchEvent(new Event('capacitySprintLengthChanged'));
+  }, [staffOverlaySprintLength]);
+
+  useEffect(() => {
+    localStorage.setItem('capacityPeriodOffset', String(teamSprintOffset));
+    window.dispatchEvent(new Event('capacityPeriodOffsetChanged'));
+  }, [teamSprintOffset]);
+
+  // Stay in sync with the Puzzle View / Timeline View when they change the shared period or
+  // sprint length (all 3 Capacity Planning views read/write the same localStorage keys).
+  useEffect(() => {
+    const syncPeriod = () => setTeamSprintOffset(parseInt(localStorage.getItem('capacityPeriodOffset') || '0', 10));
+    const syncLength = () => setStaffOverlaySprintLength(parseInt(localStorage.getItem('capacitySprintLength') || '2') as SprintLengthWeeks);
+    window.addEventListener('capacityPeriodOffsetChanged', syncPeriod);
+    window.addEventListener('capacitySprintLengthChanged', syncLength);
+    return () => {
+      window.removeEventListener('capacityPeriodOffsetChanged', syncPeriod);
+      window.removeEventListener('capacitySprintLengthChanged', syncLength);
+    };
+  }, []);
 
   // Modal state
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
@@ -111,15 +186,42 @@ export default function CapacityPlanning() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [selectedAllocation, setSelectedAllocation] = useState<SprintAllocation | null>(null);
+  // When adding a project via a Staff View sprint-level card (2-3 week tile), holds the
+  // underlying weeks so the new allocation is written to all of them at once.
+  const [staffGroupWeeks, setStaffGroupWeeks] = useState<WeekInfo[] | null>(null);
+  // Staff View sprint-level per-week sub-editor (mirrors Puzzle View's WeekSpanEditor use).
+  const [staffSpanEditor, setStaffSpanEditor] = useState<{ memberId: string; projectId: string; weeks: WeekInfo[]; title: string } | null>(null);
+  // When set, the Comment Modal applies to every week in this sprint group instead of a
+  // single allocation (used by the Staff View sprint-level cards).
+  const [staffCommentContext, setStaffCommentContext] = useState<{ memberId: string; projectId: string; weeks: WeekInfo[] } | null>(null);
+  // Which sprint-level card (by index) is expanded to full width, mirroring the Week-level
+  // "Expand sprint view" behavior.
+  const [expandedStaffGroup, setExpandedStaffGroup] = useState<number | null>(null);
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<string | null>(null);
   const [projectSearchText, setProjectSearchText] = useState('');
   const [showRemoveMemberModal, setShowRemoveMemberModal] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<{
     member: TeamMember;
     sprint: SprintInfo;
+    groupWeeks?: WeekInfo[]; // when removing from a Staff View sprint-level card (2-3 week group)
   } | null>(null);
   const [removeFutureSprintsOption, setRemoveFutureSprintsOption] = useState<'current' | 'future'>('current');
-  
+
+  // Confirmation modal for removing a project allocation. Lets the user choose whether to
+  // remove just this allocation or this and all future allocations for the same
+  // member+project. `weeks` are the specific week(s) targeted (a single week, or every
+  // week of a Staff View sprint-level card group).
+  const [showRemoveAllocationModal, setShowRemoveAllocationModal] = useState(false);
+  const [allocationToRemove, setAllocationToRemove] = useState<{
+    memberId: string;
+    projectId: string;
+    weeks: WeekInfo[];
+    memberName: string;
+    projectName: string;
+    weekLabel: string;
+  } | null>(null);
+  const [removeFutureAllocationsOption, setRemoveFutureAllocationsOption] = useState<'current' | 'future'>('current');
+
   // Track members explicitly removed from sprints
   // Key format: "memberId-year-month-sprint"
   const [removedMembers, setRemovedMembers] = useState<Set<string>>(new Set());
@@ -207,6 +309,16 @@ export default function CapacityPlanning() {
   // Inline editing state
   const [editingAllocationId, setEditingAllocationId] = useState<string | null>(null);
   const [editingPercentage, setEditingPercentage] = useState('');
+  // Scope prompt for inline % edits when the same member+project has later allocations:
+  // apply to this week only, or this and all future weeks. Mirrors the Puzzle View UX.
+  const [editScopeModal, setEditScopeModal] = useState<{
+    allocationId: string;
+    percentage: number;
+    memberName: string;
+    projectName: string;
+    futureCount: number;
+  } | null>(null);
+  const [editScopeOption, setEditScopeOption] = useState<'current' | 'future'>('current');
   
   // Ref for role selector dropdown
   const roleSelectorRef = useRef<HTMLDivElement>(null);
@@ -252,7 +364,6 @@ export default function CapacityPlanning() {
   useEffect(() => {
     const view = searchParams.get('view');
     const filter = searchParams.get('filter');
-    const sprint = searchParams.get('sprint');
     const kpi = searchParams.get('kpi');
 
     if (view) {
@@ -306,12 +417,8 @@ export default function CapacityPlanning() {
       }
     }
 
-    if (sprint) {
-      const sprintIndex = parseInt(sprint);
-      if (!isNaN(sprintIndex) && sprintIndex >= 0) {
-        setSprintCount(Math.max(3, sprintIndex + 1));
-      }
-    }
+    // Staff View shows a fixed 52-week (one year) window, so deep-linked sprint indexes
+    // within the year are always visible without adjusting the visible count.
   }, [searchParams]);
   
   // Comment state
@@ -319,6 +426,12 @@ export default function CapacityPlanning() {
   const [projectComment, setProjectComment] = useState('');
   const [commentText, setCommentText] = useState('');
   const [allocationPercentage, setAllocationPercentage] = useState('');
+  // Weekly breakdown for the Add Member modal, mirroring the Puzzle View's WeekSpanEditor:
+  // unchecked (default) applies allocationPercentage uniformly to every week being created;
+  // checked shows one field per week so each can be set individually. Only relevant when the
+  // allocation spans more than 1 week (2-3 week sprint length, and/or multiple sprints).
+  const [allocationBreakdown, setAllocationBreakdown] = useState(false);
+  const [allocationWeeklyValues, setAllocationWeeklyValues] = useState<string[]>([]);
   const [allocationStartDate, setAllocationStartDate] = useState('');
   const [editingStartDateAllocationId, setEditingStartDateAllocationId] = useState<string | null>(null);
   const [editingStartDateValue, setEditingStartDateValue] = useState('');
@@ -327,6 +440,9 @@ export default function CapacityPlanning() {
   
   // Multi-sprint allocation state
   const [numberOfSprints, setNumberOfSprints] = useState(1);
+  // How the Add Member allocation spans forward: a number of sprints, or up to an end date.
+  const [allocationSpanMode, setAllocationSpanMode] = useState<'sprints' | 'endDate'>('sprints');
+  const [allocationEndDate, setAllocationEndDate] = useState('');
   const [showMultiSprintPreview, setShowMultiSprintPreview] = useState(false);
   
   // Highlighted project for animation
@@ -334,48 +450,44 @@ export default function CapacityPlanning() {
   const projectRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [pendingProjectId, setPendingProjectId] = useState<string | null>(null);
 
-  // Generate sprint timeline
+  // Generate weekly timeline (each period is an ISO week). `sprintCount` now = number of weeks.
   const sprints = useMemo(() => {
-    const result = [];
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth() + 1;
-    
-    // Fix sprint calculation: Sprint 1 = days 1-15, Sprint 2 = days 16-end of month
-    const currentDay = today.getDate();
-    const currentSprint = currentDay <= 15 ? 1 : 2;
-    
-    let year = currentYear;
-    let month = currentMonth;
-    let sprint = currentSprint;
-
-    // Apply team sprint offset (can go negative for past sprints)
     const offset = viewMode === 'team' ? teamSprintOffset : 0;
-    for (let i = 0; i < offset; i++) {
-      sprint++;
-      if (sprint > 2) { sprint = 1; month++; }
-      if (month > 12) { month = 1; year++; }
-    }
-    for (let i = 0; i > offset; i--) {
-      sprint--;
-      if (sprint < 1) { sprint = 2; month--; }
-      if (month < 1) { month = 12; year--; }
-    }
+    // Anchor to the first week of the current sprint so the leading column is the current
+    // sprint (not a partially-elapsed previous one), consistent across all capacity views.
+    const anchor = firstWeekOfCurrentSprint(staffOverlaySprintLength);
+    const start = new Date(anchor.startDate + 'T00:00:00Z');
+    start.setUTCDate(start.getUTCDate() + offset * 7);
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + (sprintCount - 1) * 7);
+    return getWeeksInRange(start, end).slice(0, sprintCount).map(weekToPeriod);
+  }, [sprintCount, teamSprintOffset, viewMode, staffOverlaySprintLength]);
 
-    for (let i = 0; i < sprintCount; i++) {
-      result.push({ year, month, sprint });
-      sprint++;
-      if (sprint > 2) {
-        sprint = 1;
-        month++;
-        if (month > 12) {
-          month = 1;
-          year++;
-        }
-      }
-    }
-    return result;
-  }, [sprintCount, teamSprintOffset, viewMode]);
+  // Sprint band groups over the same weeks, using the week engine's numbering rules.
+  // (Month is combined into the Week band label above to save a header row.)
+  const staffSprintGroups = useMemo(() => {
+    const weekInfos: WeekInfo[] = sprints.map(s => buildWeek(new Date(s.weekStartDate + 'T00:00:00Z')));
+    return groupWeeksIntoSprints(weekInfos, staffOverlaySprintLength);
+  }, [sprints, staffOverlaySprintLength]);
+
+  // Maps each Sprint group (WeekInfo[]) back to its original SprintInfo periods (matched by
+  // isoYear/isoWeek) so getMembersForSprintGroup can reuse getMembersForSprint per week.
+  const staffSprintPeriodGroups = useMemo(() => {
+    return staffSprintGroups.map(sg => ({
+      sprint: sg,
+      periods: sg.weeks
+        .map(w => sprints.find(s => s.isoYear === w.isoYear && s.isoWeek === w.isoWeek))
+        .filter(Boolean) as SprintInfo[],
+    }));
+  }, [staffSprintGroups, sprints]);
+
+  // Set of weekStartDates that begin a new sprint, used to draw a boundary divider
+  // between the week-tiles so they visually cluster under their sprint band.
+  const staffSprintStartDates = useMemo(() => {
+    const set = new Set<string>();
+    staffSprintGroups.forEach(s => set.add(s.weeks[0].startDate));
+    return set;
+  }, [staffSprintGroups]);
 
   // Auto-expand first sprint when in expanded mode and sprints change
   useEffect(() => {
@@ -385,10 +497,10 @@ export default function CapacityPlanning() {
     }
   }, [teamExpandedMode, sprints]);
 
-  // Get allocations for a specific sprint
+  // Get allocations for a specific week (period).
   const getSprintAllocations = (sprint: SprintInfo) => {
     return allocations.filter(
-      a => a.year === sprint.year && a.month === sprint.month && a.sprint === sprint.sprint
+      a => a.isoYear === sprint.isoYear && a.isoWeek === sprint.isoWeek
     );
   };
 
@@ -460,8 +572,11 @@ export default function CapacityPlanning() {
   // Staff View: available managers and eligible members (same logic as Projects View)
   const UNASSIGNED_MANAGER_ID = '__unassigned__';
   const staffAllActiveMembers = useMemo(() =>
-    teamMembers.filter(m => m.isActive).sort((a, b) => a.fullName.localeCompare(b.fullName)),
-    [teamMembers]
+    teamMembers
+      .filter(m => m.isActive)
+      .filter(m => companyGroupFilter === 'all' || getMemberCompanyGroup(m) === companyGroupFilter)
+      .sort((a, b) => a.fullName.localeCompare(b.fullName)),
+    [teamMembers, companyGroupFilter]
   );
 
   const staffAvailableManagers = useMemo(() => {
@@ -471,6 +586,20 @@ export default function CapacityPlanning() {
     const managers = staffAllActiveMembers.filter(m => managerIdSet.has(m.id));
     return { managers, hasUnassigned };
   }, [staffAllActiveMembers]);
+
+  // Drop any selected managers that are no longer valid for the current company group
+  // (e.g. after switching groups), so eligible members don't collapse to an empty set.
+  // Clearing the selection lets the default-selection effect below re-pick a valid manager.
+  useEffect(() => {
+    if (staffSelectedManagerIds.size === 0) return;
+    const validIds = new Set(staffAvailableManagers.managers.map(m => m.id));
+    if (staffAvailableManagers.hasUnassigned) validIds.add(UNASSIGNED_MANAGER_ID);
+    const pruned = new Set([...staffSelectedManagerIds].filter(id => validIds.has(id)));
+    if (pruned.size !== staffSelectedManagerIds.size) {
+      setStaffSelectedManagerIds(pruned);
+      setStaffSelectedMemberIds(new Set());
+    }
+  }, [staffAvailableManagers, staffSelectedManagerIds]);
 
   // Default staff manager selection
   useEffect(() => {
@@ -703,6 +832,52 @@ export default function CapacityPlanning() {
     });
   };
 
+  // Sprint-level aggregation: average each member's total % across the weeks in a sprint
+  // group, flagging when the weekly totals disagree. Each project row is aggregated the same
+  // way (its own average % + varies flag), so the card can show/edit allocations directly —
+  // editing a row opens the per-week breakdown editor (WeekSpanEditor) instead of forcing a
+  // switch to Week level.
+  const getMembersForSprintGroup = (weekPeriods: SprintInfo[]) => {
+    const perWeek = weekPeriods.map(getMembersForSprint);
+    const memberIds = new Set<string>();
+    perWeek.forEach(list => list.forEach(({ member }) => memberIds.add(member.id)));
+
+    const result = Array.from(memberIds).map(id => {
+      const weeklyTotals = perWeek.map(list => list.find(m => m.member.id === id)?.total ?? 0);
+      const { average, varies } = aggregateWeeklyValues(weeklyTotals);
+      const member = perWeek.find(list => list.some(m => m.member.id === id))!.find(m => m.member.id === id)!.member;
+
+      // Union of projects the member touches across the sprint's weeks, each aggregated to
+      // its own average % + varies flag (based on that single project's weekly percentages).
+      const projectIds = new Set<string>();
+      perWeek.forEach(list => {
+        const entry = list.find(m => m.member.id === id);
+        entry?.projects.forEach((p: any) => projectIds.add(p.id));
+      });
+      const projectList = Array.from(projectIds).map(projectId => {
+        const weeklyPcts = perWeek.map(list =>
+          list.find(m => m.member.id === id)?.projects.find((p: any) => p.id === projectId)?.percentage ?? 0
+        );
+        const { average: projAvg, varies: projVaries } = aggregateWeeklyValues(weeklyPcts);
+        const sample = perWeek
+          .map(list => list.find(m => m.member.id === id)?.projects.find((p: any) => p.id === projectId))
+          .find(Boolean);
+        return {
+          id: projectId,
+          customerName: sample?.customerName,
+          projectName: sample?.projectName,
+          comment: sample?.comment,
+          percentage: projAvg,
+          varies: projVaries,
+        };
+      });
+
+      return { member, projects: projectList, total: average, varies };
+    });
+
+    return result.sort((a, b) => a.member.fullName.localeCompare(b.member.fullName));
+  };
+
   // Get members with allocations for a sprint (includes all active members)
   const getMembersForSprint = (sprint: SprintInfo) => {
     const sprintAllocs = getSprintAllocations(sprint);
@@ -791,13 +966,6 @@ export default function CapacityPlanning() {
     );
   };
 
-  const addSprint = () => {
-    if (sprintCount < 12) setSprintCount(sprintCount + 1);
-  };
-
-  const removeSprint = () => {
-    if (sprintCount > 3) setSprintCount(sprintCount - 1);
-  };
 
   const getMonthName = (month: number) => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -805,15 +973,23 @@ export default function CapacityPlanning() {
   };
 
   const getSprintDatePeriod = (sprint: SprintInfo) => {
-    const startDay = sprint.sprint === 1 ? 1 : 16;
-    const endDay = sprint.sprint === 1 ? 15 : new Date(sprint.year, sprint.month, 0).getDate();
-    return `${startDay}-${endDay}`;
+    const start = formatDDMM(sprint.weekStartDate);
+    const end = new Date(sprint.weekStartDate + 'T00:00:00Z');
+    end.setUTCDate(end.getUTCDate() + 6);
+    const endStr = `${String(end.getUTCDate()).padStart(2, '0')}/${String(end.getUTCMonth() + 1).padStart(2, '0')}`;
+    return `${start} → ${endStr}`;
   };
 
   const handleAddMemberToProject = (project: Project, sprint: SprintInfo, filterRole?: string) => {
     setSelectedProject(project);
+    setNumberOfSprints(1); // default = 1 week
     setSelectedSprint(sprint);
     setSelectedRoleFilter(filterRole || null);
+    // Clear any leftover sprint-group span so allocationSpanWeeks is computed from the
+    // clicked sprint × current sprint length, not a stale group from a prior group-add flow.
+    setStaffGroupWeeks(null);
+    setAllocationBreakdown(false);
+    setAllocationWeeklyValues([]);
     setShowAddMemberModal(true);
   };
 
@@ -822,78 +998,54 @@ export default function CapacityPlanning() {
     setShowAddProjectModal(true);
   };
 
-  // Helper function to generate sprint preview for multi-sprint allocations
+  // Helper function to generate a week-by-week preview for multi-week allocations.
   const generateSprintPreview = (startSprint: SprintInfo, count: number): SprintInfo[] => {
-    const sprints: SprintInfo[] = [];
-    let year = startSprint.year;
-    let month = startSprint.month;
-    let sprint = startSprint.sprint;
-    
+    const result: SprintInfo[] = [];
+    const start = new Date(startSprint.weekStartDate + 'T00:00:00Z');
     for (let i = 0; i < count; i++) {
-      sprints.push({ year, month, sprint });
-      
-      sprint++;
-      if (sprint > 2) {
-        sprint = 1;
-        month++;
-        if (month > 12) {
-          month = 1;
-          year++;
-        }
-      }
+      const d = new Date(start);
+      d.setUTCDate(d.getUTCDate() + i * 7);
+      result.push(weekToPeriod(buildWeek(d)));
     }
-    
-    return sprints;
+    return result;
   };
 
-  // Helper function to create multi-sprint allocations
+  // Helper function to create multi-week allocations (advances week by week).
   const createMultiSprintAllocations = (
     member: TeamMember,
     project: Project,
-    startYear: number,
-    startMonth: number,
-    startSprint: number,
+    startPeriod: SprintInfo,
     percentage: number,
     numSprints: number
   ) => {
     const groupId = crypto.randomUUID();
     const allocations = [];
-    
-    let year = startYear;
-    let month = startMonth;
-    let sprint = startSprint;
-    
+    const start = new Date(startPeriod.weekStartDate + 'T00:00:00Z');
+
     for (let i = 0; i < numSprints; i++) {
-      const allocationData = {
+      const d = new Date(start);
+      d.setUTCDate(d.getUTCDate() + i * 7);
+      const wk = buildWeek(d);
+      allocations.push({
         projectId: project.id,
         productManagerId: member.id,
-        year,
-        month,
-        sprint,
+        isoYear: wk.isoYear,
+        isoWeek: wk.isoWeek,
+        weekStartDate: wk.startDate,
+        year: wk.isoYear,
+        month: wk.month,
+        sprint: wk.isoWeek,
         allocationPercentage: percentage,
-        allocationDays: Math.round((percentage / 100) * 10),
+        allocationDays: Math.round((percentage / 100) * workingDaysInWeek(wk)),
         isPlanned: true,
         allocationGroupId: groupId,
         isGroupStart: i === 0,
-        groupStartSprint: `${startYear}-${startMonth}-${startSprint}`,
+        groupStartSprint: `${startPeriod.isoYear}-W${startPeriod.isoWeek}`,
         groupTotalSprints: numSprints,
-        groupCurrentIndex: i + 1
-      };
-      
-      allocations.push(allocationData);
-      
-      // Move to next sprint
-      sprint++;
-      if (sprint > 2) {
-        sprint = 1;
-        month++;
-        if (month > 12) {
-          month = 1;
-          year++;
-        }
-      }
+        groupCurrentIndex: i + 1,
+      });
     }
-    
+
     return allocations;
   };
 
@@ -902,7 +1054,171 @@ export default function CapacityPlanning() {
     setSelectedMember(null);
     setSelectedProject(null);
     setAllocationPercentage('');
+    setAllocationBreakdown(false);
+    setAllocationWeeklyValues([]);
+    // Clear any leftover sprint-group span from a prior group-add flow so this entry
+    // computes its own span from the clicked sprint × current sprint length.
+    setStaffGroupWeeks(null);
     setShowAddMemberModal(true);
+  };
+
+  // Add a project to a member across an entire sprint group (2-3 week Staff View sprint tile).
+  // Sets staffGroupWeeks so handleAddMember writes the same percentage to every week in the
+  // group instead of just one, mirroring the Puzzle View's sprint-level editing.
+  const handleAddProjectToMemberGroup = (member: TeamMember | null, periods: SprintInfo[], weeks: WeekInfo[]) => {
+    setSelectedMember(member);
+    setSelectedSprint(periods[0] || null);
+    setSelectedProject(null);
+    setAllocationPercentage('');
+    setAllocationBreakdown(false);
+    setAllocationWeeklyValues([]);
+    setStaffGroupWeeks(weeks);
+    setShowAddMemberModal(true);
+  };
+
+  // Per-week allocation % for a member+project across a set of weeks (used by the Staff View
+  // sprint-level cards to show/edit each underlying week's value).
+  const getMemberProjectWeeklyPcts = (memberId: string, projectId: string, weeks: WeekInfo[]) =>
+    weeks.map(w => allocations.find(a =>
+      a.productManagerId === memberId && a.projectId === projectId &&
+      a.isoYear === w.isoYear && a.isoWeek === w.isoWeek
+    )?.allocationPercentage || 0);
+
+  // Save per-week values from the Staff View sprint-level sub-editor.
+  const saveStaffSpanEditor = (memberId: string, projectId: string, weeks: WeekInfo[], valuesPerWeek: number[], scope: 'current' | 'future' = 'current') => {
+    weeks.forEach((week, i) => {
+      const pct = valuesPerWeek[i];
+      const existing = allocations.find(a =>
+        a.productManagerId === memberId && a.projectId === projectId &&
+        a.isoYear === week.isoYear && a.isoWeek === week.isoWeek
+      );
+      const legacy = { year: week.year, month: week.month, sprint: parseInt(week.startDate.slice(8, 10), 10) <= 15 ? 1 : 2 };
+      if (pct > 0) {
+        if (existing) {
+          updateAllocation(existing.id, { allocationPercentage: pct, allocationDays: Math.round((pct / 100) * workingDaysInWeek(week)) }, currentUser.email);
+        } else {
+          addAllocation({
+            projectId, productManagerId: memberId,
+            isoYear: week.isoYear, isoWeek: week.isoWeek, weekStartDate: week.startDate,
+            year: legacy.year, month: legacy.month, sprint: legacy.sprint,
+            allocationPercentage: pct, allocationDays: Math.round((pct / 100) * workingDaysInWeek(week)), isPlanned: true,
+          }, currentUser.email);
+        }
+      } else if (existing) {
+        deleteAllocation(existing.id, currentUser.email);
+      }
+    });
+
+    // "Future" scope: apply this sprint's uniform % to every later existing allocation for
+    // the same member+project (weeks strictly after this sprint's last week).
+    if (scope === 'future' && weeks.length > 0) {
+      const pct = valuesPerWeek[0] || 0;
+      const afterDate = weeks[weeks.length - 1].startDate;
+      allocations
+        .filter(a =>
+          a.productManagerId === memberId && a.projectId === projectId &&
+          (a.weekStartDate || '') > afterDate
+        )
+        .forEach(a => {
+          const wk = buildWeek(new Date((a.weekStartDate || '') + 'T00:00:00Z'));
+          if (pct > 0) {
+            updateAllocation(a.id, { allocationPercentage: pct, allocationDays: Math.round((pct / 100) * workingDaysInWeek(wk)) }, currentUser.email);
+          } else {
+            deleteAllocation(a.id, currentUser.email);
+          }
+        });
+    }
+    setStaffSpanEditor(null);
+  };
+
+  // Remove a member+project's allocations across every week in a sprint group (the "X" button
+  // on a Staff View sprint-level card row).
+  const handleRemoveAllocationGroup = (memberId: string, projectId: string, weeks: WeekInfo[]) => {
+    openRemoveAllocationModal(memberId, projectId, weeks);
+  };
+
+  // Open the "remove allocation" confirmation modal (this only vs this + future).
+  const openRemoveAllocationModal = (memberId: string, projectId: string, weeks: WeekInfo[]) => {
+    if (weeks.length === 0) return;
+    const member = teamMembers.find(m => m.id === memberId);
+    const project = projects.find(p => p.id === projectId);
+    const sorted = [...weeks].sort((a, b) => a.startDate.localeCompare(b.startDate));
+    const weekLabel = weeks.length > 1
+      ? `${weeks.length} weeks starting ${sorted[0].startDate}`
+      : `the week of ${sorted[0].startDate}`;
+    setAllocationToRemove({
+      memberId,
+      projectId,
+      weeks: sorted,
+      memberName: member?.fullName || 'this member',
+      projectName: project?.projectName || 'this project',
+      weekLabel,
+    });
+    setRemoveFutureAllocationsOption('current');
+    setShowRemoveAllocationModal(true);
+  };
+
+  // Execute the allocation removal based on the chosen scope.
+  const confirmRemoveAllocation = async () => {
+    if (!allocationToRemove) return;
+    const { memberId, projectId, weeks } = allocationToRemove;
+    setShowRemoveAllocationModal(false);
+    setIsCreatingAllocations(true);
+
+    let toDelete: SprintAllocation[] = [];
+    if (removeFutureAllocationsOption === 'future') {
+      // Every allocation for this member+project from the earliest targeted week onward.
+      const fromDate = weeks[0].startDate;
+      toDelete = allocations.filter(a =>
+        a.productManagerId === memberId && a.projectId === projectId &&
+        (a.weekStartDate || '') >= fromDate
+      );
+    } else {
+      toDelete = weeks
+        .map(week => allocations.find(a =>
+          a.productManagerId === memberId && a.projectId === projectId &&
+          a.isoYear === week.isoYear && a.isoWeek === week.isoWeek
+        ))
+        .filter((a): a is SprintAllocation => !!a);
+    }
+
+    toDelete.forEach(a => deleteAllocation(a.id, currentUser.email));
+
+    setTimeout(async () => {
+      try {
+        await refreshData();
+      } catch (error) {
+        console.error('Failed to refresh data:', error);
+        alert('⚠️ Allocation removed but failed to refresh view. Please refresh the page.');
+      } finally {
+        setIsCreatingAllocations(false);
+        setAllocationToRemove(null);
+      }
+    }, 500);
+  };
+
+  const clearStaffSpanEditor = (memberId: string, projectId: string, weeks: WeekInfo[], scope: 'current' | 'future' = 'current') => {
+    if (scope === 'future' && weeks.length > 0) {
+      // Remove this sprint's allocations plus every later one for this member+project.
+      const fromDate = weeks[0].startDate;
+      const toDelete = allocations.filter(a =>
+        a.productManagerId === memberId && a.projectId === projectId &&
+        (a.weekStartDate || '') >= fromDate
+      );
+      if (!confirm(`Remove ${toDelete.length} allocation${toDelete.length !== 1 ? 's' : ''} for this member on this project, from this sprint onward?`)) return;
+      toDelete.forEach(a => deleteAllocation(a.id, currentUser.email));
+      setStaffSpanEditor(null);
+      return;
+    }
+    if (!confirm(`Clear all allocations for this sprint (${weeks.length} week${weeks.length > 1 ? 's' : ''})?`)) return;
+    weeks.forEach(week => {
+      const existing = allocations.find(a =>
+        a.productManagerId === memberId && a.projectId === projectId &&
+        a.isoYear === week.isoYear && a.isoWeek === week.isoWeek
+      );
+      if (existing) deleteAllocation(existing.id, currentUser.email);
+    });
+    setStaffSpanEditor(null);
   };
 
   const handleSelectProject = (project: Project) => {
@@ -970,19 +1286,55 @@ export default function CapacityPlanning() {
       });
   };
 
-  // Helper function to calculate sprint from a date
+  // Helper function to derive the week (period) containing a date.
   const getSprintFromDate = (dateString: string): SprintInfo => {
     const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1; // 0-indexed
-    const day = date.getDate();
-    
-    // Determine sprint based on day of month
-    // Sprint 1: 1-15, Sprint 2: 16-31
-    const sprint = day <= 15 ? 1 : 2;
-    
-    return { year, month, sprint };
+    return weekToPeriod(buildWeek(new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))));
   };
+
+  // The actual weeks the Add Member modal's allocation will be written to. When opened from a
+  // Staff View sprint-level card (staffGroupWeeks set), that group's weeks are canonical.
+  // Otherwise it's Number of Sprints × the screen's current sprint length (staffOverlaySprintLength,
+  // the same "Sprint length" control shown next to the navigation arrows) — no longer a
+  // per-project property. Starts at the start date (or the clicked sprint). Drives both the
+  // "Weekly breakdown" UI and, when checked, the actual per-week allocation values on save.
+  const allocationSpanWeeks: WeekInfo[] = useMemo(() => {
+    // Determine the start week: explicit start date > sprint-card group's first week >
+    // the clicked sprint. The span controls (sprints / end date) then extend forward from
+    // there, so choosing an end date is honored even when opened from a sprint-level card.
+    let startWeekDate: string | undefined;
+    if (allocationStartDate) startWeekDate = getSprintFromDate(allocationStartDate).weekStartDate;
+    else if (staffGroupWeeks && staffGroupWeeks.length > 0) startWeekDate = staffGroupWeeks[0].startDate;
+    else if (selectedSprint) startWeekDate = selectedSprint.weekStartDate;
+
+    if (!startWeekDate) return [];
+    const start = new Date(startWeekDate + 'T00:00:00Z');
+
+    // End-date mode: span every week from the start week through the chosen end date.
+    if (allocationSpanMode === 'endDate') {
+      if (!allocationEndDate || allocationEndDate < startWeekDate) return getWeeksInRange(start, start);
+      return getWeeksInRange(start, new Date(allocationEndDate + 'T00:00:00Z'));
+    }
+
+    // Number-of-sprints mode. When opened from a sprint-level card and the user hasn't
+    // changed the count (still 1) nor set a start date, keep the group's exact weeks.
+    if (staffGroupWeeks && staffGroupWeeks.length > 0 && numberOfSprints === 1 && !allocationStartDate) {
+      return staffGroupWeeks;
+    }
+    const totalWeeks = numberOfSprints * staffOverlaySprintLength;
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + (totalWeeks - 1) * 7);
+    return getWeeksInRange(start, end).slice(0, totalWeeks);
+  }, [staffGroupWeeks, selectedProject, selectedSprint, allocationStartDate, allocationSpanMode, allocationEndDate, numberOfSprints, staffOverlaySprintLength]);
+
+  const allocationIsMultiWeek = allocationSpanWeeks.length > 1;
+  const allocationUseBreakdown = allocationIsMultiWeek && allocationBreakdown;
+
+  // Keep the per-week values array in sync with the number of weeks currently being created,
+  // preserving already-entered values where possible.
+  useEffect(() => {
+    setAllocationWeeklyValues(prev => allocationSpanWeeks.map((_, i) => prev[i] ?? ''));
+  }, [allocationSpanWeeks.length]);
 
   const handleAddMember = () => {
     if (!selectedMember || !selectedSprint) {
@@ -992,18 +1344,6 @@ export default function CapacityPlanning() {
     // If no project selected, member must select a project first
     if (!selectedProject) {
       alert('Please select a project for this member. Adding a member without a project is not supported.');
-      return;
-    }
-    
-    // If project is selected, allocation percentage is required
-    if (!allocationPercentage) {
-      alert('Please enter an allocation percentage when a project is selected');
-      return;
-    }
-    
-    const percentage = parseInt(allocationPercentage);
-    if (isNaN(percentage) || percentage < 0 || percentage > 100) {
-      alert('Please enter a valid percentage (0-100)');
       return;
     }
 
@@ -1020,6 +1360,65 @@ export default function CapacityPlanning() {
       alert(`${selectedMember.fullName} is already allocated to this project in this sprint. Please edit the existing allocation instead.`);
       return;
     }
+
+    // Weekly breakdown mode: each week in allocationSpanWeeks gets its own percentage from
+    // allocationWeeklyValues, mirroring the Puzzle View's WeekSpanEditor. Skips weeks left at 0.
+    if (allocationUseBreakdown) {
+      const parsed = allocationWeeklyValues.map(v => {
+        const n = parseInt(v, 10);
+        return isNaN(n) ? 0 : Math.max(0, Math.min(100, n));
+      });
+      if (!parsed.some(v => v > 0)) {
+        alert('Please enter a percentage for at least one week');
+        return;
+      }
+      allocationSpanWeeks.forEach((week, i) => {
+        const pct = parsed[i];
+        if (pct <= 0) return;
+        const legacy = { year: week.year, month: week.month, sprint: parseInt(week.startDate.slice(8, 10), 10) <= 15 ? 1 : 2 };
+        addAllocation(
+          {
+            projectId: selectedProject.id,
+            productManagerId: selectedMember.id,
+            isoYear: week.isoYear,
+            isoWeek: week.isoWeek,
+            weekStartDate: week.startDate,
+            year: legacy.year,
+            month: legacy.month,
+            sprint: legacy.sprint,
+            allocationPercentage: pct,
+            allocationDays: Math.round((pct / 100) * workingDaysInWeek(week)),
+            isPlanned: true,
+            startDate: allocationStartDate || undefined
+          },
+          currentUser.email
+        );
+      });
+
+      setShowAddMemberModal(false);
+      setSelectedMember(null);
+      setAllocationPercentage('');
+      setAllocationBreakdown(false);
+      setAllocationWeeklyValues([]);
+      setAllocationStartDate('');
+      setNumberOfSprints(1);
+      setAllocationSpanMode('sprints');
+      setAllocationEndDate('');
+      setStaffGroupWeeks(null);
+      return;
+    }
+
+    // If project is selected, allocation percentage is required
+    if (!allocationPercentage) {
+      alert('Please enter an allocation percentage when a project is selected');
+      return;
+    }
+    
+    const percentage = parseInt(allocationPercentage);
+    if (isNaN(percentage) || percentage < 0 || percentage > 100) {
+      alert('Please enter a valid percentage (0-100)');
+      return;
+    }
     
     // Determine the actual starting sprint based on start date
     let actualStartSprint = selectedSprint;
@@ -1027,26 +1426,33 @@ export default function CapacityPlanning() {
       actualStartSprint = getSprintFromDate(allocationStartDate);
     }
     
-    // Multi-sprint allocation
-    if (numberOfSprints > 1) {
+    // Total consecutive weeks to create: either Number of Sprints × sprint length, or the
+    // number of weeks from the start through the chosen end date (end-date span mode).
+    const totalWeeks = allocationSpanMode === 'endDate'
+      ? allocationSpanWeeks.length
+      : numberOfSprints * staffOverlaySprintLength;
+
+    if (totalWeeks > 1) {
       // Close modal and show loading state
       setShowAddMemberModal(false);
       setIsCreatingAllocations(true);
-      
-      const multiAllocations = createMultiSprintAllocations(
-        selectedMember,
-        selectedProject,
-        actualStartSprint.year,
-        actualStartSprint.month,
-        actualStartSprint.sprint,
-        percentage,
-        numberOfSprints
-      );
-      
-      // Add each allocation
-      multiAllocations.forEach(alloc => {
+
+      // Write to the exact weeks the modal computed (allocationSpanWeeks) so the saved data
+      // matches the preview for both "number of sprints" and "until end date" modes.
+      allocationSpanWeeks.forEach(week => {
+        const legacy = { year: week.year, month: week.month, sprint: parseInt(week.startDate.slice(8, 10), 10) <= 15 ? 1 : 2 };
         addAllocation({
-          ...alloc,
+          projectId: selectedProject.id,
+          productManagerId: selectedMember.id,
+          isoYear: week.isoYear,
+          isoWeek: week.isoWeek,
+          weekStartDate: week.startDate,
+          year: legacy.year,
+          month: legacy.month,
+          sprint: legacy.sprint,
+          allocationPercentage: percentage,
+          allocationDays: Math.round((percentage / 100) * workingDaysInWeek(week)),
+          isPlanned: true,
           startDate: allocationStartDate || undefined
         }, currentUser.email);
       });
@@ -1056,7 +1462,7 @@ export default function CapacityPlanning() {
         try {
           await refreshData();
           setIsCreatingAllocations(false);
-          alert(`✅ Created ${numberOfSprints} sprint allocations for ${selectedMember.fullName} starting from ${getMonthName(actualStartSprint.month)} ${actualStartSprint.year} Sprint ${actualStartSprint.sprint}`);
+          alert(`✅ Created ${totalWeeks} week${totalWeeks > 1 ? 's' : ''} of allocations for ${selectedMember.fullName} starting from ${actualStartSprint.monthLabel} ${actualStartSprint.weekLabel}`);
         } catch (error) {
           console.error('Failed to refresh data:', error);
           setIsCreatingAllocations(false);
@@ -1067,20 +1473,50 @@ export default function CapacityPlanning() {
       // Reset form state
       setSelectedMember(null);
       setAllocationPercentage('');
+      setAllocationBreakdown(false);
+      setAllocationWeeklyValues([]);
       setAllocationStartDate('');
       setNumberOfSprints(1);
+      setAllocationSpanMode('sprints');
+      setAllocationEndDate('');
       return; // Exit early for multi-sprint
+    } else if (staffGroupWeeks && staffGroupWeeks.length > 0) {
+      // Added from a Staff View sprint-level card (2-3 week tile) — write the same
+      // percentage to every underlying week in the group.
+      staffGroupWeeks.forEach(week => {
+        const legacy = { year: week.year, month: week.month, sprint: parseInt(week.startDate.slice(8, 10), 10) <= 15 ? 1 : 2 };
+        addAllocation(
+          {
+            projectId: selectedProject.id,
+            productManagerId: selectedMember.id,
+            isoYear: week.isoYear,
+            isoWeek: week.isoWeek,
+            weekStartDate: week.startDate,
+            year: legacy.year,
+            month: legacy.month,
+            sprint: legacy.sprint,
+            allocationPercentage: percentage,
+            allocationDays: Math.round((percentage / 100) * workingDaysInWeek(week)),
+            isPlanned: true,
+            startDate: allocationStartDate || undefined
+          },
+          currentUser.email
+        );
+      });
     } else {
-      // Single sprint allocation
+      // Single week allocation
       addAllocation(
         {
           projectId: selectedProject.id,
           productManagerId: selectedMember.id,
+          isoYear: actualStartSprint.isoYear,
+          isoWeek: actualStartSprint.isoWeek,
+          weekStartDate: actualStartSprint.weekStartDate,
           year: actualStartSprint.year,
           month: actualStartSprint.month,
           sprint: actualStartSprint.sprint,
           allocationPercentage: percentage,
-          allocationDays: (percentage / 100) * 10,
+          allocationDays: Math.round((percentage / 100) * workingDaysInWeek(buildWeek(new Date(actualStartSprint.weekStartDate + 'T00:00:00Z')))),
           isPlanned: true,
           startDate: allocationStartDate || undefined
         },
@@ -1091,9 +1527,13 @@ export default function CapacityPlanning() {
     setShowAddMemberModal(false);
     setSelectedMember(null);
     setAllocationPercentage('');
+    setAllocationBreakdown(false);
+    setAllocationWeeklyValues([]);
     setAllocationStartDate('');
     setNumberOfSprints(1);
-    setNumberOfSprints(1); // Reset to default
+    setAllocationSpanMode('sprints');
+    setAllocationEndDate('');
+    setStaffGroupWeeks(null);
   };
 
   const handleNewProjectCreated = (projectId: string) => {
@@ -1120,41 +1560,11 @@ export default function CapacityPlanning() {
     }
   };
 
-  const handleRemoveAllocation = async (allocationId: string) => {
-    if (!confirm('Remove this allocation?')) {
-      return;
-    }
-    
-    // Show loading
-    setIsCreatingAllocations(true);
-    
-    // Find the allocation to get project and sprint info
+  const handleRemoveAllocation = (allocationId: string) => {
     const allocation = allocations.find(a => a.id === allocationId);
-    
-    if (allocation) {
-      // Track the project in the sprint so it remains visible even with no allocations
-      const sprintKey = `${allocation.year}-${allocation.month}-${allocation.sprint}`;
-      const updatedSprintProjects = new Map(sprintProjects);
-      if (!updatedSprintProjects.has(sprintKey)) {
-        updatedSprintProjects.set(sprintKey, new Set());
-      }
-      updatedSprintProjects.get(sprintKey)!.add(allocation.projectId);
-      setSprintProjects(updatedSprintProjects);
-    }
-    
-    deleteAllocation(allocationId, currentUser.email);
-    
-    // Wait for delete to complete, then refresh
-    setTimeout(async () => {
-      try {
-        await refreshData();
-        setIsCreatingAllocations(false);
-      } catch (error) {
-        console.error('Failed to refresh data:', error);
-        setIsCreatingAllocations(false);
-        alert('⚠️ Allocation removed but failed to refresh view. Please refresh the page.');
-      }
-    }, 500);
+    if (!allocation) return;
+    const week = buildWeek(new Date((allocation.weekStartDate || allocation.startDate || '') + 'T00:00:00Z'));
+    openRemoveAllocationModal(allocation.productManagerId, allocation.projectId, [week]);
   };
 
   const handleCopyToNextSprint = (project: Project, currentSprint: SprintInfo) => {
@@ -1176,6 +1586,9 @@ export default function CapacityPlanning() {
         {
           projectId: alloc.projectId,
           productManagerId: alloc.productManagerId,
+          isoYear: nextSprint.isoYear,
+          isoWeek: nextSprint.isoWeek,
+          weekStartDate: nextSprint.weekStartDate,
           year: nextSprint.year,
           month: nextSprint.month,
           sprint: nextSprint.sprint,
@@ -1243,12 +1656,15 @@ export default function CapacityPlanning() {
       return;
     }
 
-    // Copy all member allocations to next sprint sequentially to avoid race conditions
+    // Copy all member allocations to next week sequentially to avoid race conditions
     for (const alloc of currentAllocs) {
       addAllocation(
         {
           projectId: alloc.projectId,
           productManagerId: alloc.productManagerId,
+          isoYear: nextSprint.isoYear,
+          isoWeek: nextSprint.isoWeek,
+          weekStartDate: nextSprint.weekStartDate,
           year: nextSprint.year,
           month: nextSprint.month,
           sprint: nextSprint.sprint,
@@ -1277,9 +1693,59 @@ export default function CapacityPlanning() {
     alert(`${member.fullName}'s ${currentAllocs.length} allocation(s) copied to next sprint!`);
   };
 
+  // Group-aware version: copies a member's allocations from every week in the current sprint
+  // group to the same number of weeks immediately following it (Staff View sprint-level card).
+  const handleCopyMemberToNextSprintGroup = async (member: TeamMember, groupWeeks: WeekInfo[]) => {
+    const lastWeek = groupWeeks[groupWeeks.length - 1];
+    const start = new Date(lastWeek.startDate + 'T00:00:00Z');
+    start.setUTCDate(start.getUTCDate() + 7);
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + (groupWeeks.length - 1) * 7);
+    const nextWeeks = getWeeksInRange(start, end).slice(0, groupWeeks.length);
+
+    let totalCopied = 0;
+    for (let i = 0; i < groupWeeks.length; i++) {
+      const srcWeek = groupWeeks[i];
+      const destWeek = nextWeeks[i];
+      if (!destWeek) continue;
+      const srcAllocs = allocations.filter(a =>
+        a.productManagerId === member.id && a.isoYear === srcWeek.isoYear && a.isoWeek === srcWeek.isoWeek
+      );
+      for (const alloc of srcAllocs) {
+        const legacy = { year: destWeek.year, month: destWeek.month, sprint: parseInt(destWeek.startDate.slice(8, 10), 10) <= 15 ? 1 : 2 };
+        addAllocation(
+          {
+            projectId: alloc.projectId,
+            productManagerId: alloc.productManagerId,
+            isoYear: destWeek.isoYear,
+            isoWeek: destWeek.isoWeek,
+            weekStartDate: destWeek.startDate,
+            year: legacy.year,
+            month: legacy.month,
+            sprint: legacy.sprint,
+            allocationPercentage: alloc.allocationPercentage || 0,
+            allocationDays: alloc.allocationDays || 0,
+            isPlanned: true
+          },
+          currentUser.email
+        );
+        totalCopied++;
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+    }
+
+    if (totalCopied === 0) {
+      alert('No allocations to copy for this member');
+      return;
+    }
+
+    await refreshData();
+    alert(`${member.fullName}'s ${totalCopied} allocation(s) copied to the next sprint!`);
+  };
+
   // Remove member from sprint handlers
-  const handleOpenRemoveMemberModal = (member: TeamMember, sprint: SprintInfo) => {
-    setMemberToRemove({ member, sprint });
+  const handleOpenRemoveMemberModal = (member: TeamMember, sprint: SprintInfo, groupWeeks?: WeekInfo[]) => {
+    setMemberToRemove({ member, sprint, groupWeeks });
     setRemoveFutureSprintsOption('current');
     setShowRemoveMemberModal(true);
   };
@@ -1287,30 +1753,28 @@ export default function CapacityPlanning() {
   const handleRemoveMemberFromSprint = async () => {
     if (!memberToRemove) return;
     
-    const { member, sprint } = memberToRemove;
+    const { member, sprint, groupWeeks } = memberToRemove;
     
     // Close modal and show loading
     setShowRemoveMemberModal(false);
     setIsCreatingAllocations(true);
     
-    // Get sprints to remove from
+    // Get sprints to remove from. When removing from a Staff View sprint-level card
+    // (groupWeeks set), "current" means every week in that sprint group, not just one.
     const sprintsToRemove = removeFutureSprintsOption === 'future'
-      ? sprints.filter(s => {
-          const sprintDate = new Date(s.year, s.month - 1, s.sprint === 1 ? 1 : 16);
-          const currentSprintDate = new Date(sprint.year, sprint.month - 1, sprint.sprint === 1 ? 1 : 16);
-          return sprintDate >= currentSprintDate;
-        })
-      : [sprint];
+      ? sprints.filter(s => s.weekStartDate >= sprint.weekStartDate)
+      : groupWeeks && groupWeeks.length > 0
+        ? groupWeeks.map(weekToPeriod)
+        : [sprint];
     
     let totalRemoved = 0;
     
-    // Remove allocations from selected sprints
+    // Remove allocations from selected weeks
     for (const s of sprintsToRemove) {
       const allocsToRemove = allocations.filter(
         a => a.productManagerId === member.id &&
-             a.year === s.year &&
-             a.month === s.month &&
-             a.sprint === s.sprint
+             a.isoYear === s.isoYear &&
+             a.isoWeek === s.isoWeek
       );
       
       for (const alloc of allocsToRemove) {
@@ -1358,6 +1822,22 @@ export default function CapacityPlanning() {
     setEditingPercentage(currentPercentage.toString());
   };
 
+  // Apply a percentage to a single allocation (person-days derived from its own week).
+  const applyPercentageToAllocation = (allocationId: string, percentage: number) => {
+    const existing = allocations.find(a => a.id === allocationId);
+    const weekDays = existing?.weekStartDate
+      ? workingDaysInWeek(buildWeek(new Date(existing.weekStartDate + 'T00:00:00Z')))
+      : 5;
+    updateAllocation(
+      allocationId,
+      {
+        allocationPercentage: percentage,
+        allocationDays: Math.round((percentage / 100) * weekDays)
+      },
+      currentUser.email
+    );
+  };
+
   const saveAllocationEdit = (allocationId: string) => {
     const percentage = parseInt(editingPercentage);
     if (isNaN(percentage) || percentage < 0 || percentage > 100) {
@@ -1365,17 +1845,54 @@ export default function CapacityPlanning() {
       return;
     }
 
-    updateAllocation(
-      allocationId,
-      {
-        allocationPercentage: percentage,
-        allocationDays: (percentage / 100) * 10
-      },
-      currentUser.email
-    );
+    // If the same member+project has later allocations, ask whether to apply this change to
+    // just this week or this and all future weeks (mirrors the Puzzle View scope UX).
+    const existing = allocations.find(a => a.id === allocationId);
+    const futureAllocs = existing
+      ? allocations.filter(a =>
+          a.id !== allocationId &&
+          a.projectId === existing.projectId && a.productManagerId === existing.productManagerId &&
+          (a.weekStartDate || '') > (existing.weekStartDate || '')
+        )
+      : [];
 
+    if (existing && futureAllocs.length > 0) {
+      const member = teamMembers.find(m => m.id === existing.productManagerId);
+      const project = projects.find(p => p.id === existing.projectId);
+      setEditScopeOption('current');
+      setEditScopeModal({
+        allocationId,
+        percentage,
+        memberName: member?.fullName || 'this member',
+        projectName: project?.projectName || 'this project',
+        futureCount: futureAllocs.length,
+      });
+      setEditingAllocationId(null);
+      setEditingPercentage('');
+      return;
+    }
+
+    applyPercentageToAllocation(allocationId, percentage);
     setEditingAllocationId(null);
     setEditingPercentage('');
+  };
+
+  // Confirm the inline edit scope chosen in the modal.
+  const confirmEditScope = () => {
+    if (!editScopeModal) return;
+    const { allocationId, percentage } = editScopeModal;
+    const existing = allocations.find(a => a.id === allocationId);
+    applyPercentageToAllocation(allocationId, percentage);
+    if (editScopeOption === 'future' && existing) {
+      allocations
+        .filter(a =>
+          a.id !== allocationId &&
+          a.projectId === existing.projectId && a.productManagerId === existing.productManagerId &&
+          (a.weekStartDate || '') > (existing.weekStartDate || '')
+        )
+        .forEach(a => applyPercentageToAllocation(a.id, percentage));
+    }
+    setEditScopeModal(null);
   };
 
   const cancelEdit = () => {
@@ -1387,6 +1904,14 @@ export default function CapacityPlanning() {
   const openCommentModal = (allocation: SprintAllocation) => {
     setSelectedAllocation(allocation);
     setCommentText(allocation.comment || '');
+    setShowCommentModal(true);
+  };
+
+  // Group-aware comment modal for the Staff View sprint-level cards: applies the same comment
+  // text to every underlying week's allocation for this member+project in the sprint group.
+  const openStaffGroupCommentModal = (memberId: string, projectId: string, weeks: WeekInfo[], existingComment?: string) => {
+    setStaffCommentContext({ memberId, projectId, weeks });
+    setCommentText(existingComment || '');
     setShowCommentModal(true);
   };
 
@@ -1534,6 +2059,7 @@ export default function CapacityPlanning() {
       if (project) {
         console.log('Found project:', project.customerName, '-', project.projectName);
         setSelectedProject(project);
+        setNumberOfSprints(1);
         setSelectedProjectId(null);
         // Focus on percentage input
         setTimeout(() => percentageInputRef.current?.focus(), 100);
@@ -1572,6 +2098,21 @@ export default function CapacityPlanning() {
   };
 
   const saveComment = () => {
+    if (staffCommentContext) {
+      const { memberId, projectId, weeks } = staffCommentContext;
+      weeks.forEach(week => {
+        const alloc = allocations.find(a =>
+          a.productManagerId === memberId && a.projectId === projectId &&
+          a.isoYear === week.isoYear && a.isoWeek === week.isoWeek
+        );
+        if (alloc) updateAllocation(alloc.id, { comment: commentText || undefined }, currentUser.email);
+      });
+      setShowCommentModal(false);
+      setStaffCommentContext(null);
+      setCommentText('');
+      return;
+    }
+
     if (!selectedAllocation) return;
 
     updateAllocation(
@@ -1919,23 +2460,15 @@ export default function CapacityPlanning() {
     const activeProjects = projects.filter(p => !p.isArchived && (p.status === 'Active' || p.status === 'Pending' || p.status === 'New Signed Off'));
     const activeMembers = teamMembers.filter(m => m.isActive).sort((a, b) => a.fullName.localeCompare(b.fullName));
     
-    // Get sprints to export (current + next 7 = 8 total)
-    const today = new Date();
-    let year = today.getFullYear();
-    let month = today.getMonth() + 1;
-    let sprint = today.getDate() <= 15 ? 1 : 2;
-    const exportSprints: { year: number; month: number; sprint: number; label: string }[] = [];
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    for (let i = 0; i < 8; i++) {
-      exportSprints.push({
-        year, month, sprint,
-        label: `${monthNames[month - 1]} ${String(year).slice(2)} Sprint ${sprint}`
-      });
-      sprint++;
-      if (sprint > 2) { sprint = 1; month++; }
-      if (month > 12) { month = 1; year++; }
-    }
+    // Get weeks to export (current + next 7 = 8 total)
+    const exportStart = new Date();
+    const exportEnd = new Date(exportStart);
+    exportEnd.setDate(exportEnd.getDate() + 7 * 7);
+    const exportSprints = getWeeksInRange(exportStart, exportEnd).slice(0, 8).map(w => ({
+      isoYear: w.isoYear,
+      isoWeek: w.isoWeek,
+      label: `${CP_MONTH_ABBR[w.month - 1]} ${String(w.year).slice(2)} W${w.weekOfMonth}`,
+    }));
     
     // Row 1: Sprint headers (merged across employee columns)
     const row1 = [''];
@@ -1955,7 +2488,7 @@ export default function CapacityPlanning() {
     exportSprints.forEach(s => {
       activeMembers.forEach(m => {
         const total = allocations
-          .filter(a => a.productManagerId === m.id && a.year === s.year && a.month === s.month && a.sprint === s.sprint)
+          .filter(a => a.productManagerId === m.id && a.isoYear === s.isoYear && a.isoWeek === s.isoWeek)
           .reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
         row3.push(total > 0 ? `${total}%` : '');
       });
@@ -1974,7 +2507,7 @@ export default function CapacityPlanning() {
             const alloc = allocations.find(a => 
               a.projectId === project.id && 
               a.productManagerId === m.id && 
-              a.year === s.year && a.month === s.month && a.sprint === s.sprint
+              a.isoYear === s.isoYear && a.isoWeek === s.isoWeek
             );
             const pct = alloc?.allocationPercentage || 0;
             row.push(pct > 0 ? `${pct}%` : '');
@@ -2212,6 +2745,22 @@ export default function CapacityPlanning() {
           </div>
           
           <div className="flex gap-2 items-center">
+            {/* Company Group Filter - applies across all views */}
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs font-medium text-gray-600 whitespace-nowrap">Group:</label>
+              <select
+                value={companyGroupFilter}
+                onChange={(e) => setCompanyGroupFilter(e.target.value)}
+                className="px-2 py-1 border border-gray-300 rounded text-xs"
+                title="Filter members by company group"
+              >
+                <option value="all">All Groups</option>
+                {COMPANY_GROUPS.map(g => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+            </div>
+
             {/* View Mode Toggle */}
             <div className="flex bg-gray-100 rounded p-0.5">
               <button
@@ -2245,33 +2794,6 @@ export default function CapacityPlanning() {
                 Timeline View
               </button>
             </div>
-
-            {/* Sprint Controls - hidden in matrix/Project List view */}
-            {viewMode !== 'matrix' && viewMode !== 'timeline' && (
-            <div className="flex items-center gap-1 border-l pl-2">
-              <button
-                onClick={removeSprint}
-                disabled={sprintCount <= 3}
-                className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Remove sprint"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                </svg>
-              </button>
-              <span className="text-xs text-gray-600">{sprintCount}</span>
-              <button
-                onClick={addSprint}
-                disabled={sprintCount >= 12}
-                className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Add sprint"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </button>
-            </div>
-            )}
 
             {/* Filter Toggle - hidden in matrix/timeline view */}
             {viewMode !== 'matrix' && viewMode !== 'timeline' && (
@@ -2590,13 +3112,13 @@ export default function CapacityPlanning() {
       {/* Matrix View */}
       {viewMode === 'matrix' && (
         <div className="flex-1">
-          <ProjectMatrixView />
+          <ProjectMatrixView companyGroupFilter={companyGroupFilter} />
         </div>
       )}
 
       {viewMode === 'timeline' && (
         <div className="flex-1">
-          <TimelineView />
+          <TimelineView companyGroupFilter={companyGroupFilter} />
         </div>
       )}
 
@@ -2606,25 +3128,236 @@ export default function CapacityPlanning() {
         {/* Sprint navigation for Staff View */}
         {viewMode === 'team' && (
           <div className="flex items-center gap-1 px-6 pt-4 pb-2">
-            <button onClick={() => { setTeamSprintOffset(o => o - 3); if (expandedSprint) setTeamExpandedMode(true); }} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Previous 3 sprints">
+            <button onClick={() => { setTeamSprintOffset(o => o - 4); if (expandedSprint) setTeamExpandedMode(true); }} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Back 4 weeks">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
             </button>
-            <button onClick={() => { setTeamSprintOffset(o => o - 1); if (expandedSprint) setTeamExpandedMode(true); }} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Previous sprint">
+            <button onClick={() => { setTeamSprintOffset(o => o - 1); if (expandedSprint) setTeamExpandedMode(true); }} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Back 1 week">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
-            <button onClick={() => { setTeamSprintOffset(0); if (expandedSprint) setTeamExpandedMode(true); }} className="px-2 py-1 rounded text-xs font-medium text-gray-700 hover:bg-gray-200" title="Go to current sprint">Today</button>
-            <button onClick={() => { setTeamSprintOffset(o => o + 1); if (expandedSprint) setTeamExpandedMode(true); }} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Next sprint">
+            <button onClick={() => { setTeamSprintOffset(0); if (expandedSprint) setTeamExpandedMode(true); }} className="px-2 py-1 rounded text-xs font-medium text-gray-700 hover:bg-gray-200" title="Go to current week">Today</button>
+            <button onClick={() => { setTeamSprintOffset(o => o + 1); if (expandedSprint) setTeamExpandedMode(true); }} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Forward 1 week">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </button>
-            <button onClick={() => { setTeamSprintOffset(o => o + 3); if (expandedSprint) setTeamExpandedMode(true); }} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Next 3 sprints">
+            <button onClick={() => { setTeamSprintOffset(o => o + 4); if (expandedSprint) setTeamExpandedMode(true); }} className="p-1 rounded hover:bg-gray-200 text-gray-600" title="Forward 4 weeks">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
             </button>
             {teamSprintOffset !== 0 && (
-              <span className="text-[10px] text-gray-400 ml-2">{teamSprintOffset > 0 ? `+${teamSprintOffset}` : teamSprintOffset} sprints from today</span>
+              <span className="text-[10px] text-gray-400 ml-2">{teamSprintOffset > 0 ? `+${teamSprintOffset}` : teamSprintOffset} weeks from today</span>
+            )}
+            {/* Week / Sprint display level — toggle temporarily disabled, Sprint is always shown */}
+            {VIEW_LEVEL_TOGGLE_ENABLED && (
+              <div className="flex items-center border rounded-lg overflow-hidden ml-3">
+                <button onClick={() => setStaffViewLevel('week')}
+                  className={`px-2.5 py-1 text-[11px] font-medium ${staffViewLevel === 'week' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+                  Week
+                </button>
+                <button onClick={() => setStaffViewLevel('sprint')}
+                  className={`px-2.5 py-1 text-[11px] font-medium ${staffViewLevel === 'sprint' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+                  Sprint
+                </button>
+              </div>
             )}
           </div>
         )}
-        <div className={expandedSprint ? "p-6" : "flex gap-6 p-6 max-w-[1920px] mx-auto"}>
+        {/* Leveled header + week-tiles share one horizontal-scroll container with fixed pixel
+            column widths, so the Month/Week/Sprint bands always line up with the tiles below. */}
+        <div className={expandedSprint ? "p-6" : "overflow-x-auto"}>
+        <div className={expandedSprint ? "" : "px-6 pt-1"} style={expandedSprint ? undefined : { minWidth: 'fit-content' }}>
+        {viewMode === 'team' && staffViewLevel === 'sprint' && !expandedSprint ? (
+          <div className="flex pb-6" style={{ gap: STAFF_COL_GAP }}>
+            {staffSprintPeriodGroups.map(({ sprint, periods }, sIdx) => {
+              const aggMembers = getMembersForSprintGroup(periods);
+              const isGroupExpanded = expandedStaffGroup === sIdx;
+              const isGroupHidden = expandedStaffGroup !== null && !isGroupExpanded;
+              if (isGroupHidden) return null;
+              return (
+                <div key={sIdx} className={`bg-white rounded-xl border border-gray-100 ${isGroupExpanded ? 'w-full' : 'flex-shrink-0'}`}
+                  style={!isGroupExpanded ? { width: STAFF_COL_WIDTH } : undefined}>
+                  <div className="px-4 py-2.5 border-b-2 border-blue-300 bg-blue-100 flex justify-between items-center">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-sm text-blue-800">
+                        {getSprintDateLabel(sprint)} <span className="text-xs font-semibold text-blue-600">{getSprintYearLabel(sprint)}</span>
+                      </h3>
+                      <p className="text-sm font-bold text-blue-800 mt-0.5">{getSprintDayRangeLabel(sprint)} <span className="text-[10px] font-normal text-blue-500">· {aggMembers.length} Member{aggMembers.length !== 1 ? 's' : ''}</span></p>
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        className="p-1 rounded hover:bg-blue-200"
+                        title={isGroupExpanded ? "Restore to normal view" : "Expand sprint view"}
+                        onClick={() => setExpandedStaffGroup(isGroupExpanded ? null : sIdx)}
+                      >
+                        {isGroupExpanded ? (
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                          </svg>
+                        )}
+                      </button>
+                      {canWrite && (
+                        <button
+                          className="p-1 rounded hover:bg-blue-200"
+                          title="Add member to sprint"
+                          onClick={() => handleAddProjectToMemberGroup(null, periods, sprint.weeks)}
+                        >
+                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className={isGroupExpanded ? "p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3" : "p-3 space-y-2.5"}>
+                    {aggMembers.length === 0 ? (
+                      <div className="text-center text-gray-400 py-8 text-sm col-span-full">No team members allocated</div>
+                    ) : (
+                      aggMembers.map(({ member, projects: memberProjects, total, varies }) => (
+                        <div key={member.id} className={`group border border-gray-100 rounded-xl bg-white hover:border-gray-200 hover:shadow-sm transition-all ${collapsedMembers.has(member.id) ? 'px-3 py-2' : 'p-3'}`}>
+                          {/* Member Header */}
+                          <div className="flex justify-between items-center cursor-pointer" onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; toggleMemberCollapse(member.id); }}>
+                            <div className="flex-1">
+                              <div className="font-semibold text-sm text-gray-900">{member.fullName}</div>
+                              {member.role && <div className="text-[10px] text-gray-400">{member.role}</div>}
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <div className="text-right flex items-center gap-1">
+                                <div>
+                                  <div className={`text-xs font-bold ${total > ((member.capacity ?? 100) * overCapacityThreshold / 100) ? 'text-amber-500' : total < ((member.capacity ?? 100) * underCapacityThreshold / 100) ? 'text-red-500' : total === 0 ? 'text-gray-300' : 'text-green-600'}`}>{total}%</div>
+                                  <div className="text-[9px] text-gray-400">of {member.capacity ?? 100}%</div>
+                                </div>
+                                {varies && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" title="Total varies by week within this sprint" />}
+                              </div>
+                              <button
+                                onClick={() => toggleMemberCollapse(member.id)}
+                                className="p-0.5 rounded hover:bg-gray-100 text-gray-300"
+                                title={collapsedMembers.has(member.id) ? "Expand member" : "Collapse member"}
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  {collapsedMembers.has(member.id) ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                  ) : (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                  )}
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+
+                          {!collapsedMembers.has(member.id) && (
+                            <div className="mt-2">
+                              <div className="w-full bg-gray-100 rounded-full h-1 mb-2.5">
+                                <div className={`h-1 rounded-full ${total > ((member.capacity ?? 100) * overCapacityThreshold / 100) ? 'bg-amber-400' : total < ((member.capacity ?? 100) * underCapacityThreshold / 100) ? 'bg-red-400' : total === 0 ? 'bg-gray-200' : 'bg-green-400'}`} style={{ width: `${Math.min(total, member.capacity ?? 100) / (member.capacity ?? 100) * 100}%` }}></div>
+                              </div>
+                              {canWrite && (
+                                <div className="flex gap-1 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={() => handleAddProjectToMemberGroup(member, periods, sprint.weeks)}
+                                    className="p-0.5 rounded hover:bg-green-50 text-green-500"
+                                    title="Add project to member"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={() => handleCopyMemberToNextSprintGroup(member, sprint.weeks)}
+                                    className="p-0.5 rounded hover:bg-blue-50 text-blue-500"
+                                    title="Copy member allocations to next sprint"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={() => handleOpenRemoveMemberModal(member, periods[0], sprint.weeks)}
+                                    className="p-0.5 rounded hover:bg-red-50 text-red-400"
+                                    title="Remove member from sprint"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              )}
+
+                              {/* Projects List */}
+                              <div className="space-y-1">
+                                {memberProjects.sort((a: any, b: any) => b.percentage - a.percentage).map((p: any) => {
+                                  const projectObj = projects.find(pr => pr.id === p.id);
+                                  return (
+                                    <div key={p.id} className="flex justify-between items-center text-xs py-1 px-2 gap-2 rounded-lg bg-gray-50 hover:bg-gray-100/60 transition-colors">
+                                      <div className="flex-1 min-w-0">
+                                        <button
+                                          onClick={() => projectObj && openEditProjectModal(projectObj)}
+                                          className="text-[11px] font-medium text-gray-700 hover:text-blue-600 hover:underline"
+                                        >
+                                          {p.customerName}
+                                        </button>
+                                        <span className="text-[11px] text-gray-300 mx-1">-</span>
+                                        <button
+                                          onClick={() => projectObj && openEditProjectModal(projectObj)}
+                                          className="text-[11px] text-gray-500 hover:text-blue-600 hover:underline"
+                                        >
+                                          {p.projectName}
+                                        </button>
+                                        <span className="ml-2 text-[11px] text-blue-600 font-semibold">{p.percentage}%</span>
+                                        {p.varies && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" title="Varies by week — click to view/edit each week" />}
+                                        {p.comment && <span className="ml-1 text-blue-500" title={p.comment}>💬</span>}
+                                      </div>
+                                      {canWrite && (
+                                        <div className="flex gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <button
+                                            onClick={() => openStaffGroupCommentModal(member.id, p.id, sprint.weeks, p.comment)}
+                                            className="p-0.5 rounded hover:bg-blue-100 text-blue-600"
+                                            title="Comment"
+                                          >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                            </svg>
+                                          </button>
+                                          <button
+                                            onClick={() => setStaffSpanEditor({
+                                              memberId: member.id,
+                                              projectId: p.id,
+                                              weeks: sprint.weeks,
+                                              title: `${p.customerName} - ${p.projectName} → ${member.fullName} | ${getSprintTitleLabel(sprint)}`,
+                                            })}
+                                            className="p-0.5 rounded hover:bg-yellow-100 text-yellow-600"
+                                            title="Edit (per-week breakdown)"
+                                          >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                            </svg>
+                                          </button>
+                                          <button
+                                            onClick={() => handleRemoveAllocationGroup(member.id, p.id, sprint.weeks)}
+                                            className="p-0.5 rounded hover:bg-red-100 text-red-600"
+                                            title="Remove"
+                                          >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+        <div className="flex pb-6" style={{ gap: STAFF_COL_GAP }}>
           {sprints.map((sprint) => {
             const sprintKey = `${sprint.year}-${sprint.month}-${sprint.sprint}`;
             const isExpanded = expandedSprint === sprintKey;
@@ -2641,20 +3374,17 @@ export default function CapacityPlanning() {
                 className={`bg-white rounded-xl border border-gray-100 ${
                   isExpanded 
                     ? 'w-full' 
-                    : 'flex-shrink-0 w-[450px] min-w-[400px]'
+                    : 'flex-shrink-0'
                 }`}
-                style={!isExpanded ? { flexBasis: `${100 / Math.min(sprintCount, 4)}%` } : undefined}
+                style={!isExpanded ? { width: STAFF_COL_WIDTH } : undefined}
               >
                 {/* Sprint Header */}
                 <div className="px-4 py-2.5 border-b border-gray-100">
                   <div className="flex justify-between items-center">
                     <div className="flex-1">
                       <h3 className="font-semibold text-sm text-gray-900">
-                        {getMonthName(sprint.month)} {sprint.year}
+                        {getSprintDatePeriod(sprint)}
                       </h3>
-                      <p className="text-xs text-gray-400">
-                        Sprint #{sprint.sprint} ({getSprintDatePeriod(sprint)})
-                      </p>
                       <p className="text-[10px] text-gray-400 mt-0.5">
                         {viewMode === 'projects' 
                           ? `${projectsData.length} Project${projectsData.length !== 1 ? 's' : ''}`
@@ -2976,10 +3706,7 @@ export default function CapacityPlanning() {
                                         Sprint {currentIndex} of {totalSprints}
                                         {alloc?.groupStartSprint && (
                                           <span className="ml-1 text-gray-500">
-                                            • Started {(() => {
-                                              const [year, month, sprint] = alloc.groupStartSprint.split('-');
-                                              return `${getMonthName(parseInt(month))} ${year} S${sprint}`;
-                                            })()}
+                                            • Started {alloc.groupStartSprint}
                                           </span>
                                         )}
                                       </div>
@@ -3309,6 +4036,9 @@ export default function CapacityPlanning() {
             );
           })}
         </div>
+        )}
+        </div>
+        </div>
       </div>
       )}
 
@@ -3321,13 +4051,19 @@ export default function CapacityPlanning() {
           setSelectedProject(null);
           setSelectedRoleFilter(null);
           setAllocationPercentage('');
+          setAllocationBreakdown(false);
+          setAllocationWeeklyValues([]);
+          setAllocationSpanMode('sprints');
+          setAllocationEndDate('');
+          setNumberOfSprints(1);
+          setStaffGroupWeeks(null);
         }}
         title={selectedProject && selectedMember 
-          ? `Add ${selectedMember.fullName} to ${selectedProject.projectName}`
+          ? `Add ${selectedMember.fullName} to ${selectedProject.customerName} - ${selectedProject.projectName}`
           : selectedProject && selectedRoleFilter
-            ? `Add ${selectedRoleFilter} to ${selectedProject.projectName}`
+            ? `Add ${selectedRoleFilter} to ${selectedProject.customerName} - ${selectedProject.projectName}`
             : selectedProject 
-            ? `Add Member to ${selectedProject.projectName}`
+            ? `Add Member to ${selectedProject.customerName} - ${selectedProject.projectName}`
             : 'Add Allocation'}
       >
         <div className="space-y-4">
@@ -3427,33 +4163,77 @@ export default function CapacityPlanning() {
           )}
           {selectedProject && (
             <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Allocation %
-                  {selectedRoleFilter && selectedProject && selectedSprint && (() => {
-                    const requirementKey = `${selectedProject.id}-${selectedSprint.year}-${selectedSprint.month}-${selectedSprint.sprint}`;
-                    const requirements = sprintRoleRequirements[requirementKey];
-                    const plannedCapacity = requirements?.[selectedRoleFilter];
-                    return plannedCapacity ? <span className="text-purple-600 ml-1">(Planned: {plannedCapacity}%)</span> : null;
-                  })()}
+              {allocationIsMultiWeek && (
+                <label className="flex items-center gap-2 -mb-1 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={allocationBreakdown}
+                    onChange={(e) => setAllocationBreakdown(e.target.checked)}
+                    className="rounded"
+                  />
+                  <span className="text-xs font-medium text-gray-700">Weekly breakdown</span>
+                  <span className="text-[10px] text-gray-400">(set each week individually)</span>
                 </label>
-                <input
-                  ref={percentageInputRef}
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={allocationPercentage}
-                  onChange={(e) => setAllocationPercentage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && selectedMember && selectedProject && allocationPercentage && numberOfSprints === 1) {
-                      e.preventDefault();
-                      handleAddMember();
-                    }
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  placeholder="Enter percentage (0-100)"
-                />
-              </div>
+              )}
+              {allocationUseBreakdown ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Allocation % per week
+                  </label>
+                  <div className="space-y-2">
+                    {allocationSpanWeeks.map((w, i) => (
+                      <div key={i} className="flex items-center justify-between gap-3">
+                        <div className="text-xs text-gray-700">
+                          <div className="font-medium">{getWeekLabel(w)}</div>
+                          <div className="text-[10px] text-gray-400">{getWeekDayRangeLabel(w)}</div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number" min="0" max="100"
+                            value={allocationWeeklyValues[i] ?? ''}
+                            onChange={(e) => setAllocationWeeklyValues(prev => prev.map((v, idx) => (idx === i ? e.target.value : v)))}
+                            className="w-20 px-2 py-1.5 border rounded text-sm text-right"
+                            placeholder="0"
+                            autoFocus={i === 0}
+                          />
+                          <span className="text-xs text-gray-500">%</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Allocation %
+                    {selectedRoleFilter && selectedProject && selectedSprint && (() => {
+                      const requirementKey = `${selectedProject.id}-${selectedSprint.year}-${selectedSprint.month}-${selectedSprint.sprint}`;
+                      const requirements = sprintRoleRequirements[requirementKey];
+                      const plannedCapacity = requirements?.[selectedRoleFilter];
+                      return plannedCapacity ? <span className="text-purple-600 ml-1">(Planned: {plannedCapacity}%)</span> : null;
+                    })()}
+                    {allocationIsMultiWeek && (
+                      <span className="ml-1.5 text-[10px] font-normal text-gray-400">(applies to all {allocationSpanWeeks.length} weeks)</span>
+                    )}
+                  </label>
+                  <input
+                    ref={percentageInputRef}
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={allocationPercentage}
+                    onChange={(e) => setAllocationPercentage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && selectedMember && selectedProject && allocationPercentage && allocationSpanWeeks.length <= 1) {
+                        e.preventDefault();
+                        handleAddMember();
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    placeholder="Enter percentage (0-100)"
+                  />
+                </div>
+              )}
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -3472,56 +4252,70 @@ export default function CapacityPlanning() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Number of Sprints
+                  Duration
+                  <span className="ml-1.5 text-[11px] font-normal text-blue-600 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5">
+                    {staffOverlaySprintLength}-week sprint
+                  </span>
                 </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="12"
-                  value={numberOfSprints}
-                  onChange={(e) => {
-                    const num = parseInt(e.target.value) || 1;
-                    setNumberOfSprints(Math.max(1, Math.min(12, num)));
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  placeholder="1"
-                />
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="allocationSpanMode"
+                      value="sprints"
+                      checked={allocationSpanMode === 'sprints'}
+                      onChange={() => setAllocationSpanMode('sprints')}
+                    />
+                    <span className="text-sm text-gray-700">Number of sprints</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="52"
+                      value={numberOfSprints}
+                      disabled={allocationSpanMode !== 'sprints'}
+                      onChange={(e) => {
+                        const num = parseInt(e.target.value) || 1;
+                        setNumberOfSprints(Math.max(1, Math.min(52, num)));
+                      }}
+                      className="w-20 px-2 py-1.5 border border-gray-300 rounded-md disabled:bg-gray-100 disabled:text-gray-400"
+                      placeholder="1"
+                    />
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="allocationSpanMode"
+                      value="endDate"
+                      checked={allocationSpanMode === 'endDate'}
+                      onChange={() => setAllocationSpanMode('endDate')}
+                    />
+                    <span className="text-sm text-gray-700">Until end date</span>
+                    <input
+                      type="date"
+                      value={allocationEndDate}
+                      disabled={allocationSpanMode !== 'endDate'}
+                      min={(allocationStartDate || selectedSprint?.weekStartDate) || undefined}
+                      onChange={(e) => setAllocationEndDate(e.target.value)}
+                      className="px-2 py-1.5 border border-gray-300 rounded-md disabled:bg-gray-100 disabled:text-gray-400"
+                    />
+                  </label>
+                </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Create allocations for multiple consecutive sprints (1-12)
+                  {allocationSpanMode === 'endDate'
+                    ? `Creates ${allocationSpanWeeks.length} week${allocationSpanWeeks.length !== 1 ? 's' : ''} of consecutive weekly allocations through the end date.`
+                    : `Creates ${numberOfSprints} sprint${numberOfSprints > 1 ? 's' : ''} = ${numberOfSprints * staffOverlaySprintLength} week${numberOfSprints * staffOverlaySprintLength > 1 ? 's' : ''} of consecutive weekly allocations.`}
                 </p>
               </div>
               
-              {numberOfSprints > 1 && selectedSprint && allocationPercentage && (
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-                  <div className="text-sm font-medium text-gray-700 mb-2">
-                    Preview: {numberOfSprints} sprints will be created
-                  </div>
-                  <div className="text-xs text-gray-600 space-y-1 max-h-32 overflow-y-auto">
-                    {(() => {
-                      // Use start date to determine starting sprint if provided
-                      const startSprint = allocationStartDate 
-                        ? getSprintFromDate(allocationStartDate)
-                        : selectedSprint;
-                      
-                      return generateSprintPreview(startSprint, numberOfSprints).map((sprint, idx) => (
-                        <div key={idx}>
-                          • {getMonthName(sprint.month)} {sprint.year} Sprint {sprint.sprint} - {allocationPercentage}%
-                        </div>
-                      ));
-                    })()}
-                  </div>
-                  {allocationStartDate && (
-                    <div className="text-xs text-blue-600 mt-2">
-                      ℹ️ Starting from {new Date(allocationStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </div>
-                  )}
-                </div>
-              )}
             </>
           )}
           <div className="flex justify-between gap-2">
             <p className="text-xs text-gray-500 self-center">
-              {!selectedProject ? 'Project and allocation percentage are required' : 'Allocation percentage is required'}
+              {!selectedProject
+                ? 'Project and allocation percentage are required'
+                : allocationUseBreakdown
+                  ? 'Enter a percentage for at least one week'
+                  : 'Allocation percentage is required'}
             </p>
             <div className="flex gap-2">
               <button
@@ -3530,6 +4324,11 @@ export default function CapacityPlanning() {
                   setSelectedMember(null);
                   setSelectedProject(null);
                   setAllocationPercentage('');
+                  setAllocationBreakdown(false);
+                  setAllocationWeeklyValues([]);
+                  setAllocationSpanMode('sprints');
+                  setAllocationEndDate('');
+                  setNumberOfSprints(1);
                 }}
                 className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
               >
@@ -3537,7 +4336,7 @@ export default function CapacityPlanning() {
               </button>
               <button
                 onClick={handleAddMember}
-                disabled={!selectedMember || !selectedProject || !allocationPercentage}
+                disabled={!selectedMember || !selectedProject || (allocationUseBreakdown ? !allocationWeeklyValues.some(v => parseInt(v, 10) > 0) : !allocationPercentage)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Add Member
@@ -3564,8 +4363,8 @@ export default function CapacityPlanning() {
           <div className="flex justify-between items-center">
             <p className="text-sm text-gray-600">
               {selectedMember 
-                ? `Select a project for ${selectedMember.fullName} in ${selectedSprint && `${getMonthName(selectedSprint.month)} ${selectedSprint.year} Sprint #${selectedSprint.sprint}`}`
-                : `Select a project to add to ${selectedSprint && `${getMonthName(selectedSprint.month)} ${selectedSprint.year} Sprint #${selectedSprint.sprint}`}`}
+                ? `Select a project for ${selectedMember.fullName} in ${selectedSprint && `${selectedSprint.monthLabel} ${selectedSprint.weekLabel} (${formatDDMM(selectedSprint.weekStartDate)})`}`
+                : `Select a project to add to ${selectedSprint && `${selectedSprint.monthLabel} ${selectedSprint.weekLabel} (${formatDDMM(selectedSprint.weekStartDate)})`}`}
             </p>
             <button
               onClick={() => {
@@ -3669,7 +4468,7 @@ export default function CapacityPlanning() {
           setSelectedSprint(null);
           setProjectComment('');
         }}
-        title={`Project Comment - ${selectedProject?.projectName || ''} (${selectedSprint ? `${getMonthName(selectedSprint.month)} ${selectedSprint.year} Sprint #${selectedSprint.sprint}` : ''})`}
+        title={`Project Comment - ${selectedProject?.projectName || ''} (${selectedSprint ? `${selectedSprint.monthLabel} ${selectedSprint.weekLabel}` : ''})`}
       >
         <div className="space-y-4">
           <div>
@@ -3710,6 +4509,7 @@ export default function CapacityPlanning() {
         onClose={() => {
           setShowCommentModal(false);
           setSelectedAllocation(null);
+          setStaffCommentContext(null);
           setCommentText('');
         }}
         title="Add/Edit Comment"
@@ -3730,6 +4530,7 @@ export default function CapacityPlanning() {
               onClick={() => {
                 setShowCommentModal(false);
                 setSelectedAllocation(null);
+                setStaffCommentContext(null);
                 setCommentText('');
               }}
               className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
@@ -3772,7 +4573,7 @@ export default function CapacityPlanning() {
           setSelectedProject(null);
           setRoleRequirements({});
         }}
-        title={`Required Capacity Planning - ${selectedProject?.projectName || ''} (${selectedSprint ? `${getMonthName(selectedSprint.month)} ${selectedSprint.year} Sprint #${selectedSprint.sprint}` : ''})`}
+        title={`Required Capacity Planning - ${selectedProject?.projectName || ''} (${selectedSprint ? `${selectedSprint.monthLabel} ${selectedSprint.weekLabel}` : ''})`}
       >
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
@@ -3898,7 +4699,9 @@ export default function CapacityPlanning() {
                   <p className="text-sm text-gray-700">
                     You are about to remove <span className="font-semibold">{memberToRemove.member.fullName}</span> from{' '}
                     <span className="font-semibold">
-                      {getMonthName(memberToRemove.sprint.month)} {memberToRemove.sprint.year} Sprint #{memberToRemove.sprint.sprint}
+                      {memberToRemove.groupWeeks && memberToRemove.groupWeeks.length > 1
+                        ? `${memberToRemove.sprint.monthLabel} (${memberToRemove.groupWeeks.length} weeks)`
+                        : `${memberToRemove.sprint.monthLabel} ${memberToRemove.sprint.weekLabel}`}
                     </span>.
                   </p>
                   <p className="text-sm text-gray-600 mt-2">
@@ -3925,7 +4728,9 @@ export default function CapacityPlanning() {
                   <div>
                     <div className="font-medium text-sm text-gray-900">This sprint only</div>
                     <div className="text-xs text-gray-600">
-                      Remove member only from {getMonthName(memberToRemove.sprint.month)} {memberToRemove.sprint.year} Sprint #{memberToRemove.sprint.sprint}
+                      {memberToRemove.groupWeeks && memberToRemove.groupWeeks.length > 1
+                        ? `Remove member only from this sprint's ${memberToRemove.groupWeeks.length} weeks`
+                        : `Remove member only from ${memberToRemove.sprint.monthLabel} ${memberToRemove.sprint.weekLabel}`}
                     </div>
                   </div>
                 </label>
@@ -3963,6 +4768,146 @@ export default function CapacityPlanning() {
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
               >
                 Remove Member
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Edit Allocation Scope Modal (inline % edit: this week only vs this + future) */}
+      <Modal
+        isOpen={!!editScopeModal}
+        onClose={() => setEditScopeModal(null)}
+        title="Edit Allocation"
+      >
+        {editScopeModal && (
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-gray-700">
+                Set <span className="font-semibold">{editScopeModal.memberName}</span>'s allocation to{' '}
+                <span className="font-semibold">{editScopeModal.projectName}</span> to{' '}
+                <span className="font-semibold">{editScopeModal.percentage}%</span>.
+              </p>
+              <p className="text-xs text-gray-600 mt-1">
+                There {editScopeModal.futureCount === 1 ? 'is' : 'are'} {editScopeModal.futureCount} later
+                allocation{editScopeModal.futureCount !== 1 ? 's' : ''} for this member on this project.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Apply to</label>
+              <label className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                <input type="radio" name="editScopeOption" value="current"
+                  checked={editScopeOption === 'current'}
+                  onChange={() => setEditScopeOption('current')} className="mt-0.5" />
+                <div>
+                  <div className="font-medium text-sm text-gray-900">This allocation only</div>
+                  <div className="text-xs text-gray-600">Update just this week</div>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                <input type="radio" name="editScopeOption" value="future"
+                  checked={editScopeOption === 'future'}
+                  onChange={() => setEditScopeOption('future')} className="mt-0.5" />
+                <div>
+                  <div className="font-medium text-sm text-gray-900">This and all future allocations</div>
+                  <div className="text-xs text-gray-600">
+                    Update this and every later week for this member on this project
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <button onClick={() => setEditScopeModal(null)}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Cancel</button>
+              <button onClick={confirmEditScope}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Apply</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Remove Allocation Modal */}
+      <Modal
+        isOpen={showRemoveAllocationModal}
+        onClose={() => {
+          setShowRemoveAllocationModal(false);
+          setAllocationToRemove(null);
+        }}
+        title="Remove Allocation"
+      >
+        {allocationToRemove && (
+          <div className="space-y-4">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <svg className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Are you sure?</h4>
+                  <p className="text-sm text-gray-700">
+                    You are about to remove <span className="font-semibold">{allocationToRemove.memberName}</span>'s
+                    allocation to <span className="font-semibold">{allocationToRemove.projectName}</span> for{' '}
+                    <span className="font-semibold">{allocationToRemove.weekLabel}</span>.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">Remove:</label>
+              <div className="space-y-2">
+                <label className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    name="removeAllocationOption"
+                    value="current"
+                    checked={removeFutureAllocationsOption === 'current'}
+                    onChange={(e) => setRemoveFutureAllocationsOption(e.target.value as 'current' | 'future')}
+                    className="mt-0.5"
+                  />
+                  <div>
+                    <div className="font-medium text-sm text-gray-900">This allocation only</div>
+                    <div className="text-xs text-gray-600">
+                      Remove only the selected allocation for {allocationToRemove.weekLabel}
+                    </div>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    name="removeAllocationOption"
+                    value="future"
+                    checked={removeFutureAllocationsOption === 'future'}
+                    onChange={(e) => setRemoveFutureAllocationsOption(e.target.value as 'current' | 'future')}
+                    className="mt-0.5"
+                  />
+                  <div>
+                    <div className="font-medium text-sm text-gray-900">This and all future allocations</div>
+                    <div className="text-xs text-gray-600">
+                      Remove this allocation and every later allocation of {allocationToRemove.memberName} to {allocationToRemove.projectName}
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <button
+                onClick={() => {
+                  setShowRemoveAllocationModal(false);
+                  setAllocationToRemove(null);
+                }}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmRemoveAllocation}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Remove Allocation
               </button>
             </div>
           </div>
@@ -4073,7 +5018,7 @@ export default function CapacityPlanning() {
           <div className="relative bg-white rounded-lg shadow-xl w-full h-full m-2 overflow-y-auto">
             <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
               <h2 className="text-xl font-semibold">
-                Daily Tasks - {getMonthName(dailyViewSprint.month)} {dailyViewSprint.year} Sprint #{dailyViewSprint.sprint}
+                Daily Tasks - {dailyViewSprint.monthLabel} {dailyViewSprint.weekLabel}
               </h2>
               <button 
                 onClick={() => {
@@ -4102,6 +5047,18 @@ export default function CapacityPlanning() {
       <Modal isOpen={showImportProjectsModal} onClose={() => setShowImportProjectsModal(false)} title="Import Projects from Excel">
         <ImportProjects onComplete={() => setShowImportProjectsModal(false)} />
       </Modal>
+
+      {/* Staff View sprint-level per-week sub-editor (mirrors Puzzle View's WeekSpanEditor) */}
+      {staffSpanEditor && (
+        <WeekSpanEditor
+          title={staffSpanEditor.title}
+          weeks={staffSpanEditor.weeks}
+          initialValues={getMemberProjectWeeklyPcts(staffSpanEditor.memberId, staffSpanEditor.projectId, staffSpanEditor.weeks)}
+          onSave={(values, scope) => saveStaffSpanEditor(staffSpanEditor.memberId, staffSpanEditor.projectId, staffSpanEditor.weeks, values, scope)}
+          onDelete={(scope) => clearStaffSpanEditor(staffSpanEditor.memberId, staffSpanEditor.projectId, staffSpanEditor.weeks, scope)}
+          onClose={() => setStaffSpanEditor(null)}
+        />
+      )}
     </div>
   );
 }

@@ -2,11 +2,11 @@
 // Generated at build time
 
 export const VERSION_INFO = {
-  "version": "1.2.2",
-  "gitHash": "68cfe90",
+  "version": "1.2.8",
+  "gitHash": "43c84ab",
   "gitBranch": "main",
-  "buildTime": "2025-12-10T21:46:10.621Z",
-  "fullVersion": "1.2.2 (68cfe90)"
+  "buildTime": "2026-09-06T15:21:31.500Z",
+  "fullVersion": "1.2.8 (43c84ab)"
 } as const;
 
 export const APP_VERSION = VERSION_INFO.fullVersion;

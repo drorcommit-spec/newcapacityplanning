@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Executive Dashboard — Mock</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  .chart-dot { cursor: pointer; transition: r 0.1s ease; }
+  .chart-dot:hover { r: 7; }
+</style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+<!-- Top nav (mimics app shell) -->
+<header class="bg-white border-b border-gray-200">
+  <div class="px-6 h-14 flex items-center gap-6">
+    <div class="flex items-center gap-2">
+      <span class="text-xl">🧩</span>
+      <span class="font-semibold">Puzzle</span>
+    </div>
+    <nav class="flex items-center gap-1 text-sm">
+      <a class="px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100">Dashboard</a>
+      <a class="px-3 py-2 rounded-md bg-blue-100 text-blue-700 font-semibold">Executive Dashboard</a>
+      <a class="px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100">Capacity Planning</a>
+      <a class="px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100">History</a>
+      <a class="px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100">Settings ▾</a>
+    </nav>
+  </div>
+</header>
+
+<main class="px-6 py-5 space-y-5 max-w-[1400px] mx-auto">
+
+  <!-- Title -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold">Executive Dashboard</h1>
+      <p class="text-sm text-gray-500 mt-0.5">Workforce allocation trends and planning signals</p>
+    </div>
+    <button class="px-3 py-1.5 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg flex items-center gap-2">
+      ⟳ Refresh
+    </button>
+  </div>
+
+  <!-- Global Filters (sticky) -->
+  <div class="sticky top-0 z-20 bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3">
+    <div class="flex flex-wrap items-end gap-4">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Filters</span>
+      </div>
+
+      <!-- Company Group -->
+      <div class="flex flex-col gap-1">
+        <label class="text-[11px] text-gray-500 font-medium">Company Group</label>
+        <select class="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white min-w-[160px]">
+          <option>All Groups</option>
+          <option>Administration</option>
+          <option>Cloud</option>
+          <option>Quickode</option>
+          <option>Security&Cyber</option>
+          <option selected>Software</option>
+          <option>Valinor</option>
+        </select>
+      </div>
+
+      <!-- Employees -->
+      <div class="flex flex-col gap-1">
+        <label class="text-[11px] text-gray-500 font-medium">Employees</label>
+        <button class="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white min-w-[160px] text-left flex items-center justify-between gap-2">
+          <span>All employees (24)</span>
+          <span class="text-gray-400">▾</span>
+        </button>
+      </div>
+
+      <div class="ml-auto flex items-center gap-2">
+        <span class="text-[11px] text-gray-400">Sprint period: 2-week · from Settings</span>
+        <button class="text-xs text-blue-600 hover:underline">Reset filters</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Graph 1: Workforce Allocation Trend -->
+  <div class="bg-white border border-gray-200 rounded-xl p-5">
+    <div class="flex items-start justify-between mb-3">
+      <div>
+        <h2 class="text-lg font-semibold flex items-center gap-2">
+          <span>⭐ Workforce Allocation Trend</span>
+        </h2>
+        <p class="text-sm text-gray-500">Average allocation % per sprint. Click a sprint column to see the breakdown.</p>
+      </div>
+      <div class="flex items-center gap-3 text-xs text-gray-500">
+        <span class="flex items-center gap-1"><span class="w-3 h-0.5 bg-blue-500 inline-block"></span> Avg allocation</span>
+        <span class="flex items-center gap-1"><span class="w-3 inline-block" style="border-top:2px dashed #f87171"></span> Over (100%)</span>
+        <span class="flex items-center gap-1"><span class="w-3 inline-block" style="border-top:2px dashed #fbbf24"></span> Under (70%)</span>
+      </div>
+    </div>
+
+    <!-- Period navigation (mirrors Puzzle view) -->
+    <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center gap-1">
+        <button class="p-1 rounded hover:bg-gray-100 text-gray-500" title="Back 4 sprints">«</button>
+        <button class="p-1 rounded hover:bg-gray-100 text-gray-500" title="Back 1 sprint">‹</button>
+        <button class="px-2 py-0.5 text-xs rounded hover:bg-gray-100 text-gray-700 font-medium">Today</button>
+        <button class="p-1 rounded hover:bg-gray-100 text-gray-500" title="Forward 1 sprint">›</button>
+        <button class="p-1 rounded hover:bg-gray-100 text-gray-500" title="Forward 4 sprints">»</button>
+      </div>
+      <div class="text-xs text-gray-400">8 sprints shown · 2-week period</div>
+    </div>
+
+    <!-- Chart row: fixed Y-axis gutter on the left + plot that fills to the right border -->
+    <!-- Y gutter = 44px; the header band and the SVG plot share the same left offset so columns line up. -->
+    <div class="flex">
+      <!-- Y-axis labels (sticky left), aligned to the plot's gridlines -->
+      <div class="w-11 shrink-0 relative" style="height:300px">
+        <!-- plot vertical range inside SVG is y:12..260 for 120..0; mirror the key ticks here -->
+        <div class="absolute right-1 text-[11px] text-gray-400" style="top:7px">120</div>
+        <div class="absolute right-1 text-[11px] text-red-500 font-medium" style="top:49px">100</div>
+        <div class="absolute right-1 text-[11px] text-gray-400" style="top:90px">80</div>
+        <div class="absolute right-1 text-[11px] text-amber-600 font-medium" style="top:111px">70</div>
+        <div class="absolute right-1 text-[11px] text-gray-400" style="top:132px">60</div>
+        <div class="absolute right-1 text-[11px] text-gray-400" style="top:173px">40</div>
+        <div class="absolute right-1 text-[11px] text-gray-400" style="top:215px">20</div>
+        <div class="absolute right-1 text-[11px] text-gray-400" style="top:255px">0</div>
+      </div>
+
+      <!-- Plot column: header band + chart both span full width to the right border -->
+      <div class="flex-1 min-w-0">
+        <!-- X-axis as a TOP header band (bold date + Sprint N beneath), Puzzle-view style -->
+        <div class="grid border-y-2 border-blue-200 bg-blue-50/60 rounded-t-md" style="grid-template-columns:repeat(8, 1fr)">
+          <div class="py-1.5 text-center">
+            <div class="text-[11px] font-bold text-blue-800">Aug 1-15 <span class="text-[9px] font-semibold text-blue-500">2026</span></div>
+            <div class="text-[11px] font-bold text-blue-800">Sprint 1</div>
+          </div>
+          <div class="py-1.5 text-center border-l border-blue-100">
+            <div class="text-[11px] font-bold text-blue-800">Aug 16-31 <span class="text-[9px] font-semibold text-blue-500">2026</span></div>
+            <div class="text-[11px] font-bold text-blue-800">Sprint 2</div>
+          </div>
+          <div class="py-1.5 text-center border-l border-blue-100">
+            <div class="text-[11px] font-bold text-blue-800">Sep 1-15 <span class="text-[9px] font-semibold text-blue-500">2026</span></div>
+            <div class="text-[11px] font-bold text-blue-800">Sprint 1</div>
+          </div>
+          <div class="py-1.5 text-center border-l border-blue-100">
+            <div class="text-[11px] font-bold text-blue-800">Sep 16-30 <span class="text-[9px] font-semibold text-blue-500">2026</span></div>
+            <div class="text-[11px] font-bold text-blue-800">Sprint 2</div>
+          </div>
+          <div class="py-1.5 text-center border-l border-blue-200 bg-blue-100">
+            <div class="text-[11px] font-bold text-blue-900">Oct 1-15 <span class="text-[9px] font-semibold text-blue-600">2026</span></div>
+            <div class="text-[11px] font-bold text-blue-900">Sprint 1 ◂ now</div>
+          </div>
+          <div class="py-1.5 text-center border-l border-blue-100">
+            <div class="text-[11px] font-bold text-blue-800">Oct 16-31 <span class="text-[9px] font-semibold text-blue-500">2026</span></div>
+            <div class="text-[11px] font-bold text-blue-800">Sprint 2</div>
+          </div>
+          <div class="py-1.5 text-center border-l border-blue-100">
+            <div class="text-[11px] font-bold text-blue-800">Nov 1-15 <span class="text-[9px] font-semibold text-blue-500">2026</span></div>
+            <div class="text-[11px] font-bold text-blue-800">Sprint 1</div>
+          </div>
+          <div class="py-1.5 text-center border-l border-blue-100">
+            <div class="text-[11px] font-bold text-blue-800">Nov 16-30 <span class="text-[9px] font-semibold text-blue-500">2026</span></div>
+            <div class="text-[11px] font-bold text-blue-800">Sprint 2</div>
+          </div>
+        </div>
+
+        <!-- SVG plot fills the full column width (0..800) and height (300).
+             8 columns, width 100 each; centers at x = 50,150,...,750.
+             Y maps 0..120% to y 260..12  =>  y = 260 - (val/120)*248 -->
+        <svg viewBox="0 0 800 300" preserveAspectRatio="none" class="w-full" style="height:300px">
+          <!-- current sprint column highlight (5th: x 400..500) -->
+          <rect x="400" y="12" width="100" height="248" fill="#dbeafe" fill-opacity="0.4"/>
+
+          <!-- faint vertical separators between columns -->
+          <g stroke="#eef2ff" stroke-width="1">
+            <line x1="100" y1="12" x2="100" y2="260"/>
+            <line x1="200" y1="12" x2="200" y2="260"/>
+            <line x1="300" y1="12" x2="300" y2="260"/>
+            <line x1="400" y1="12" x2="400" y2="260"/>
+            <line x1="500" y1="12" x2="500" y2="260"/>
+            <line x1="600" y1="12" x2="600" y2="260"/>
+            <line x1="700" y1="12" x2="700" y2="260"/>
+          </g>
+
+          <!-- Y gridlines spanning full width. y = 260 - (val/120)*248 -->
+          <line x1="0" y1="12" x2="800" y2="12" stroke="#f1f5f9"/>
+          <line x1="0" y1="53.3" x2="800" y2="53.3" stroke="#f87171" stroke-dasharray="5 4" stroke-width="1.5"/><!-- 100 -->
+          <line x1="0" y1="94.7" x2="800" y2="94.7" stroke="#f1f5f9"/><!-- 80 -->
+          <line x1="0" y1="115.3" x2="800" y2="115.3" stroke="#fbbf24" stroke-dasharray="5 4" stroke-width="1.5"/><!-- 70 -->
+          <line x1="0" y1="136" x2="800" y2="136" stroke="#f1f5f9"/><!-- 60 -->
+          <line x1="0" y1="177.3" x2="800" y2="177.3" stroke="#f1f5f9"/><!-- 40 -->
+          <line x1="0" y1="218.7" x2="800" y2="218.7" stroke="#f1f5f9"/><!-- 20 -->
+          <line x1="0" y1="260" x2="800" y2="260" stroke="#e5e7eb"/><!-- 0 -->
+
+          <!-- Trend line + area. values(%):62,68,71,74,78,92,104,97 ; x centers 50..750 -->
+          <polyline fill="none" stroke="#3b82f6" stroke-width="2.5"
+            points="50,131.9 150,119.5 250,113.3 350,107.1 450,98.8 550,70.1 650,45.1 750,59.6" />
+          <polygon fill="#3b82f6" fill-opacity="0.08"
+            points="50,131.9 150,119.5 250,113.3 350,107.1 450,98.8 550,70.1 650,45.1 750,59.6 750,260 50,260" />
+        </svg>
+
+        <!-- Dots + value labels overlaid in a non-stretched SVG so circles stay round.
+             This layer uses the same 0..800 x but is drawn after; kept inline for the mock. -->
+        <svg viewBox="0 0 800 300" class="w-full -mt-[300px]" style="height:300px">
+          <circle class="chart-dot" cx="50" cy="131.9" r="5" fill="#3b82f6"/>
+          <circle class="chart-dot" cx="150" cy="119.5" r="5" fill="#3b82f6"/>
+          <circle class="chart-dot" cx="250" cy="113.3" r="5" fill="#3b82f6"/>
+          <circle class="chart-dot" cx="350" cy="107.1" r="5" fill="#3b82f6"/>
+          <circle cx="450" cy="98.8" r="9" fill="none" stroke="#3b82f6" stroke-opacity="0.3" stroke-width="3"/>
+          <circle class="chart-dot" cx="450" cy="98.8" r="6" fill="#2563eb"/>
+          <circle class="chart-dot" cx="550" cy="70.1" r="5" fill="#f59e0b"/>
+          <circle class="chart-dot" cx="650" cy="45.1" r="5" fill="#ef4444"/>
+          <circle class="chart-dot" cx="750" cy="59.6" r="5" fill="#f59e0b"/>
+
+          <g font-size="11" font-weight="700" text-anchor="middle" fill="#1e3a8a">
+            <text x="50" y="122">62%</text>
+            <text x="150" y="110">68%</text>
+            <text x="250" y="104">71%</text>
+            <text x="350" y="98">74%</text>
+            <text x="450" y="89" fill="#2563eb">78%</text>
+            <text x="550" y="61" fill="#d97706">92%</text>
+            <text x="650" y="36" fill="#dc2626">104%</text>
+            <text x="750" y="50" fill="#d97706">97%</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>

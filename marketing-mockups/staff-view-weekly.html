@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Puzzle - Staff View (Weekly)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}</style>
+</head>
+<body class="bg-white min-h-screen">
+<nav class="bg-white border-b px-6 py-2.5 flex items-center justify-between">
+<div class="flex items-center gap-6"><div class="flex items-center gap-2"><span class="text-xl">&#129513;</span><div><span class="text-lg font-bold">Puzzle</span><br><span class="text-[9px] text-gray-400">Capacity Planning Platform</span></div></div>
+<div class="flex gap-1 text-xs"><span class="px-2.5 py-1.5 rounded text-gray-600">Dashboard</span><span class="px-2.5 py-1.5 rounded bg-blue-50 text-blue-700 font-semibold">Capacity Planning</span><span class="px-2.5 py-1.5 rounded text-gray-600">History</span></div></div>
+<div class="text-right text-xs"><div class="font-medium">John Smith</div><div class="text-gray-400">john@company.com</div></div>
+</nav>
+<div class="px-6 py-2 border-b flex items-center justify-between">
+<div class="flex items-center gap-3"><h1 class="text-sm font-bold">Capacity Planning</h1>
+<div class="flex items-center gap-1.5 border rounded-lg px-2 py-1 bg-gray-50 text-[10px]"><span class="text-gray-500 font-medium mr-1">Sprint length</span>
+<button id="b1" onclick="setLen(1)" class="px-2 py-0.5 rounded text-gray-500">1 week</button>
+<button id="b2" onclick="setLen(2)" class="px-2 py-0.5 rounded bg-white shadow font-bold text-gray-800">2 weeks</button>
+<button id="b3" onclick="setLen(3)" class="px-2 py-0.5 rounded text-gray-500">3 weeks</button></div>
+<label class="flex items-center gap-1.5 border rounded-lg px-2 py-1 bg-gray-50 text-[10px] cursor-pointer select-none"><input type="checkbox" id="sprintToggle" checked onchange="render()" class="accent-blue-600"><span class="text-gray-600 font-medium">Sprint label</span></label></div>
+<div class="flex bg-gray-100 rounded-md p-0.5 text-[11px]"><button class="px-2.5 py-1 rounded text-gray-500">Puzzle View</button><button class="px-2.5 py-1 rounded bg-white text-blue-600 shadow-sm font-medium">Staff View</button><button class="px-2.5 py-1 rounded text-gray-500">Timeline View</button></div>
+</div>
+<div class="px-6 py-1.5 border-b flex items-center gap-1 text-gray-400 text-xs"><span>&#171;</span><span>&#8249;</span><span class="mx-2 text-gray-600 font-medium">Today</span><span>&#8250;</span><span>&#187;</span></div>
+<main class="p-6 overflow-x-auto"><div class="flex gap-4" id="cols"></div>
+<p class="text-[11px] text-gray-400 mt-4 max-w-3xl">Staff View now shows one column per <b>week</b>. Each column groups member capacity for that week. The sprint label above each column follows the project's sprint length: 1w &rarr; S1&ndash;S4 per month, 2w &rarr; S1&ndash;S2 per month (a 2-week sprint label spans two week-columns), 3w &rarr; consecutive S1&hellip;N across months. Toggle it off for a pure weekly view.</p>
+</main>
+<script>
+var len=2;
+// each week: month tag + week range + per-member allocation
+var weeks=[
+ {mo:"Aug",w:"W1",d:"04-10",monthIdx:8,members:[["Alex Cohen","Product Manager",100,"green",[["Acme Corp - CRM",50],["TechFlow - AI",30],["BioSense - Data",20]]],["Sarah Levi","PMO",130,"amber",[["Acme Corp - CRM",80],["TechFlow - AI",50]]],["David Stern","SW Architect",50,"red",[]],["Noa Mizrahi","AI Architect",90,"green",[]]]},
+ {mo:"Aug",w:"W2",d:"11-17",monthIdx:8,members:[["Alex Cohen","Product Manager",100,"green",[["Acme Corp - CRM",50],["TechFlow - AI",30],["BioSense - Data",20]]],["Sarah Levi","PMO",120,"amber",[["Acme Corp - CRM",70],["TechFlow - AI",50]]],["David Stern","SW Architect",50,"red",[]],["Noa Mizrahi","AI Architect",90,"green",[]]]},
+ {mo:"Aug",w:"W3",d:"18-24",monthIdx:8,members:[["Alex Cohen","Product Manager",90,"green",[["Acme Corp - CRM",40],["TechFlow - AI",30],["BioSense - Data",20]]],["Sarah Levi","PMO",90,"green",[["Acme Corp - CRM",40],["TechFlow - AI",50]]],["David Stern","SW Architect",40,"red",[]],["Noa Mizrahi","AI Architect",85,"green",[]]]},
+ {mo:"Aug",w:"W4",d:"25-31",monthIdx:8,members:[["Alex Cohen","Product Manager",80,"green",[["Acme Corp - CRM",40],["TechFlow - AI",40]]],["Sarah Levi","PMO",90,"green",[["Acme Corp - CRM",40],["TechFlow - AI",50]]],["David Stern","SW Architect",40,"red",[]],["Noa Mizrahi","AI Architect",85,"green",[]]]},
+ {mo:"Sep",w:"W1",d:"01-07",monthIdx:9,members:[["Alex Cohen","Product Manager",50,"red",[["Acme Corp - CRM",30],["TechFlow - AI",20]]],["Sarah Levi","PMO",90,"green",[["Acme Corp - CRM",40],["TechFlow - AI",50]]],["David Stern","SW Architect",60,"red",[]],["Noa Mizrahi","AI Architect",85,"green",[]]]},
+ {mo:"Sep",w:"W2",d:"08-14",monthIdx:9,members:[["Alex Cohen","Product Manager",80,"green",[["Acme Corp - CRM",40],["TechFlow - AI",40]]],["Sarah Levi","PMO",90,"green",[["Acme Corp - CRM",40],["TechFlow - AI",50]]],["David Stern","SW Architect",60,"red",[]],["Noa Mizrahi","AI Architect",85,"green",[]]]}
+];
+function sprintLabelFor(i){
+ // returns {label, isStart, span} for the week at index i under current len
+ if(len===3){
+   var s=Math.floor(i/3); return {label:"S"+(s+1), isStart:(i%3===0), span:3};
+ }
+ // 1w or 2w: reset per month
+ // find weeks in same month before i
+ var mo=weeks[i].monthIdx, idxInMonth=0;
+ for(var k=0;k<i;k++){ if(weeks[k].monthIdx===mo) idxInMonth++; }
+ var s=Math.floor(idxInMonth/len);
+ return {label:"S"+(s+1), isStart:(idxInMonth%len===0), span:len};
+}
+var barColor={green:"bg-green-400",amber:"bg-amber-400",red:"bg-red-400"};
+var txColor={green:"text-green-600",amber:"text-amber-500",red:"text-red-500"};
+function card(m){
+ var rows="";
+ m[4].forEach(function(p){ rows+='<div class="flex items-center justify-between py-1 px-2 rounded-lg bg-gray-50"><span class="text-[11px] text-gray-700 truncate">'+p[0]+'</span><span class="text-[11px] font-semibold text-blue-600">'+p[1]+'%</span></div>'; });
+ var body = rows? '<div class="w-full bg-gray-100 rounded-full h-1 mt-2 mb-2"><div class="h-1 rounded-full '+barColor[m[3]]+'" style="width:'+Math.min(m[2],100)+'%"></div></div><div class="space-y-1">'+rows+'</div>':'';
+ return '<div class="border border-gray-100 rounded-xl p-3 mb-2.5"><div class="flex items-start justify-between"><div><div class="text-xs font-semibold">'+m[0]+'</div><div class="text-[10px] text-gray-400">'+m[1]+'</div></div><div class="text-right"><div class="text-xs font-bold '+txColor[m[3]]+'">'+m[2]+'%</div><div class="text-[9px] text-gray-400">of 100%</div></div></div>'+body+'</div>';
+}
+function render(){
+ var showSprint=document.getElementById('sprintToggle').checked;
+ var h="";
+ weeks.forEach(function(wk,i){
+  var sp=sprintLabelFor(i);
+  var badge = showSprint ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-semibold">'+ (sp.isStart? sp.label + (sp.span>1?' \u00b7 '+sp.span+'w':'') : sp.label+' \u2192') +'</span>' : '';
+  h+='<div class="flex-shrink-0 w-[300px]">';
+  h+='<div class="mb-3 pb-2 border-b border-gray-100 flex items-center justify-between"><div><h3 class="text-sm font-semibold text-gray-900">'+wk.mo+' '+wk.w+'</h3><p class="text-xs text-gray-400">'+wk.d+'</p></div>'+badge+'</div>';
+  wk.members.forEach(function(m){ h+=card(m); });
+  h+='</div>';
+ });
+ document.getElementById('cols').innerHTML=h;
+}
+function setLen(n){ len=n; ['b1','b2','b3'].forEach(function(id,idx){ var el=document.getElementById(id); if(idx+1===n){el.className='px-2 py-0.5 rounded bg-white shadow font-bold text-gray-800';} else {el.className='px-2 py-0.5 rounded text-gray-500';} }); render(); }
+render();
+</script>
+</body></html>

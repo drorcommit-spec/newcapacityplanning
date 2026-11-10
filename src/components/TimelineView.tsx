@@ -2,29 +2,73 @@ import { useState, useMemo, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { useAuth } from '../context/AuthContext';
+import PeriodHeader from './PeriodHeader';
+import {
+  getWeeksInRange, firstWeekOfCurrentSprint, weekKey, getWeekLabel, WeekInfo, SprintLengthWeeks,
+  groupWeeksIntoSprints, getSprintDayRangeLabel, getSprintDateLabel, getSprintYearLabel, aggregateWeeklyValues, Sprint,
+} from '../utils/weekUtils';
+import { getMemberCompanyGroup } from '../utils/memberUtils';
 
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-interface PeriodCol {
-  key: string;
-  label: string;
-  sublabel: string;
-  year: number;
-  month: number;
-  sprint: number;
+interface TimelineViewProps {
+  companyGroupFilter?: string;
 }
 
-export default function TimelineView() {
+const WEEKS_VISIBLE = 8;
+type ViewLevel = 'week' | 'sprint';
+// Week/Sprint toggle is temporarily disabled — Sprint view is the only mode for now (see
+// general note #3). Flip back to true to re-expose the toggle once ready.
+const VIEW_LEVEL_TOGGLE_ENABLED = false;
+
+export default function TimelineView({ companyGroupFilter = 'all' }: TimelineViewProps) {
   const { teamMembers, projects, allocations } = useData();
   const { canWrite } = usePermissions();
   const { user } = useAuth();
 
-  const [periodOffset, setPeriodOffset] = useState(0);
+  // Shared with Puzzle View and Staff View (same localStorage keys) so the visible
+  // week/sprint period stays in sync no matter which of the 3 Capacity Planning views the
+  // user navigates to, instead of each view tracking its own independent position.
+  const [periodOffset, setPeriodOffset] = useState(
+    () => parseInt(localStorage.getItem('capacityPeriodOffset') || '0', 10)
+  );
   const [managerFilter, setManagerFilter] = useState<string>('all');
   const [searchText, setSearchText] = useState('');
   const [capacityFilter, setCapacityFilter] = useState<'all' | 'under' | 'good' | 'over'>('all');
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
   const [allExpanded, setAllExpanded] = useState(false);
+  // Sprint length used to group weeks into sprints (shared with Puzzle/Staff views).
+  const [overlaySprintLength, setOverlaySprintLength] = useState<SprintLengthWeeks>(
+    () => (parseInt(localStorage.getItem('capacitySprintLength') || '2') as SprintLengthWeeks)
+  );
+  // Week vs Sprint display level. Toggle is temporarily disabled (VIEW_LEVEL_TOGGLE_ENABLED) —
+  // Sprint is always shown, and the Sprint row is always visible (no longer a checkbox).
+  const [viewLevel, setViewLevel] = useState<ViewLevel>(
+    () => (VIEW_LEVEL_TOGGLE_ENABLED ? (localStorage.getItem('timelineViewLevel') as ViewLevel) || 'week' : 'sprint')
+  );
+
+  useEffect(() => {
+    localStorage.setItem('capacityPeriodOffset', String(periodOffset));
+    window.dispatchEvent(new Event('capacityPeriodOffsetChanged'));
+  }, [periodOffset]);
+  useEffect(() => {
+    localStorage.setItem('capacitySprintLength', String(overlaySprintLength));
+    window.dispatchEvent(new Event('capacitySprintLengthChanged'));
+  }, [overlaySprintLength]);
+  useEffect(() => {
+    if (VIEW_LEVEL_TOGGLE_ENABLED) localStorage.setItem('timelineViewLevel', viewLevel);
+  }, [viewLevel]);
+
+  // Stay in sync with the Puzzle View / Staff View when they change the shared period or
+  // sprint length (all 3 Capacity Planning views read/write the same localStorage keys).
+  useEffect(() => {
+    const syncPeriod = () => setPeriodOffset(parseInt(localStorage.getItem('capacityPeriodOffset') || '0', 10));
+    const syncLength = () => setOverlaySprintLength(parseInt(localStorage.getItem('capacitySprintLength') || '2') as SprintLengthWeeks);
+    window.addEventListener('capacityPeriodOffsetChanged', syncPeriod);
+    window.addEventListener('capacitySprintLengthChanged', syncLength);
+    return () => {
+      window.removeEventListener('capacityPeriodOffsetChanged', syncPeriod);
+      window.removeEventListener('capacitySprintLengthChanged', syncLength);
+    };
+  }, []);
 
   const toggleMember = (id: string) => {
     setExpandedMembers(prev => {
@@ -57,10 +101,13 @@ export default function TimelineView() {
     return () => window.removeEventListener('thresholdChanged', handler);
   }, []);
 
-  // Active members
+  // Active members (optionally scoped to a company group)
   const activeMembers = useMemo(() =>
-    teamMembers.filter(m => m.isActive).sort((a, b) => a.fullName.localeCompare(b.fullName)),
-    [teamMembers]
+    teamMembers
+      .filter(m => m.isActive)
+      .filter(m => companyGroupFilter === 'all' || getMemberCompanyGroup(m) === companyGroupFilter)
+      .sort((a, b) => a.fullName.localeCompare(b.fullName)),
+    [teamMembers, companyGroupFilter]
   );
 
   // Managers
@@ -82,50 +129,86 @@ export default function TimelineView() {
     return members;
   }, [activeMembers, managerFilter, searchText, capacityFilter, allocations, underThreshold, overThreshold]);
 
-  // Generate sprint columns (8 sprints from current + offset)
-  const periods: PeriodCol[] = useMemo(() => {
-    const cols: PeriodCol[] = [];
-    const today = new Date();
-    let year = today.getFullYear();
-    let month = today.getMonth() + 1;
-    let sprint = today.getDate() <= 15 ? 1 : 2;
+  // Generate week columns (8 weeks from current + offset weeks)
+  const weeks: WeekInfo[] = useMemo(() => {
+    // Anchor to the first week of the current sprint (not the current calendar week) so the
+    // leading column is always the current sprint, consistent across all capacity views.
+    const anchor = firstWeekOfCurrentSprint(overlaySprintLength);
+    const start = new Date(anchor.startDate + 'T00:00:00Z');
+    start.setUTCDate(start.getUTCDate() + periodOffset * 7);
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + (WEEKS_VISIBLE - 1) * 7);
+    return getWeeksInRange(start, end).slice(0, WEEKS_VISIBLE);
+  }, [periodOffset, overlaySprintLength]);
 
-    // Apply offset
-    let totalSprints = (year * 24) + ((month - 1) * 2) + sprint + periodOffset;
-    year = Math.floor((totalSprints - 1) / 24);
-    const rem = totalSprints - (year * 24);
-    month = Math.floor((rem - 1) / 2) + 1;
-    sprint = ((rem - 1) % 2) + 1;
+  // Sprint groups for sprint-level display (each sprint aggregates its weeks).
+  const sprintGroups: Sprint[] = useMemo(
+    () => groupWeeksIntoSprints(weeks, overlaySprintLength),
+    [weeks, overlaySprintLength]
+  );
 
-    for (let i = 0; i < 8; i++) {
-      cols.push({
-        key: `${year}-${month}-${sprint}`,
-        label: `${MONTH_NAMES[month - 1]} ${year}`,
-        sublabel: `S${sprint}`,
-        year, month, sprint,
-      });
-      sprint++;
-      if (sprint > 2) { sprint = 1; month++; }
-      if (month > 12) { month = 1; year++; }
+  // Performance indexes: avoid scanning the full allocations array for every cell.
+  const projectById = useMemo(() => {
+    const m = new Map<string, typeof projects[number]>();
+    for (const p of projects) m.set(p.id, p);
+    return m;
+  }, [projects]);
+
+  // member|isoYear|isoWeek -> allocations in that cell
+  const allocsByMemberWeek = useMemo(() => {
+    const m = new Map<string, typeof allocations>();
+    for (const a of allocations) {
+      const key = `${a.productManagerId}|${a.isoYear}|${a.isoWeek}`;
+      const arr = m.get(key);
+      if (arr) arr.push(a); else m.set(key, [a]);
     }
-    return cols;
-  }, [periodOffset]);
+    return m;
+  }, [allocations]);
 
-  // Get allocations for a member in a period
-  const getCellAllocations = (memberId: string, period: PeriodCol) => {
-    return allocations
-      .filter(a => a.productManagerId === memberId && a.year === period.year && a.month === period.month && a.sprint === period.sprint)
+  // Get allocations for a member in a given week — O(1) map lookup.
+  const getCellAllocations = (memberId: string, week: WeekInfo) => {
+    const list = allocsByMemberWeek.get(`${memberId}|${week.isoYear}|${week.isoWeek}`) || [];
+    return list
       .map(a => {
-        const project = projects.find(p => p.id === a.projectId);
+        const project = projectById.get(a.projectId);
         return { ...a, customerName: project?.customerName || '', projectName: project?.projectName || '' };
       })
       .sort((a, b) => (b.allocationPercentage || 0) - (a.allocationPercentage || 0));
   };
 
-  const getMemberTotal = (memberId: string, period: PeriodCol) => {
-    return allocations
-      .filter(a => a.productManagerId === memberId && a.year === period.year && a.month === period.month && a.sprint === period.sprint)
-      .reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
+  const getMemberTotal = (memberId: string, week: WeekInfo) => {
+    const list = allocsByMemberWeek.get(`${memberId}|${week.isoYear}|${week.isoWeek}`) || [];
+    return list.reduce((sum, a) => sum + (a.allocationPercentage || 0), 0);
+  };
+
+  // Per-project allocation breakdown for a member across a whole sprint. Each project's
+  // sprint allocation is the average of its weekly percentages over the sprint's weeks
+  // (rounded), matching how the sprint aggregate is computed. Used to render the collapsed
+  // sprint cell as a project-level breakdown (customer/project + %), like PROD.
+  const getSprintProjectBreakdown = (memberId: string, sprint: Sprint) => {
+    const byProject = new Map<string, { customerName: string; projectName: string; weekly: number[] }>();
+    sprint.weeks.forEach(week => {
+      (allocsByMemberWeek.get(`${memberId}|${week.isoYear}|${week.isoWeek}`) || [])
+        .forEach(a => {
+          let entry = byProject.get(a.projectId);
+          if (!entry) {
+            const project = projectById.get(a.projectId);
+            entry = { customerName: project?.customerName || '', projectName: project?.projectName || '', weekly: sprint.weeks.map(() => 0) };
+            byProject.set(a.projectId, entry);
+          }
+          const wIdx = sprint.weeks.findIndex(w => w.isoYear === week.isoYear && w.isoWeek === week.isoWeek);
+          if (wIdx >= 0) entry.weekly[wIdx] += a.allocationPercentage || 0;
+        });
+    });
+    return Array.from(byProject.entries())
+      .map(([projectId, e]) => ({
+        projectId,
+        customerName: e.customerName,
+        projectName: e.projectName,
+        percentage: aggregateWeeklyValues(e.weekly).average,
+      }))
+      .filter(p => p.percentage > 0)
+      .sort((a, b) => b.percentage - a.percentage);
   };
 
   const getTotalColor = (total: number, capacity: number) => {
@@ -190,19 +273,32 @@ export default function TimelineView() {
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Over
             </button>
           </div>
+          {/* Week / Sprint display level — toggle temporarily disabled, Sprint is always shown */}
+          {VIEW_LEVEL_TOGGLE_ENABLED && (
+            <div className="flex items-center border rounded-lg overflow-hidden">
+              <button onClick={() => setViewLevel('week')}
+                className={`px-2.5 py-1 text-[11px] font-medium ${viewLevel === 'week' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+                Week
+              </button>
+              <button onClick={() => setViewLevel('sprint')}
+                className={`px-2.5 py-1 text-[11px] font-medium ${viewLevel === 'sprint' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+                Sprint
+              </button>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={() => setPeriodOffset(o => o - 3)} className="p-1 rounded hover:bg-gray-50 text-gray-400">
+          <button onClick={() => setPeriodOffset(o => o - 4)} className="p-1 rounded hover:bg-gray-50 text-gray-400" title="Back 4 weeks">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
           </button>
-          <button onClick={() => setPeriodOffset(o => o - 1)} className="p-1 rounded hover:bg-gray-50 text-gray-400">
+          <button onClick={() => setPeriodOffset(o => o - 1)} className="p-1 rounded hover:bg-gray-50 text-gray-400" title="Back 1 week">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
           </button>
           <button onClick={() => setPeriodOffset(0)} className="px-2 py-0.5 text-[11px] text-gray-600 rounded hover:bg-gray-50">Today</button>
-          <button onClick={() => setPeriodOffset(o => o + 1)} className="p-1 rounded hover:bg-gray-50 text-gray-400">
+          <button onClick={() => setPeriodOffset(o => o + 1)} className="p-1 rounded hover:bg-gray-50 text-gray-400" title="Forward 1 week">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
           </button>
-          <button onClick={() => setPeriodOffset(o => o + 3)} className="p-1 rounded hover:bg-gray-50 text-gray-400">
+          <button onClick={() => setPeriodOffset(o => o + 4)} className="p-1 rounded hover:bg-gray-50 text-gray-400" title="Forward 4 weeks">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
           </button>
         </div>
@@ -211,19 +307,32 @@ export default function TimelineView() {
       {/* Grid */}
       <div className="flex-1 overflow-auto">
         <table className="w-full border-collapse text-xs">
-          <thead className="sticky top-0 z-10 bg-white">
-            <tr className="border-b border-gray-200">
-              <th className="sticky left-0 z-20 bg-white w-[180px] min-w-[180px] text-left px-3 py-2 border-r border-gray-100">
-                <span className="text-[10px] text-gray-400 uppercase tracking-wide font-medium">Member</span>
-              </th>
-              {periods.map(p => (
-                <th key={p.key} className="text-center px-1 py-2 border-r border-gray-100 min-w-[140px]">
-                  <div className="text-[11px] font-semibold text-gray-800">{p.label}</div>
-                  <div className="text-[9px] text-gray-400">{p.sublabel}</div>
+          {viewLevel === 'week' ? (
+            <PeriodHeader
+              mode="table"
+              weeks={weeks}
+              sprintLengthWeeks={overlaySprintLength}
+              showSprintRow={true}
+              theadClassName="sticky top-0 z-10 bg-white"
+              leadingLabel={<span className="text-[10px] text-gray-400 uppercase tracking-wide font-medium">Member</span>}
+              leadingClassName="sticky left-0 z-20 bg-white w-[180px] min-w-[180px] text-left px-3 py-2 border-r border-gray-100 align-bottom"
+              weekThClassName="text-center px-1 py-2 border-r border-l-2 border-l-gray-300 min-w-[110px]"
+            />
+          ) : (
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="border-b-2 border-blue-300 bg-blue-100">
+                <th className="sticky left-0 z-20 bg-blue-100 w-[180px] min-w-[180px] text-left px-3 py-2 border-r border-blue-200">
+                  <span className="text-[10px] text-blue-500 uppercase tracking-wide font-medium">Member</span>
                 </th>
-              ))}
-            </tr>
-          </thead>
+                {sprintGroups.map((s, i) => (
+                  <th key={i} className="text-center px-1 py-2 border-r border-l-2 border-l-blue-300 min-w-[110px]">
+                    <div className="font-bold text-blue-800 text-[12px]">{getSprintDateLabel(s)} <span className="text-[10px] font-semibold text-blue-600">{getSprintYearLabel(s)}</span></div>
+                    <div className="font-bold text-blue-800 text-[12px]">{getSprintDayRangeLabel(s)}</div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+          )}
           <tbody>
             {filteredMembers.map(member => {
               const cap = member.capacity ?? 100;
@@ -239,13 +348,13 @@ export default function TimelineView() {
                       </div>
                     </div>
                   </td>
-                  {periods.map(period => {
-                    const cellAllocs = getCellAllocations(member.id, period);
-                    const total = getMemberTotal(member.id, period);
+                  {viewLevel === 'week' ? weeks.map(week => {
+                    const cellAllocs = getCellAllocations(member.id, week);
+                    const total = getMemberTotal(member.id, week);
                     const bgColor = getTotalBgColor(total, cap);
                     const matches = cellMatchesFilter(total, cap);
                     return (
-                      <td key={period.key} className={`px-1.5 py-1.5 border-r border-gray-100 align-top ${matches ? bgColor : ''}`} onClick={e => e.stopPropagation()}>
+                      <td key={weekKey(week)} className={`px-1.5 py-1.5 border-r border-gray-100 align-top ${matches ? bgColor : ''}`} onClick={e => e.stopPropagation()}>
                         {!matches ? (
                           <div className="text-[10px] text-gray-200 text-center py-1">-</div>
                         ) : isExpanded && cellAllocs.length > 0 ? (
@@ -263,6 +372,40 @@ export default function TimelineView() {
                         ) : (
                           <div className={`text-[11px] font-bold text-center ${getTotalColor(total, cap)}`}>
                             {total > 0 ? `${total}%` : <span className="text-gray-200">-</span>}
+                          </div>
+                        )}
+                      </td>
+                    );
+                  }) : sprintGroups.map((sprint, sIdx) => {
+                    const weeklyTotals = sprint.weeks.map(w => getMemberTotal(member.id, w));
+                    const { average, varies } = aggregateWeeklyValues(weeklyTotals);
+                    const bgColor = getTotalBgColor(average, cap);
+                    const matches = cellMatchesFilter(average, cap);
+                    const breakdown = getSprintProjectBreakdown(member.id, sprint);
+                    return (
+                      <td key={sIdx} className={`px-1.5 py-1.5 border-r border-gray-100 align-top ${matches ? bgColor : ''}`} onClick={e => e.stopPropagation()}>
+                        {!matches ? (
+                          <div className="text-[10px] text-gray-200 text-center py-1">-</div>
+                        ) : isExpanded && breakdown.length > 0 ? (
+                          // Expanded: per-project breakdown (customer/project + the project's
+                          // allocation for the sprint) with the sprint total.
+                          <div className="space-y-0.5">
+                            {breakdown.map(p => (
+                              <div key={p.projectId} className="flex items-center justify-between px-1.5 py-0.5 rounded bg-white/70 text-[10px]">
+                                <span className="text-gray-600 truncate mr-1" title={`${p.customerName}${p.projectName ? ` - ${p.projectName}` : ''}`}>{p.customerName || p.projectName}</span>
+                                <span className="font-semibold text-gray-800 flex-shrink-0">{p.percentage}%</span>
+                              </div>
+                            ))}
+                            <div className={`text-[10px] font-bold text-right mt-0.5 flex items-center justify-end gap-1 ${getTotalColor(average, cap)}`}>
+                              {average}%
+                              {varies && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" title="Varies by week" />}
+                            </div>
+                          </div>
+                        ) : (
+                          // Collapsed: summary total only.
+                          <div className={`text-[11px] font-bold text-center ${getTotalColor(average, cap)} flex items-center justify-center gap-1`}>
+                            {average > 0 ? `${average}%` : <span className="text-gray-200">-</span>}
+                            {varies && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" title="Varies by week" />}
                           </div>
                         )}
                       </td>

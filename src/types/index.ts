@@ -6,12 +6,28 @@ export type ProjectStatus = 'Pending' | 'New Signed Off' | 'Active' | 'Inactive'
 
 export type ProjectRegion = 'UK' | 'US' | 'Canada' | 'Israel';
 
+// Company group (separate P&L) a member belongs to. One per member.
+export type CompanyGroup = 'Administration' | 'Cloud' | 'Quickode' | 'Security&Cyber' | 'Software' | 'Valinor';
+
+// Default/available company groups, in display order.
+export const COMPANY_GROUPS: CompanyGroup[] = [
+  'Administration',
+  'Cloud',
+  'Quickode',
+  'Security&Cyber',
+  'Software',
+  'Valinor',
+];
+
+export const DEFAULT_COMPANY_GROUP: CompanyGroup = 'Software';
+
 export interface TeamMember {
   id: string;
   fullName: string;
   email: string;
   role: UserRole;
   teams?: string[]; // Array of team names - members can belong to multiple teams
+  companyGroup?: CompanyGroup; // Company group / separate P&L the member belongs to
   isActive: boolean;
   createdAt: string;
   employeeNumber?: string;
@@ -41,6 +57,9 @@ export interface Project {
   createdAt: string;
   isArchived: boolean;
   comment?: string;
+  // Sprint length in weeks (1, 2, or 3). Default 2. Used as the default allocation span
+  // in the allocation dialog. Does not affect stored weekly allocations.
+  sprintLengthWeeks?: 1 | 2 | 3;
   // Planning fields
   plannedStartMonth?: number;      // 1-12
   plannedStartYear?: number;
@@ -73,6 +92,11 @@ export interface SprintAllocation {
   id: string;
   projectId: string;
   productManagerId: string;
+  // Weekly model (target): the atomic unit is an ISO week.
+  isoYear?: number;                // ISO week-numbering year
+  isoWeek?: number;                // ISO week number (1..53)
+  weekStartDate?: string;          // Monday of the week (YYYY-MM-DD), for display
+  // Legacy half-month sprint key — kept only during the phased transition; removed in Phase 4.
   year: number;
   month: number;
   sprint: number;
@@ -84,12 +108,13 @@ export interface SprintAllocation {
   startDate?: string;              // Start date for the allocation (ISO date string)
   // New field for Capacity Planning - indicates if this is a planned allocation
   isPlanned?: boolean;
-  // Multi-sprint allocation fields
-  allocationGroupId?: string;     // Links related allocations together
-  isGroupStart?: boolean;          // True for the first sprint in a group
-  groupStartSprint?: string;       // Reference to start sprint (format: "year-month-sprint")
-  groupTotalSprints?: number;      // Total number of sprints in the group
-  groupCurrentIndex?: number;      // Position in group (1, 2, 3...)
+  // Groups weeks created together as one multi-week allocation span.
+  allocationGroupId?: string;
+  // Legacy multi-sprint fields — removed in Phase 4.
+  isGroupStart?: boolean;
+  groupStartSprint?: string;
+  groupTotalSprints?: number;
+  groupCurrentIndex?: number;
 }
 
 export interface AllocationHistory {

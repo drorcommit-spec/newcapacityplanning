@@ -3,6 +3,69 @@ import { DatabaseData } from './api';
 
 // Supabase API functions - only used when Supabase is enabled
 
+// Supabase caps a select at 1000 rows. Fetch the first page with an exact count, then
+// fetch the remaining pages concurrently instead of paying one network round trip per page.
+// The secondary id ordering makes offset pagination deterministic when timestamps tie.
+// Only the columns the app actually maps are requested, instead of `*`. This trims the
+// transfer size per row (no unused/heavy columns) with no behavior change.
+const ALLOCATION_COLUMNS =
+  'id,project_id,product_manager_id,iso_year,iso_week,week_start_date,year,month,sprint,' +
+  'allocation_percentage,allocation_days,comment,start_date,created_at,created_by,' +
+  'allocation_group_id,is_group_start,group_start_sprint,group_total_sprints,group_current_index';
+
+const HISTORY_COLUMNS =
+  'id,allocation_id,changed_by,changed_at,change_type,old_value,new_value';
+
+// Optional server-side filter applied to each page query (e.g. a date window on allocations).
+type PageFilter = (q: any) => any;
+
+async function fetchAllRows(
+  table: string,
+  orderColumn: string,
+  columns = '*',
+  applyFilter?: PageFilter
+): Promise<any[]> {
+  if (!supabase) return [];
+  const client = supabase;
+  const pageSize = 1000;
+  const build = (q: any) => (applyFilter ? applyFilter(q) : q);
+
+  const first = await build(
+    client.from(table).select(columns, { count: 'exact' })
+  )
+    .order(orderColumn, { ascending: false })
+    .order('id', { ascending: true })
+    .range(0, pageSize - 1);
+  if (first.error) throw first.error;
+
+  const rows = first.data || [];
+  const total = first.count || rows.length;
+  const pageStarts = Array.from(
+    { length: Math.max(0, Math.ceil(total / pageSize) - 1) },
+    (_, index) => (index + 1) * pageSize
+  );
+  const remaining = await Promise.all(pageStarts.map(async from => {
+    const page = await build(
+      client.from(table).select(columns)
+    )
+      .order(orderColumn, { ascending: false })
+      .order('id', { ascending: true })
+      .range(from, from + pageSize - 1);
+    if (page.error) throw page.error;
+    return page.data || [];
+  }));
+
+  return rows.concat(...remaining);
+}
+
+// Allocations are bounded to a date window around "now" so the client never downloads the
+// entire history/future. The window is intentionally wide (previous year through two years
+// ahead) so every screen's visible range is fully covered — no view loses data it shows.
+function allocationDateWindow(): { from: string; to: string } {
+  const year = new Date().getUTCFullYear();
+  return { from: `${year - 1}-01-01`, to: `${year + 2}-12-31` };
+}
+
 export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
   if (!isSupabaseEnabled() || !supabase) {
     throw new Error('Supabase is not configured');
@@ -10,12 +73,18 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
 
   console.log('📥 Fetching data from Supabase...');
 
-  // Fetch all data in parallel
-  const [teamMembersRes, projectsRes, allocationsRes, historyRes, resourceTypesRes, teamsRes, sprintProjectsData, sprintRoleReqsData] = await Promise.all([
+  // Fetch all data in parallel. Allocations/history are paged to avoid the 1000-row cap.
+  const [teamMembersRes, projectsRes, allocationsRows, historyRows, resourceTypesRes, teamsRes, sprintProjectsData, sprintRoleReqsData] = await Promise.all([
     supabase.from('team_members').select('*').order('created_at', { ascending: false }),
     supabase.from('projects').select('*').order('created_at', { ascending: false }),
-    supabase.from('allocations').select('*').order('created_at', { ascending: false }),
-    supabase.from('allocation_history').select('*').order('changed_at', { ascending: false }),
+    (() => {
+      const { from, to } = allocationDateWindow();
+      // Keep rows inside the window AND any legacy rows with no week_start_date, so nothing
+      // that a screen might rely on is silently dropped.
+      return fetchAllRows('allocations', 'created_at', ALLOCATION_COLUMNS,
+        q => q.or(`and(week_start_date.gte.${from},week_start_date.lte.${to}),week_start_date.is.null`));
+    })(),
+    fetchAllRows('allocation_history', 'changed_at', HISTORY_COLUMNS),
     supabase.from('resource_types').select('*').order('created_at', { ascending: false }),
     supabase.from('teams').select('*').order('created_at', { ascending: false }),
     fetchSprintProjectsFromSupabase(),
@@ -25,8 +94,6 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
   // Check for errors (teams table is optional for backward compatibility)
   if (teamMembersRes.error) throw teamMembersRes.error;
   if (projectsRes.error) throw projectsRes.error;
-  if (allocationsRes.error) throw allocationsRes.error;
-  if (historyRes.error) throw historyRes.error;
   if (resourceTypesRes.error) throw resourceTypesRes.error;
   // Teams table might not exist yet - log warning but don't fail
   if (teamsRes.error) {
@@ -57,8 +124,8 @@ export async function fetchAllDataFromSupabase(): Promise<DatabaseData> {
   const data: DatabaseData = {
     teamMembers: (teamMembersRes.data || []).map(transformTeamMember),
     projects: (projectsRes.data || []).map(transformProject),
-    allocations: (allocationsRes.data || []).map(transformAllocation),
-    history: (historyRes.data || []).map(transformHistory),
+    allocations: (allocationsRows || []).map(transformAllocation),
+    history: (historyRows || []).map(transformHistory),
     resourceRoles: resourceRoles,
     teams: teamsRes.error ? [] : (teamsRes.data || []).map(transformTeam),
     sprintProjects: sprintProjectsData,
@@ -106,6 +173,14 @@ export async function saveProjectsToSupabase(projects: any[]): Promise<void> {
   console.log('✅ Projects saved');
 }
 
+export async function saveAllocationToSupabase(allocation: any): Promise<void> {
+  if (!isSupabaseEnabled() || !supabase) return;
+  const { error } = await supabase
+    .from('allocations')
+    .upsert(transformAllocationToSupabase(allocation), { onConflict: 'id' });
+  if (error) throw error;
+}
+
 export async function saveAllocationsToSupabase(allocations: any[]): Promise<void> {
   if (!isSupabaseEnabled() || !supabase) return;
 
@@ -134,6 +209,14 @@ export async function deleteAllocationFromSupabase(allocationId: string): Promis
     throw new Error(`Failed to delete allocation: ${error.message}`);
   }
   console.log('✅ Allocation deleted from Supabase');
+}
+
+export async function saveHistoryEntryToSupabase(entry: any): Promise<void> {
+  if (!isSupabaseEnabled() || !supabase) return;
+  const { error } = await supabase
+    .from('allocation_history')
+    .upsert(transformHistoryToSupabase(entry), { onConflict: 'id' });
+  if (error) throw error;
 }
 
 export async function saveHistoryToSupabase(history: any[]): Promise<void> {
@@ -248,6 +331,7 @@ function transformTeamMember(data: any): any {
     email: data.email,
     role: data.role,
     teams: Array.isArray(data.teams) ? data.teams : (data.teams || []),
+    companyGroup: data.company_group || undefined,
     managerId: data.manager_id || null,
     isActive: data.is_active ?? true,
     createdAt: data.created_at,
@@ -262,6 +346,7 @@ function transformTeamMemberToSupabase(data: any): any {
     email: data.email,
     role: data.role,
     teams: Array.isArray(data.teams) ? data.teams : (data.teams || []),
+    company_group: data.companyGroup || null,
     manager_id: data.managerId || null,
     is_active: data.isActive ?? true,
     created_at: data.createdAt || new Date().toISOString(),
@@ -289,6 +374,7 @@ function transformProject(data: any): any {
     plannedStartSprint: data.planned_start_sprint,
     requiredCapacity: data.required_capacity,
     plannedSprintCount: data.planned_sprint_count,
+    sprintLengthWeeks: data.sprint_length_weeks ?? 2,
     requiredRoles: Array.isArray(data.required_roles) ? data.required_roles : [],
   };
 }
@@ -313,6 +399,7 @@ function transformProjectToSupabase(data: any): any {
     planned_start_sprint: data.plannedStartSprint,
     required_capacity: data.requiredCapacity,
     planned_sprint_count: data.plannedSprintCount,
+    sprint_length_weeks: data.sprintLengthWeeks ?? 2,
     required_roles: data.requiredRoles || [],
   };
 }
@@ -322,6 +409,11 @@ function transformAllocation(data: any): any {
     id: data.id,
     projectId: data.project_id,
     productManagerId: data.product_manager_id,
+    // Weekly model
+    isoYear: data.iso_year,
+    isoWeek: data.iso_week,
+    weekStartDate: data.week_start_date,
+    // Legacy sprint key
     year: data.year,
     month: data.month,
     sprint: data.sprint,
@@ -345,6 +437,11 @@ function transformAllocationToSupabase(data: any): any {
     id: data.id,
     project_id: data.projectId,
     product_manager_id: data.productManagerId,
+    // Weekly model
+    iso_year: data.isoYear,
+    iso_week: data.isoWeek,
+    week_start_date: data.weekStartDate,
+    // Legacy sprint key
     year: data.year,
     month: data.month,
     sprint: data.sprint,

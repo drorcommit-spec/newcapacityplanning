@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Puzzle View - Sprint = 3 weeks</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}</style>
+</head>
+<body class="bg-white min-h-screen">
+<nav class="bg-white border-b px-6 py-2.5 flex items-center justify-between">
+<div class="flex items-center gap-6"><div class="flex items-center gap-2"><span class="text-xl">&#129513;</span><div><span class="text-lg font-bold">Puzzle</span><br><span class="text-[9px] text-gray-400">Capacity Planning Platform</span></div></div>
+<div class="flex gap-1 text-xs"><span class="px-2.5 py-1.5 rounded text-gray-600">Dashboard</span><span class="px-2.5 py-1.5 rounded bg-blue-50 text-blue-700 font-semibold">Capacity Planning</span><span class="px-2.5 py-1.5 rounded text-gray-600">History</span></div></div>
+<div class="text-right text-xs"><div class="font-medium">John Smith</div><div class="text-gray-400">john@company.com</div></div>
+</nav>
+<div class="px-6 py-2 border-b flex items-center justify-between">
+<div class="flex items-center gap-3"><h1 class="text-sm font-bold">Capacity Planning</h1>
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">Project Cascade · Sprint length: 3 weeks</span>
+<label class="flex items-center gap-1.5 border rounded-lg px-2 py-1 bg-gray-50 text-[10px] cursor-pointer select-none"><input type="checkbox" id="sprintToggle" checked onchange="toggleSprint()" class="accent-blue-600"><span class="text-gray-600 font-medium">Sprint row</span></label></div>
+<div class="flex bg-gray-100 rounded-md p-0.5 text-[11px]"><button class="px-2.5 py-1 rounded bg-white text-blue-600 shadow-sm font-medium">Puzzle View</button><button class="px-2.5 py-1 rounded text-gray-500">Staff View</button><button class="px-2.5 py-1 rounded text-gray-500">Timeline View</button></div>
+</div>
+<div class="px-6 pt-3 overflow-x-auto">
+<div class="border rounded-lg overflow-hidden inline-block min-w-full">
+<table class="text-xs border-collapse" id="grid"></table>
+</div>
+<p class="text-[11px] text-gray-400 mt-2">Puzzle View is a project &times; member matrix. The grid is weekly; member sub-columns repeat under every week. With a 3-week sprint numbering runs consecutively S1, S2, S3&hellip; across months (S2 here crosses from August into September), with the date range shown underneath.</p>
+</div>
+<script>
+var members=["Alex","Sarah","David"];
+// two months so a 3-week sprint crosses the boundary
+var months=[{name:"August 2026",weeks:[{w:"W1",d:"04-10"},{w:"W2",d:"11-17"},{w:"W3",d:"18-24"},{w:"W4",d:"25-31"}]},
+            {name:"September 2026",weeks:[{w:"W1",d:"01-07"},{w:"W2",d:"08-14"}]}];
+// consecutive sprints, each 3 weeks: S1 covers first 3 weeks, S2 next 3 (crosses month)
+var sprints=[["S1","Aug 04-24",3],["S2","Aug 25 - Sep 14",3]];
+var projects=[
+ {n:"Acme Corp - CRM",dot:"bg-green-500",v:[[50,80,null],[50,80,null],[40,60,null],[40,60,null],[40,60,null],[40,60,null]]},
+ {n:"TechFlow - AI",dot:"bg-yellow-400",v:[[30,50,50],[30,50,50],[40,40,40],[40,40,40],[40,40,40],[30,40,40]]},
+ {n:"BioSense - Data",dot:"bg-red-500",v:[[20,null,null],[20,null,null],[null,null,null],[null,null,null],[20,null,null],[20,null,null]]}
+];
+function ac(v){ if(v===null) return '<td class="px-2 py-1 border-r"></td>'; return '<td class="px-2 py-1 border-r text-center bg-blue-50 text-blue-700 font-medium">'+v+'%</td>'; }
+function build(){
+ var nM=members.length,h="";
+ var totalWeeks=months.reduce(function(a,m){return a+m.weeks.length;},0);
+ // MONTH
+ h+='<thead><tr class="bg-gray-100 border-b"><th rowspan="4" class="text-left px-3 py-2 w-44 border-r align-bottom">Active Projects</th>';
+ months.forEach(function(m){ h+='<th colspan="'+(m.weeks.length*nM)+'" class="text-center px-2 py-1.5 border-l-2 border-l-gray-300 text-[11px] font-bold text-gray-700">'+m.name+'</th>'; });
+ h+='</tr>';
+ // WEEK
+ h+='<tr class="bg-gray-50 border-b text-[10px]">';
+ months.forEach(function(m){ m.weeks.forEach(function(wk){ h+='<th colspan="'+nM+'" class="text-center px-2 py-1.5 border-r border-l-2 border-l-gray-300"><div class="font-semibold">'+wk.w+'</div><div class="text-[9px] text-gray-400">'+wk.d+'</div></th>'; }); });
+ h+='</tr>';
+ // SPRINT
+ h+='<tr class="sprint-row bg-blue-50/50 border-b text-[10px]">';
+ sprints.forEach(function(s){ h+='<th colspan="'+(s[2]*nM)+'" class="text-center px-1 py-1 border-r border-l-2 border-l-blue-200 font-semibold text-blue-600">'+s[0]+'<div class="text-[9px] font-normal text-blue-400">'+s[1]+'</div></th>'; });
+ h+='</tr>';
+ // MEMBER
+ h+='<tr class="bg-gray-50 border-b text-[10px] text-gray-500">';
+ for(var i=0;i<totalWeeks;i++){ members.forEach(function(m){ h+='<th class="px-2 py-1 border-r">'+m+'</th>'; }); }
+ h+='</tr></thead><tbody>';
+ projects.forEach(function(p){
+  h+='<tr class="border-b hover:bg-gray-50"><td class="px-3 py-2 border-r whitespace-nowrap"><span class="w-2 h-2 rounded-full '+p.dot+' inline-block mr-1"></span>'+p.n+'</td>';
+  p.v.forEach(function(week){ week.forEach(function(val){ h+=ac(val); }); });
+  h+='</tr>';
+ });
+ h+='</tbody>';
+ document.getElementById('grid').innerHTML=h;
+}
+function toggleSprint(){ var on=document.getElementById('sprintToggle').checked; document.querySelectorAll('.sprint-row').forEach(function(r){ r.style.display=on?'':'none'; }); }
+build();
+</script>
+</body></html>

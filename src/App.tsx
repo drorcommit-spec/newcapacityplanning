@@ -4,6 +4,7 @@ import { DataProvider } from './context/DataContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import ExecutiveDashboard from './pages/ExecutiveDashboard';
 import TeamManagement from './pages/TeamManagement';
 import ProjectManagement from './pages/ProjectManagement';
 import TeamsManagement from './pages/TeamsManagement';
@@ -33,6 +34,11 @@ function AppRoutes() {
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Layout><Dashboard /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/executive-dashboard" element={
+        <ProtectedRoute>
+          <Layout><ExecutiveDashboard /></Layout>
         </ProtectedRoute>
       } />
       <Route path="/members" element={

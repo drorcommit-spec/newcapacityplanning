@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Capacity Planning — Mobile Mocks</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  /* Phone frame */
+  .phone {
+    width: 390px;
+    height: 820px;
+    border-radius: 2.5rem;
+    border: 10px solid #111827;
+    background: #f9fafb;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35);
+  }
+  .phone-notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 150px; height: 26px; background: #111827;
+    border-bottom-left-radius: 14px; border-bottom-right-radius: 14px; z-index: 50;
+  }
+  .phone-scroll { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .phone-scroll::-webkit-scrollbar { width: 0; }
+  /* bottom tab bar sits fixed within the phone */
+  .tabbar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: #ffffff; border-top: 1px solid #e5e7eb;
+    display: flex; z-index: 40;
+  }
+</style>
+</head>
+<body class="bg-gray-100 text-gray-900 p-8">
+
+<div class="max-w-[1500px] mx-auto">
+  <header class="mb-6">
+    <h1 class="text-2xl font-bold flex items-center gap-2">🧩 Capacity Planning — Mobile UI Mocks</h1>
+    <p class="text-sm text-gray-500 mt-1">Responsive concepts for the three Capacity Planning views. Dense desktop grids collapse into vertical, card-first layouts optimized for a single thumb.</p>
+  </header>
+
+  <!-- Shared pattern notes -->
+  <div class="bg-white border border-gray-200 rounded-xl p-4 mb-8 text-sm text-gray-600 leading-relaxed">
+    <div class="font-semibold text-gray-800 mb-2">Shared mobile patterns across all three views</div>
+    <ul class="list-disc pl-5 space-y-1">
+      <li><b>Filters collapse into a sticky toolbar</b> with a single “Filters” sheet (bottom drawer) instead of an inline filter row.</li>
+      <li><b>View switch</b> (Puzzle / Staff / Timeline) becomes a segmented control under the header.</li>
+      <li><b>Period navigation</b> stays as a compact ‹ Today › strip; swipe left/right also moves sprints.</li>
+      <li><b>Wide grids become one-entity-per-card</b>; the “other axis” (sprints / projects) scrolls horizontally inside each card as chips.</li>
+      <li><b>Color coding preserved</b>: amber = under, green = healthy, red = over capacity.</li>
+    </ul>
+  </div>
+
+  <div class="flex flex-wrap gap-10 justify-center">
+
+    <!-- ================= PUZZLE VIEW ================= -->
+    <div>
+      <h2 class="text-center font-semibold text-gray-700 mb-3">1 · Puzzle View (Projects)</h2>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-scroll pb-20">
+          <!-- App bar -->
+          <div class="sticky top-0 z-30 bg-white border-b border-gray-200 pt-7">
+            <div class="px-4 py-2 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">🧩</span>
+                <span class="font-semibold text-sm">Capacity Planning</span>
+              </div>
+              <button class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">⋯</button>
+            </div>
+            <!-- Segmented view switch -->
+            <div class="px-4 pb-2">
+              <div class="flex bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
+                <button class="flex-1 py-1.5 rounded-md bg-white shadow-sm text-blue-700">Puzzle</button>
+                <button class="flex-1 py-1.5 rounded-md text-gray-500">Staff</button>
+                <button class="flex-1 py-1.5 rounded-md text-gray-500">Timeline</button>
+              </div>
+            </div>
+            <!-- Sticky filter + period bar -->
+            <div class="px-4 pb-2 flex items-center gap-2">
+              <button class="flex items-center gap-1 px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs bg-white">
+                <span>⚙️</span> Filters <span class="ml-0.5 w-4 h-4 bg-blue-600 text-white rounded-full text-[9px] flex items-center justify-center">2</span>
+              </button>
+              <div class="flex items-center gap-0.5 ml-auto border border-gray-200 rounded-lg px-1 py-0.5 bg-white">
+                <button class="px-1.5 text-gray-500">‹</button>
+                <button class="px-2 text-[11px] font-medium text-gray-700">Today</button>
+                <button class="px-1.5 text-gray-500">›</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sprint selector chips (horizontal scroll) -->
+          <div class="px-4 py-2 overflow-x-auto whitespace-nowrap border-b border-gray-100 bg-white">
+            <button class="inline-block px-3 py-1 mr-1.5 rounded-full bg-blue-600 text-white text-[11px] font-semibold">Dec 16–31 · S2 ◂ now</button>
+            <button class="inline-block px-3 py-1 mr-1.5 rounded-full bg-gray-100 text-gray-600 text-[11px]">Jan 01–15 · S1</button>
+            <button class="inline-block px-3 py-1 mr-1.5 rounded-full bg-gray-100 text-gray-600 text-[11px]">Jan 16–31 · S2</button>
+            <button class="inline-block px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-[11px]">Feb 01–15 · S1</button>
+          </div>
+
+          <p class="px-4 pt-3 pb-1 text-[11px] text-gray-400 uppercase tracking-wide font-semibold">9 projects · Dec 16–31, Sprint 2</p>
+
+          <!-- Project cards: each project is a card, members shown as chips -->
+          <div class="px-4 space-y-2.5">
+            <!-- Project card -->
+            <div class="bg-white border border-gray-200 rounded-xl p-3">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                  <span class="font-semibold text-sm">AKSOB</span>
+                  <span class="text-[10px] text-gray-400">POC</span>
+                </div>
+                <button class="text-blue-600 text-lg leading-none">＋</button>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="px-2 py-1 rounded-md bg-blue-50 text-blue-800 text-xs">Alex <b>135%</b></span>
+                <span class="px-2 py-1 rounded-md bg-blue-50 text-blue-800 text-xs">Daniel <b>40%</b></span>
+                <span class="px-2 py-1 rounded-md bg-blue-50 text-blue-800 text-xs">Ariel <b>125%</b></span>
+              </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl p-3">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                  <span class="font-semibold text-sm">BNKMZR</span>
+                  <span class="text-[10px] text-gray-400">Delivery</span>
+                </div>
+                <button class="text-blue-600 text-lg leading-none">＋</button>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="px-2 py-1 rounded-md bg-blue-50 text-blue-800 text-xs">Dean <b>120%</b></span>
+                <span class="px-2 py-1 rounded-md bg-blue-50 text-blue-800 text-xs">Don <b>100%</b></span>
+              </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl p-3">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                  <span class="font-semibold text-sm">CMIT</span>
+                  <span class="text-[10px] text-gray-400">HRS</span>
+                </div>
+                <button class="text-blue-600 text-lg leading-none">＋</button>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="px-2 py-1 rounded-md bg-blue-50 text-blue-800 text-xs">Eran <b>75%</b></span>
+                <span class="px-2 py-1 rounded-md bg-blue-50 text-blue-800 text-xs">Igal <b>105%</b></span>
+                <span class="px-2 py-1 rounded-md bg-blue-50 text-blue-800 text-xs">Itamar <b>45%</b></span>
+              </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl p-3">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                  <span class="font-semibold text-sm">RDRDR</span>
+                  <span class="text-[10px] text-gray-400">Delivery</span>
+                </div>
+                <button class="text-blue-600 text-lg leading-none">＋</button>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="px-2 py-1 rounded-md bg-blue-50 text-blue-800 text-xs">Michael <b>35%</b></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- bottom tab bar -->
+        <div class="tabbar text-[10px] text-gray-500">
+          <div class="flex-1 py-2 text-center text-blue-600"><div>📋</div>Plan</div>
+          <div class="flex-1 py-2 text-center"><div>📊</div>Exec</div>
+          <div class="flex-1 py-2 text-center"><div>🕑</div>History</div>
+          <div class="flex-1 py-2 text-center"><div>⚙️</div>Settings</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= STAFF VIEW ================= -->
+    <div>
+      <h2 class="text-center font-semibold text-gray-700 mb-3">2 · Staff View (Employees)</h2>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-scroll pb-20">
+          <div class="sticky top-0 z-30 bg-white border-b border-gray-200 pt-7">
+            <div class="px-4 py-2 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">🧩</span>
+                <span class="font-semibold text-sm">Capacity Planning</span>
+              </div>
+              <button class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">⋯</button>
+            </div>
+            <div class="px-4 pb-2">
+              <div class="flex bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
+                <button class="flex-1 py-1.5 rounded-md text-gray-500">Puzzle</button>
+                <button class="flex-1 py-1.5 rounded-md bg-white shadow-sm text-blue-700">Staff</button>
+                <button class="flex-1 py-1.5 rounded-md text-gray-500">Timeline</button>
+              </div>
+            </div>
+            <div class="px-4 pb-2 flex items-center gap-2">
+              <button class="flex items-center gap-1 px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs bg-white">
+                <span>⚙️</span> Filters
+              </button>
+              <!-- quick capacity filter -->
+              <div class="flex items-center gap-1 ml-auto text-[10px]">
+                <span class="px-2 py-1 rounded-full bg-gray-900 text-white">All</span>
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sprint period header -->
+          <div class="px-4 py-2.5 bg-blue-50 border-b border-blue-200 sticky top-[132px] z-20">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[11px] font-bold text-blue-900">January 01–15 <span class="text-[9px] text-blue-500">2027</span></div>
+                <div class="text-[11px] font-bold text-blue-900">Sprint 1 · 12 members</div>
+              </div>
+              <div class="flex items-center gap-0.5 border border-blue-200 rounded-lg px-1 py-0.5 bg-white">
+                <button class="px-1.5 text-blue-500">‹</button>
+                <button class="px-1.5 text-blue-500">›</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Member cards with capacity ring/bar -->
+          <div class="px-4 py-3 space-y-2.5">
+            <!-- member -->
+            <div class="bg-white border border-gray-200 rounded-xl p-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white text-xs font-bold flex items-center justify-center">AL</div>
+                  <div>
+                    <div class="font-semibold text-sm">Alex Levin</div>
+                    <div class="text-[10px] text-gray-400">Developer · 2 activities</div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm font-bold text-red-600">135%</div>
+                  <div class="text-[9px] text-gray-400">of 100%</div>
+                </div>
+              </div>
+              <!-- stacked capacity bar -->
+              <div class="mt-2.5 h-2.5 w-full bg-gray-100 rounded-full overflow-hidden flex">
+                <div class="h-full bg-blue-500" style="width:75%"></div>
+                <div class="h-full bg-blue-300" style="width:25%"></div>
+                <div class="h-full bg-red-400" style="width:35%; margin-left:-35px; opacity:.7"></div>
+              </div>
+              <!-- expandable project rows -->
+              <div class="mt-2 space-y-1">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm bg-blue-500"></span> AKSOB</span>
+                  <span class="font-medium text-gray-700">95%</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                  <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm bg-blue-300"></span> BNKMZR</span>
+                  <span class="font-medium text-gray-700">40%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- member healthy -->
+            <div class="bg-white border border-gray-200 rounded-xl p-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white text-xs font-bold flex items-center justify-center">DN</div>
+                  <div>
+                    <div class="font-semibold text-sm">Dana Navon</div>
+                    <div class="text-[10px] text-gray-400">PM · 1 activity</div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm font-bold text-green-600">90%</div>
+                  <div class="text-[9px] text-gray-400">of 100%</div>
+                </div>
+              </div>
+              <div class="mt-2.5 h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-green-500" style="width:90%"></div>
+              </div>
+            </div>
+
+            <!-- member under -->
+            <div class="bg-white border border-gray-200 rounded-xl p-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-white text-xs font-bold flex items-center justify-center">IT</div>
+                  <div>
+                    <div class="font-semibold text-sm">Itamar Tal</div>
+                    <div class="text-[10px] text-gray-400">Developer · 1 activity</div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm font-bold text-amber-600">45%</div>
+                  <div class="text-[9px] text-gray-400">of 100%</div>
+                </div>
+              </div>
+              <div class="mt-2.5 h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-amber-400" style="width:45%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tabbar text-[10px] text-gray-500">
+          <div class="flex-1 py-2 text-center text-blue-600"><div>📋</div>Plan</div>
+          <div class="flex-1 py-2 text-center"><div>📊</div>Exec</div>
+          <div class="flex-1 py-2 text-center"><div>🕑</div>History</div>
+          <div class="flex-1 py-2 text-center"><div>⚙️</div>Settings</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TIMELINE VIEW ================= -->
+    <div>
+      <h2 class="text-center font-semibold text-gray-700 mb-3">3 · Timeline View (Trend)</h2>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-scroll pb-20">
+          <div class="sticky top-0 z-30 bg-white border-b border-gray-200 pt-7">
+            <div class="px-4 py-2 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">🧩</span>
+                <span class="font-semibold text-sm">Capacity Planning</span>
+              </div>
+              <button class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">⋯</button>
+            </div>
+            <div class="px-4 pb-2">
+              <div class="flex bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
+                <button class="flex-1 py-1.5 rounded-md text-gray-500">Puzzle</button>
+                <button class="flex-1 py-1.5 rounded-md text-gray-500">Staff</button>
+                <button class="flex-1 py-1.5 rounded-md bg-white shadow-sm text-blue-700">Timeline</button>
+              </div>
+            </div>
+            <div class="px-4 pb-2 flex items-center gap-2">
+              <button class="flex items-center gap-1 px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs bg-white">
+                <span>⚙️</span> Filters
+              </button>
+              <button class="text-xs text-blue-600 ml-1">Expand all</button>
+              <div class="flex items-center gap-0.5 ml-auto border border-gray-200 rounded-lg px-1 py-0.5 bg-white">
+                <button class="px-1.5 text-gray-500">‹</button>
+                <button class="px-2 text-[11px] font-medium text-gray-700">Today</button>
+                <button class="px-1.5 text-gray-500">›</button>
+              </div>
+            </div>
+          </div>
+
+          <p class="px-4 pt-3 pb-1 text-[11px] text-gray-400 uppercase tracking-wide font-semibold">Per-member allocation over 8 sprints</p>
+
+          <!-- Member row: name + horizontally scrollable mini sparkline of sprints -->
+          <div class="px-4 space-y-2.5">
+            <!-- member card -->
+            <div class="bg-white border border-gray-200 rounded-xl p-3">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center justify-center">AL</div>
+                  <span class="font-semibold text-sm">Alex Levin</span>
+                </div>
+                <span class="text-gray-400 text-xs">▾</span>
+              </div>
+              <!-- horizontal sprint strip -->
+              <div class="overflow-x-auto whitespace-nowrap -mx-1 px-1">
+                <div class="inline-flex gap-1 items-end h-16">
+                  <div class="flex flex-col items-center justify-end w-10">
+                    <div class="w-6 bg-green-500 rounded-t" style="height:38px"></div>
+                    <span class="text-[8px] text-gray-400 mt-1">Dec1</span>
+                  </div>
+                  <div class="flex flex-col items-center justify-end w-10">
+                    <div class="w-6 bg-green-500 rounded-t" style="height:42px"></div>
+                    <span class="text-[8px] text-gray-400 mt-1">Dec2</span>
+                  </div>
+                  <div class="flex flex-col items-center justify-end w-10">
+                    <div class="w-6 bg-red-500 rounded-t" style="height:58px"></div>
+                    <span class="text-[8px] text-blue-600 font-bold mt-1">Jan1</span>
+                  </div>
+                  <div class="flex flex-col items-center justify-end w-10">
+                    <div class="w-6 bg-amber-400 rounded-t" style="height:22px"></div>
+                    <span class="text-[8px] text-gray-400 mt-1">Jan2</span>
+                  </div>
+                  <div class="flex flex-col items-center justify-end w-10">
+                    <div class="w-6 bg-green-500 rounded-t" style="height:40px"></div>
+                    <span class="text-[8px] text-gray-400 mt-1">Feb1</span>
+                  </div>
+                  <div class="flex flex-col items-center justify-end w-10">
+                    <div class="w-6 bg-green-500 rounded-t" style="height:44px"></div>
+                    <span class="text-[8px] text-gray-400 mt-1">Feb2</span>
+                  </div>
+                </div>
+              </div>
+              <!-- expanded per-project rows (shown because expanded) -->
+              <div class="mt-2 pt-2 border-t border-gray-100 space-y-1">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm bg-blue-500"></span> AKSOB</span>
+                  <span class="text-gray-500">avg 95%</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                  <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm bg-blue-300"></span> BNKMZR</span>
+                  <span class="text-gray-500">avg 40%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- collapsed member -->
+            <div class="bg-white border border-gray-200 rounded-xl p-3">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold flex items-center justify-center">DN</div>
+                  <span class="font-semibold text-sm">Dana Navon</span>
+                </div>
+                <span class="text-gray-400 text-xs">▸</span>
+              </div>
+              <div class="overflow-x-auto whitespace-nowrap -mx-1 px-1">
+                <div class="inline-flex gap-1 items-end h-16">
+                  <div class="flex flex-col items-center justify-end w-10"><div class="w-6 bg-green-500 rounded-t" style="height:36px"></div><span class="text-[8px] text-gray-400 mt-1">Dec1</span></div>
+                  <div class="flex flex-col items-center justify-end w-10"><div class="w-6 bg-green-500 rounded-t" style="height:40px"></div><span class="text-[8px] text-gray-400 mt-1">Dec2</span></div>
+                  <div class="flex flex-col items-center justify-end w-10"><div class="w-6 bg-green-500 rounded-t" style="height:38px"></div><span class="text-[8px] text-blue-600 font-bold mt-1">Jan1</span></div>
+                  <div class="flex flex-col items-center justify-end w-10"><div class="w-6 bg-amber-400 rounded-t" style="height:26px"></div><span class="text-[8px] text-gray-400 mt-1">Jan2</span></div>
+                  <div class="flex flex-col items-center justify-end w-10"><div class="w-6 bg-green-500 rounded-t" style="height:42px"></div><span class="text-[8px] text-gray-400 mt-1">Feb1</span></div>
+                  <div class="flex flex-col items-center justify-end w-10"><div class="w-6 bg-green-500 rounded-t" style="height:40px"></div><span class="text-[8px] text-gray-400 mt-1">Feb2</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tabbar text-[10px] text-gray-500">
+          <div class="flex-1 py-2 text-center text-blue-600"><div>📋</div>Plan</div>
+          <div class="flex-1 py-2 text-center"><div>📊</div>Exec</div>
+          <div class="flex-1 py-2 text-center"><div>🕑</div>History</div>
+          <div class="flex-1 py-2 text-center"><div>⚙️</div>Settings</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Filters bottom sheet concept -->
+  <div class="mt-10 flex justify-center">
+    <div>
+      <h2 class="text-center font-semibold text-gray-700 mb-3">Shared · Filters Bottom Sheet</h2>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <!-- dimmed content behind -->
+        <div class="absolute inset-0 bg-black/40 z-10"></div>
+        <!-- sheet -->
+        <div class="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-2xl p-4 pb-8">
+          <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold">Filters</h3>
+            <button class="text-sm text-blue-600">Reset</button>
+          </div>
+
+          <label class="text-[11px] text-gray-500 font-medium">Company Group</label>
+          <select class="w-full mt-1 mb-3 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+            <option>Software</option><option>Cloud</option>
+          </select>
+
+          <label class="text-[11px] text-gray-500 font-medium">Manager</label>
+          <button class="w-full mt-1 mb-3 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-left flex justify-between">
+            <span>6 managers</span><span class="text-gray-400">▾</span>
+          </button>
+
+          <label class="text-[11px] text-gray-500 font-medium">Employees</label>
+          <button class="w-full mt-1 mb-3 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-left flex justify-between">
+            <span>All employees (26)</span><span class="text-gray-400">▾</span>
+          </button>
+
+          <label class="text-[11px] text-gray-500 font-medium">Capacity</label>
+          <div class="flex gap-2 mt-1 mb-5 text-xs">
+            <span class="px-3 py-1.5 rounded-full bg-gray-900 text-white">All</span>
+            <span class="px-3 py-1.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Under</span>
+            <span class="px-3 py-1.5 rounded-full bg-green-100 text-green-700 border border-green-200">Good</span>
+            <span class="px-3 py-1.5 rounded-full bg-red-100 text-red-700 border border-red-200">Over</span>
+          </div>
+
+          <button class="w-full py-2.5 bg-blue-600 text-white rounded-lg font-semibold text-sm">Apply filters</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

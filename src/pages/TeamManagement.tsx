@@ -8,7 +8,8 @@ import Card from '../components/Card';
 import Modal from '../components/Modal';
 import Input from '../components/Input';
 import Select from '../components/Select';
-import { UserRole } from '../types';
+import { UserRole, CompanyGroup, COMPANY_GROUPS, DEFAULT_COMPANY_GROUP } from '../types';
+import { getMemberCompanyGroup } from '../utils/memberUtils';
 import { getTeams, fetchAllData } from '../services/api';
 import { supabase, isSupabaseEnabled } from '../services/supabase';
 
@@ -27,6 +28,7 @@ export default function TeamManagement() {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [managerFilter, setManagerFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
+  const [groupFilter, setGroupFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [availableTeams, setAvailableTeams] = useState<string[]>([]);
   const [resourceTypes, setResourceTypes] = useState<ResourceType[]>([]);
@@ -35,6 +37,7 @@ export default function TeamManagement() {
     email: '',
     role: 'Product Manager' as UserRole,
     teams: [] as string[],
+    companyGroup: DEFAULT_COMPANY_GROUP as CompanyGroup,
     managerId: '',
   });
   const [emailError, setEmailError] = useState('');
@@ -95,7 +98,7 @@ export default function TeamManagement() {
   };
 
   const resetForm = () => {
-    setFormData({ fullName: '', email: '', role: 'Product Manager', teams: [], managerId: '' });
+    setFormData({ fullName: '', email: '', role: 'Product Manager', teams: [], companyGroup: DEFAULT_COMPANY_GROUP, managerId: '' });
     setEmailError('');
     setEditingId(null);
     setIsModalOpen(false);
@@ -109,6 +112,7 @@ export default function TeamManagement() {
       email: member.email,
       role: member.role,
       teams: member.teams || [],
+      companyGroup: getMemberCompanyGroup(member),
       managerId: member.managerId || '',
     });
     setEditingId(member.id);
@@ -207,6 +211,9 @@ export default function TeamManagement() {
       
       // Role filter
       if (roleFilter !== 'all' && member.role !== roleFilter) return false;
+
+      // Company group filter
+      if (groupFilter !== 'all' && getMemberCompanyGroup(member) !== groupFilter) return false;
       
       // Manager filter
       if (managerFilter !== 'all') {
@@ -223,7 +230,8 @@ export default function TeamManagement() {
         const matchesName = member.fullName.toLowerCase().includes(searchLower);
         const matchesEmail = member.email.toLowerCase().includes(searchLower);
         const matchesTeams = member.teams?.some(t => t.toLowerCase().includes(searchLower));
-        if (!matchesName && !matchesEmail && !matchesTeams) return false;
+        const matchesGroup = (member.companyGroup || '').toLowerCase().includes(searchLower);
+        if (!matchesName && !matchesEmail && !matchesTeams && !matchesGroup) return false;
       }
       
       return true;
@@ -254,12 +262,21 @@ export default function TeamManagement() {
       </div>
 
       <Card>
-        <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="mb-4 grid grid-cols-1 md:grid-cols-5 gap-4">
           <Input
             label="Search by Name"
             placeholder="Search member name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <Select
+            label="Filter by Company Group"
+            options={[
+              { value: 'all', label: 'All Groups' },
+              ...COMPANY_GROUPS.map(g => ({ value: g, label: g })),
+            ]}
+            value={groupFilter}
+            onChange={(e) => setGroupFilter(e.target.value)}
           />
           <Select
             label="Filter by Resource Type"
@@ -296,6 +313,7 @@ export default function TeamManagement() {
                 <th className="text-left py-3 px-4">Name</th>
                 <th className="text-left py-3 px-4">Email</th>
                 <th className="text-left py-3 px-4">Resource Type</th>
+                <th className="text-left py-3 px-4">Company Group</th>
                 <th className="text-left py-3 px-4">Manager</th>
                 <th className="text-left py-3 px-4">Teams</th>
                 <th className="text-left py-3 px-4">Status</th>
@@ -311,6 +329,11 @@ export default function TeamManagement() {
                   <td className="py-3 px-4">{member.fullName}</td>
                   <td className="py-3 px-4">{member.email}</td>
                   <td className="py-3 px-4">{member.role}</td>
+                  <td className="py-3 px-4">
+                    <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs">
+                      {getMemberCompanyGroup(member)}
+                    </span>
+                  </td>
                   <td className="py-3 px-4">
                     {canManageMembers ? (
                       <select
@@ -456,6 +479,22 @@ export default function TeamManagement() {
                 ))}
               </select>
             )}
+          </div>
+
+          {/* Company Group */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Company Group
+            </label>
+            <select
+              value={formData.companyGroup}
+              onChange={(e) => setFormData({ ...formData, companyGroup: e.target.value as CompanyGroup })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {COMPANY_GROUPS.map(g => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
           </div>
 
           {/* Manager Selection */}

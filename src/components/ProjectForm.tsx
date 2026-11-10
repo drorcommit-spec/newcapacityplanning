@@ -30,6 +30,7 @@ export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
     pmoContact: '',
     latestStatus: '',
     activityCloseDate: '',
+    sprintLengthWeeks: 2 as 1 | 2 | 3,
     requiredRoles: DEFAULT_REQUIRED_ROLES.filter(r => availableRoles.includes(r) || DEFAULT_REQUIRED_ROLES.includes(r)),
   });
   const [customerError, setCustomerError] = useState('');
@@ -80,6 +81,7 @@ export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
       pmoContact: formData.pmoContact || undefined,
       latestStatus: formData.latestStatus || undefined,
       activityCloseDate: formData.activityCloseDate || undefined,
+      sprintLengthWeeks: formData.sprintLengthWeeks,
       requiredRoles: formData.requiredRoles,
       isArchived: false,
     };
@@ -203,7 +205,11 @@ export default function ProjectForm({ onSuccess, onCancel }: ProjectFormProps) {
           value={formData.status}
           onChange={(e) => setFormData({ ...formData, status: e.target.value as ProjectStatus })}
         />
-        
+
+        {/* Sprint Length is no longer a user-facing project property — hidden from the form.
+            formData.sprintLengthWeeks still defaults to 2 and is saved for backward
+            compatibility with existing data, but is no longer editable here. */}
+
         <div>
           <label className="text-sm font-medium text-gray-700 block mb-1">Activity Sign Off Date</label>
           <input
