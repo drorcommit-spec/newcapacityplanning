@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import Layout from './components/Layout';
+import ComingSoon from './components/ComingSoon';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ExecutiveDashboard from './pages/ExecutiveDashboard';
@@ -33,7 +34,8 @@ function AppRoutes() {
       } />
       <Route path="/dashboard" element={
         <ProtectedRoute>
-          <Layout><Dashboard /></Layout>
+          {/* Dashboard is not released yet: production shows a watermark, local dev shows the page. */}
+          <Layout>{import.meta.env.DEV ? <Dashboard /> : <ComingSoon />}</Layout>
         </ProtectedRoute>
       } />
       <Route path="/executive-dashboard" element={
